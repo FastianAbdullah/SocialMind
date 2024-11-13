@@ -16,3 +16,4 @@ yarn-error.log
 composer.lock
 /storage/installed
 *.zip
+/node_modules
