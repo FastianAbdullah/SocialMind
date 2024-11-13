@@ -13,8 +13,12 @@ use App\Http\Controllers\AuthController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+// web.php
+Route::get('/{any?}', function () {
+    return view('welcome');
+})->where('any', '.*');
 
-Route::get('/', function () {return view('welcome');});
+// Keep your API routes above this catch-all route
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
