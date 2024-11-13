@@ -8,7 +8,7 @@
   <meta name="author" content="Themetags">
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.3/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.3/ScrollTrigger.min.js"></script> -->
-  <title>Social Mind - Modern AI Landing HTML Template</title>
+  <title>Social Mind - Modern AI Landing HTML Templates</title>
 
   <!-- Update the paths for stylesheets -->
   <link rel="stylesheet" href="/css/fonts/ff-1.css">
