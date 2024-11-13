@@ -31,6 +31,11 @@ return [
 
     'allowed_origins' => ['http://localhost:5173'],
 
+    'allowed_origins' => [
+        'http://localhost:5173',
+        'https://socialmind.discountroof.co.uk'
+    ],
+
     'supports_credentials' => false,
 
 ];

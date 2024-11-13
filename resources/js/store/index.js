@@ -3,9 +3,11 @@ import { createStore } from 'vuex';
 import axios from 'axios';
 
 // Configure axios defaults
-axios.defaults.baseURL = 'http://127.0.0.1:8000';
+axios.defaults.baseURL = 'https://socialmind.discountroof.co.uk';
 axios.defaults.withCredentials = true; // Important for CSRF token
 axios.defaults.headers.common['Accept'] = 'application/json';
+
+axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 
 // Add request and response interceptors
 axios.interceptors.request.use(request => {
