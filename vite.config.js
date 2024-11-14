@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => {
       }),
       vue(),
     ],
+    
     base: publicPath,
 };
 });
