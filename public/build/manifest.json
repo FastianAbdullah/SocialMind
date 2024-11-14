@@ -1,0 +1,346 @@
+{
+  "public/img/avatar-1.png": {
+    "file": "assets/avatar-1-553d0834.png",
+    "src": "public/img/avatar-1.png"
+  },
+  "public/img/avatar-2.png": {
+    "file": "assets/avatar-2-813879de.png",
+    "src": "public/img/avatar-2.png"
+  },
+  "public/img/avatar-3.png": {
+    "file": "assets/avatar-3-2773cfe5.png",
+    "src": "public/img/avatar-3.png"
+  },
+  "public/img/avatar-4.png": {
+    "file": "assets/avatar-4-ee347287.png",
+    "src": "public/img/avatar-4.png"
+  },
+  "public/img/avatar-5.png": {
+    "file": "assets/avatar-5-9b4826eb.png",
+    "src": "public/img/avatar-5.png"
+  },
+  "public/img/avatar-6.png": {
+    "file": "assets/avatar-6-1fa4246d.png",
+    "src": "public/img/avatar-6.png"
+  },
+  "public/img/brand-icon-1.png": {
+    "file": "assets/brand-icon-1-67a54899.png",
+    "src": "public/img/brand-icon-1.png"
+  },
+  "public/img/brand-icon-10.png": {
+    "file": "assets/brand-icon-10-62d56ce6.png",
+    "src": "public/img/brand-icon-10.png"
+  },
+  "public/img/brand-icon-11.png": {
+    "file": "assets/brand-icon-11-bf6317d2.png",
+    "src": "public/img/brand-icon-11.png"
+  },
+  "public/img/brand-icon-12.png": {
+    "file": "assets/brand-icon-12-8cc1c917.png",
+    "src": "public/img/brand-icon-12.png"
+  },
+  "public/img/brand-icon-2.png": {
+    "file": "assets/brand-icon-2-87ba8b5c.png",
+    "src": "public/img/brand-icon-2.png"
+  },
+  "public/img/brand-icon-3.png": {
+    "file": "assets/brand-icon-3-73e933be.png",
+    "src": "public/img/brand-icon-3.png"
+  },
+  "public/img/brand-icon-4.png": {
+    "file": "assets/brand-icon-4-7b53127c.png",
+    "src": "public/img/brand-icon-4.png"
+  },
+  "public/img/brand-icon-5.png": {
+    "file": "assets/brand-icon-5-fdf21b3e.png",
+    "src": "public/img/brand-icon-5.png"
+  },
+  "public/img/brand-icon-6.png": {
+    "file": "assets/brand-icon-6-9aeb9ab4.png",
+    "src": "public/img/brand-icon-6.png"
+  },
+  "public/img/brand-icon-7.png": {
+    "file": "assets/brand-icon-7-bac8b866.png",
+    "src": "public/img/brand-icon-7.png"
+  },
+  "public/img/brand-icon-8.png": {
+    "file": "assets/brand-icon-8-25f581e5.png",
+    "src": "public/img/brand-icon-8.png"
+  },
+  "public/img/brand-icon-9.png": {
+    "file": "assets/brand-icon-9-b0e0370c.png",
+    "src": "public/img/brand-icon-9.png"
+  },
+  "public/img/breadcrumb-shape-left.png": {
+    "file": "assets/login-shape-left-94135ba0.png",
+    "src": "public/img/breadcrumb-shape-left.png"
+  },
+  "public/img/breadcrumb-shape-line-left.png": {
+    "file": "assets/login-shape-line-left-7fa6b8a3.png",
+    "src": "public/img/breadcrumb-shape-line-left.png"
+  },
+  "public/img/breadcrumb-shape-line-right.png": {
+    "file": "assets/login-shape-line-right-3a51f2be.png",
+    "src": "public/img/breadcrumb-shape-line-right.png"
+  },
+  "public/img/breadcrumb-shape-right.png": {
+    "file": "assets/login-shape-right-eb722658.png",
+    "src": "public/img/breadcrumb-shape-right.png"
+  },
+  "public/img/breadcrumb-shape-top.png": {
+    "file": "assets/login-shape-top-65eba71f.png",
+    "src": "public/img/breadcrumb-shape-top.png"
+  },
+  "public/img/circular-text-shape-end.png": {
+    "file": "assets/circular-text-shape-end-ee1bc0b0.png",
+    "src": "public/img/circular-text-shape-end.png"
+  },
+  "public/img/circular-text-shape-start.png": {
+    "file": "assets/circular-text-shape-start-99e74941.png",
+    "src": "public/img/circular-text-shape-start.png"
+  },
+  "public/img/cta-2-log.png": {
+    "file": "assets/cta-2-log-5f680039.png",
+    "src": "public/img/cta-2-log.png"
+  },
+  "public/img/cta-4-bg.png": {
+    "file": "assets/cta-4-bg-44d44b6e.png",
+    "src": "public/img/cta-4-bg.png"
+  },
+  "public/img/fb-card-blurr-shape.png": {
+    "file": "assets/fb-card-blurr-shape-09340be5.png",
+    "src": "public/img/fb-card-blurr-shape.png"
+  },
+  "public/img/fb-img-1.png": {
+    "file": "assets/fb-img-1-ed3118d5.png",
+    "src": "public/img/fb-img-1.png"
+  },
+  "public/img/fb-img-2.png": {
+    "file": "assets/fb-img-2-b47a57c0.png",
+    "src": "public/img/fb-img-2.png"
+  },
+  "public/img/fb-img-3.png": {
+    "file": "assets/fb-img-3-c1e6db07.png",
+    "src": "public/img/fb-img-3.png"
+  },
+  "public/img/fb-img-4.png": {
+    "file": "assets/fb-img-4-4eac440c.png",
+    "src": "public/img/fb-img-4.png"
+  },
+  "public/img/fb-img-5.png": {
+    "file": "assets/fb-img-5-f276c8a7.png",
+    "src": "public/img/fb-img-5.png"
+  },
+  "public/img/fb-img-6.png": {
+    "file": "assets/fb-img-6-6df636c3.png",
+    "src": "public/img/fb-img-6.png"
+  },
+  "public/img/fb-img-7.png": {
+    "file": "assets/fb-img-7-e8c9abed.png",
+    "src": "public/img/fb-img-7.png"
+  },
+  "public/img/fb-img-8.png": {
+    "file": "assets/fb-img-8-2450d15c.png",
+    "src": "public/img/fb-img-8.png"
+  },
+  "public/img/fb-img-9.png": {
+    "file": "assets/fb-img-9-6b4d2c5d.png",
+    "src": "public/img/fb-img-9.png"
+  },
+  "public/img/gradient-bottom-half-border.png": {
+    "file": "assets/gradient-bottom-half-border-bccfb7e4.png",
+    "src": "public/img/gradient-bottom-half-border.png"
+  },
+  "public/img/gradient-top-half-border.png": {
+    "file": "assets/gradient-top-half-border-fb4953b7.png",
+    "src": "public/img/gradient-top-half-border.png"
+  },
+  "public/img/hero-4-content-shape.webp": {
+    "file": "assets/hero-4-content-shape-66353c6e.webp",
+    "src": "public/img/hero-4-content-shape.webp"
+  },
+  "public/img/hero-4-img.webp": {
+    "file": "assets/hero-4-img-43a25c53.webp",
+    "src": "public/img/hero-4-img.webp"
+  },
+  "public/img/hero-7-logo.png": {
+    "file": "assets/hero-7-logo-7b15c6d1.png",
+    "src": "public/img/hero-7-logo.png"
+  },
+  "public/img/icon-feature-1.png": {
+    "file": "assets/icon-feature-1-a1b052bd.png",
+    "src": "public/img/icon-feature-1.png"
+  },
+  "public/img/icon-feature-2.png": {
+    "file": "assets/icon-feature-2-206cc26e.png",
+    "src": "public/img/icon-feature-2.png"
+  },
+  "public/img/icon-feature-3.png": {
+    "file": "assets/icon-feature-3-bc43c45a.png",
+    "src": "public/img/icon-feature-3.png"
+  },
+  "public/img/icon-feature-4.png": {
+    "file": "assets/icon-feature-4-c0f33405.png",
+    "src": "public/img/icon-feature-4.png"
+  },
+  "public/img/login-facebook.svg": {
+    "file": "assets/login-facebook-5ed661f0.svg",
+    "src": "public/img/login-facebook.svg"
+  },
+  "public/img/login-google.svg": {
+    "file": "assets/login-google-8ac9c8a6.svg",
+    "src": "public/img/login-google.svg"
+  },
+  "public/img/login-shape-circle-text.png": {
+    "file": "assets/login-shape-circle-text-8a24b75f.png",
+    "src": "public/img/login-shape-circle-text.png"
+  },
+  "public/img/login-shape-left.png": {
+    "file": "assets/login-shape-left-94135ba0.png",
+    "src": "public/img/breadcrumb-shape-left.png"
+  },
+  "public/img/login-shape-line-left.png": {
+    "file": "assets/login-shape-line-left-7fa6b8a3.png",
+    "src": "public/img/breadcrumb-shape-line-left.png"
+  },
+  "public/img/login-shape-line-right.png": {
+    "file": "assets/login-shape-line-right-3a51f2be.png",
+    "src": "public/img/breadcrumb-shape-line-right.png"
+  },
+  "public/img/login-shape-right.png": {
+    "file": "assets/login-shape-right-eb722658.png",
+    "src": "public/img/breadcrumb-shape-right.png"
+  },
+  "public/img/login-shape-top.png": {
+    "file": "assets/login-shape-top-65eba71f.png",
+    "src": "public/img/breadcrumb-shape-top.png"
+  },
+  "public/img/logo-circular-text.png": {
+    "file": "assets/logo-circular-text-ca074ef4.png",
+    "src": "public/img/logo-circular-text.png"
+  },
+  "public/img/logo-light.png": {
+    "file": "assets/logo-light-8936f687.png",
+    "src": "public/img/logo-light.png"
+  },
+  "public/img/pricing-faq-bottom-right.png": {
+    "file": "assets/pricing-faq-bottom-right-c383df6b.png",
+    "src": "public/img/pricing-faq-bottom-right.png"
+  },
+  "public/img/pricing-faq-top-left.png": {
+    "file": "assets/pricing-faq-top-left-c3a8d67c.png",
+    "src": "public/img/pricing-faq-top-left.png"
+  },
+  "public/img/pricing-faq-top-right.png": {
+    "file": "assets/pricing-faq-top-right-22234dd4.png",
+    "src": "public/img/pricing-faq-top-right.png"
+  },
+  "public/img/pricing-line-bottom.png": {
+    "file": "assets/pricing-line-bottom-b8167b35.png",
+    "src": "public/img/pricing-line-bottom.png"
+  },
+  "public/img/pricing-line-right.png": {
+    "file": "assets/pricing-line-right-cebb1e0a.png",
+    "src": "public/img/pricing-line-right.png"
+  },
+  "public/img/pricing-line-top.png": {
+    "file": "assets/pricing-line-top-2bd6705c.png",
+    "src": "public/img/pricing-line-top.png"
+  },
+  "public/img/spotify.png": {
+    "file": "assets/spotify-c885b863.png",
+    "src": "public/img/spotify.png"
+  },
+  "public/img/testimonial-section-shape-1.png": {
+    "file": "assets/testimonial-section-shape-1-94d49289.png",
+    "src": "public/img/testimonial-section-shape-1.png"
+  },
+  "resources/js/app.css": {
+    "file": "assets/app-2857829f.css",
+    "src": "resources/js/app.css"
+  },
+  "resources/js/app.js": {
+    "assets": [
+      "assets/hero-4-img-43a25c53.webp",
+      "assets/hero-4-content-shape-66353c6e.webp",
+      "assets/spotify-c885b863.png",
+      "assets/brand-icon-1-67a54899.png",
+      "assets/brand-icon-2-87ba8b5c.png",
+      "assets/brand-icon-3-73e933be.png",
+      "assets/brand-icon-4-7b53127c.png",
+      "assets/brand-icon-5-fdf21b3e.png",
+      "assets/brand-icon-6-9aeb9ab4.png",
+      "assets/brand-icon-7-bac8b866.png",
+      "assets/brand-icon-8-25f581e5.png",
+      "assets/brand-icon-9-b0e0370c.png",
+      "assets/brand-icon-10-62d56ce6.png",
+      "assets/brand-icon-11-bf6317d2.png",
+      "assets/brand-icon-12-8cc1c917.png",
+      "assets/logo-circular-text-ca074ef4.png",
+      "assets/circular-text-shape-start-99e74941.png",
+      "assets/circular-text-shape-end-ee1bc0b0.png",
+      "assets/icon-feature-1-a1b052bd.png",
+      "assets/gradient-bottom-half-border-bccfb7e4.png",
+      "assets/icon-feature-2-206cc26e.png",
+      "assets/gradient-top-half-border-fb4953b7.png",
+      "assets/icon-feature-3-bc43c45a.png",
+      "assets/icon-feature-4-c0f33405.png",
+      "assets/fb-img-1-ed3118d5.png",
+      "assets/fb-img-2-b47a57c0.png",
+      "assets/fb-img-3-c1e6db07.png",
+      "assets/fb-img-4-4eac440c.png",
+      "assets/fb-img-5-f276c8a7.png",
+      "assets/fb-card-blurr-shape-09340be5.png",
+      "assets/fb-img-6-6df636c3.png",
+      "assets/fb-img-7-e8c9abed.png",
+      "assets/fb-img-8-2450d15c.png",
+      "assets/fb-img-9-6b4d2c5d.png",
+      "assets/testimonial-section-shape-1-94d49289.png",
+      "assets/avatar-1-553d0834.png",
+      "assets/avatar-2-813879de.png",
+      "assets/avatar-3-2773cfe5.png",
+      "assets/avatar-4-ee347287.png",
+      "assets/avatar-5-9b4826eb.png",
+      "assets/avatar-6-1fa4246d.png",
+      "assets/cta-2-log-5f680039.png",
+      "assets/logo-light-8936f687.png",
+      "assets/login-facebook-5ed661f0.svg",
+      "assets/login-google-8ac9c8a6.svg",
+      "assets/login-shape-top-65eba71f.png",
+      "assets/login-shape-left-94135ba0.png",
+      "assets/login-shape-right-eb722658.png",
+      "assets/login-shape-line-left-7fa6b8a3.png",
+      "assets/login-shape-line-right-3a51f2be.png",
+      "assets/login-shape-circle-text-8a24b75f.png",
+      "assets/hero-7-logo-7b15c6d1.png",
+      "assets/pricing-line-top-2bd6705c.png",
+      "assets/pricing-line-bottom-b8167b35.png",
+      "assets/pricing-line-right-cebb1e0a.png",
+      "assets/pricing-faq-top-left-c3a8d67c.png",
+      "assets/pricing-faq-top-right-22234dd4.png",
+      "assets/pricing-faq-bottom-right-c383df6b.png",
+      "assets/cta-4-bg-44d44b6e.png"
+    ],
+    "css": [
+      "assets/app-2857829f.css"
+    ],
+    "file": "assets/app-685bba38.js",
+    "isEntry": true,
+    "src": "resources/js/app.js"
+  },
+  "resources/js/legacy/animatedt-title.js": {
+    "file": "assets/animatedt-title-1f255911.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/animatedt-title.js"
+  },
+  "resources/js/legacy/app.js": {
+    "file": "assets/app-f830d99f.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/app.js"
+  },
+  "resources/js/legacy/plugins.js": {
+    "file": "assets/plugins-d53c6ec7.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/plugins.js"
+  }
+}
