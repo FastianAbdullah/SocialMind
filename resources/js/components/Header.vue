@@ -1,4 +1,4 @@
-z<!-- Header.vue -->
+<!-- Header.vue -->
 <template>
     <header class="header header--4 header--fixed">
       <div class="container">

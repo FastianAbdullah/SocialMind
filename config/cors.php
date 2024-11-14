@@ -29,10 +29,7 @@ return [
 
     'max_age' => 0,
 
-    'allowed_origins' => [
-        'http://localhost:5173',
-        'https://socialmind.discountroof.co.uk'
-    ],
+    'allowed_origins' => ['http://localhost:5173','https://socialmind.discountroof.co.uk'],
 
     'supports_credentials' => false,
 
