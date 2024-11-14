@@ -2,25 +2,32 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 
-export default defineConfig(({ mode }) => {
-  const publicPath = mode === 'production'
-    ? 'https://socialmind.discountroof.co.uk'
-    : '/';
-
-  return {
-    plugins: [
+export default defineConfig({
+  plugins: [
       laravel({
-        input: [
-          'resources/js/app.js',
-          'resources/js/legacy/plugins.js',
-          'resources/js/legacy/app.js',
-          'resources/js/legacy/animatedt-title.js',
-        ],
-        refresh: true,
+          input: [
+            'resources/js/app.js',
+            'resources/js/legacy/plugins.js',
+            'resources/js/legacy/app.js',
+            'resources/js/legacy/animatedt-title.js',
+          ],
+          refresh: true,
       }),
-      vue(),
-    ],
-    
-    base: publicPath,
-};
+      vue({ 
+          template: {
+              transformAssetUrls: {
+                  base: null,
+                  includeAbsolute: false,
+              },
+          },
+      }),
+  ],
+  resolve: { 
+      alias: {
+          vue: 'vue/dist/vue.esm-bundler.js',
+      },
+  },
 });
+
+
+

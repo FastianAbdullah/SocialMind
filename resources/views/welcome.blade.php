@@ -19,10 +19,15 @@
   <link rel="stylesheet" href="/css/style.min.css">
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
-  @vite(['resources/js/app.js'])
 </head>
 <body class="bg-black body-clip">
   <div id="app"></div>
-  @vite(['resources/js/legacy/plugins.js','resources/js/legacy/app.js','resources/js/legacy/animatedt-title.js'])
+  @vite([
+    'resources/js/legacy/plugins.js',
+    'resources/js/legacy/app.js',
+    'resources/js/legacy/animatedt-title.js',
+    'resources/js/app.js'
+  ])
+
 </body>
 </html>
