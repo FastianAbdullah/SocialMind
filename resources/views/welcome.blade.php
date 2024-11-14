@@ -27,6 +27,8 @@
     'resources/js/legacy/app.js',
     'resources/js/legacy/animatedt-title.js',
     'resources/js/app.js'
+
+    
   ])
 
 </body>
