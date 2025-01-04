@@ -100,7 +100,7 @@ export default {
         this.$store.dispatch('login', token);
 
         // Redirect to home after login
-        this.$router.push('/');
+        this.$router.push('/dashboard');
       } catch (error) {
         if (error.response && error.response.data.errors) {
           const errorMessages = Object.values(error.response.data.errors).flat();
