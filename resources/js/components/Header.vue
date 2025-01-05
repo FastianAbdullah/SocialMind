@@ -53,9 +53,9 @@
         </div>
       </div>
     </header>
-  </template>
+</template>
   
-  <script>
+<script>
   import { mapState, mapActions } from 'vuex';
   
   export default {
@@ -74,5 +74,5 @@
       }
     },
   }
-  </script>
+</script>
   

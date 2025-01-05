@@ -182,3 +182,110 @@
     </div>
   </body>
 </template>
+
+<script>
+export default {
+  methods: {
+    loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const existingScript = document.querySelector(`script[src="${src}"]`);
+        if (existingScript) {
+          console.log(`${src} already loaded.`);
+          return resolve();
+        }
+
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.body.appendChild(script);
+      });
+    },
+    removeDynamicCss() {
+      return new Promise((resolve,reject) => {
+        try {
+
+          const links = document.querySelectorAll('link[data-dynamic="true"]');
+          links.forEach((link) => {
+            document.head.removeChild(link);
+          });
+          console.log(`${links.length} CSS file(s) removed.`);
+          resolve();
+
+      } catch (error) {
+          console.log('Error Occured While loading the Css file', error);
+          reject();
+        }
+      });
+    },
+    loadCss(href) {
+      return new Promise((resolve, reject) => {
+        // Check if the CSS file is already loaded
+        const existingLink = document.querySelector(`link[href="${href}"]`);
+        if (existingLink) {
+          console.log(`${href} already loaded.`);
+          return resolve();
+        }
+
+        // Create and load a new <link> element
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.dataset.dynamic = 'true'; // Mark as dynamically added for removal later
+
+        link.onload = () => {
+          console.log(`${href} loaded successfully.`);
+          resolve();
+        };
+
+        link.onerror = () => {
+          console.error(`Failed to load CSS: ${href}`);
+          reject(new Error(`Failed to load CSS: ${href}`));
+        };
+
+        document.head.appendChild(link);
+      });
+    },
+    async initializeCss() {
+      try {
+        // load Bottstrap.
+        await this.loadCss('http://[::1]:5173/resources/css/vendors/bootstrap.css');
+        console.log('bootstrap Css loaded successfully.');
+
+        await this.loadCss('http://[::1]:5173/resources/css/style.css');
+        console.log('Styles Css loaded successfully.');
+
+        await this.loadCss('http://[::1]:5173/resources/css/color-1.css');
+
+        await this.loadCss('http://[::1]:5173/resources/css/responsive.css');
+
+      } catch (error) {
+        console.log('Error Occured While Intializing Css files' , error);
+      }
+    },
+    async initializeScripts() {
+      try {
+        // Ensure jQuery is loaded
+        await this.loadScript('http://[::1]:5173/resources/js/legacy/jquery.min.js');
+        console.log('jQuery loaded successfully.');
+
+        // Load the sidebar-menu.js file
+        await this.loadScript('http://[::1]:5173/resources/js/legacy/sidebar-menu.js');
+        console.log('Sidebar menu script loaded successfully.');
+
+        console.log('Sidebar menu initialized.');
+      } catch (error) {
+        console.error('Error loading scripts:', error);
+      }
+    },
+  },
+  mounted() {
+    //remove already present css files.
+    this.removeDynamicCss();
+    // load css files of the component.
+    this.initializeCss();
+    // load javascript files of the component.
+    this.initializeScripts();
+  },
+};
+</script>

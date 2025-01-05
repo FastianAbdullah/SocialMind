@@ -12,13 +12,19 @@ export default defineConfig({
             'resources/js/legacy/animatedt-title.js',
             
             //Dashboard JS files.
+            // latest jquery
             'resources/js/legacy/jquery.min.js',
+            // Bootstrap js
             'resources/js/legacy/bootstrap/bootstrap.bundle.min.js',
+            // Feather Icon
             'resources/js/legacy/icons/feather-icon/feather.min.js',
             'resources/js/legacy/icons/feather-icon/feather-icon.js',
+            // ScrollBar Js
             'resources/js/legacy/scrollbar/simplebar.js',
             'resources/js/legacy/scrollbar/custom.js',
+            // Sidebar Jquery
             'resources/js/legacy/config.js',
+            // Plugins JS start
             'resources/js/legacy/sidebar-menu.js',
             'resources/js/legacy/sidebar-pin.js',
             'resources/js/legacy/slick/slick.min.js',
@@ -26,20 +32,11 @@ export default defineConfig({
             'resources/js/legacy/header-slick.js',
             'resources/js/legacy/chart/apex-chart/apex-chart.js',
             'resources/js/legacy/chart/apex-chart/stock-prices.js',
-            'resources/js/legacy/range-slider/rSlider.min.js',
-            'resources/js/legacy/rangeslider/rangeslider.js',
-            'resources/js/legacy/prism/prism.min.js',
-            'resources/js/legacy/clipboard/clipboard.min.js',
-            'resources/js/legacy/counter/jquery.waypoints.min.js',
-            'resources/js/legacy/counter/jquery.counterup.min.js',
-            'resources/js/legacy/counter/counter-custom.js',
-            'resources/js/legacy/custom-card/custom-card.js',
-            'resources/js/legacy/calendar/fullcalender.js',
-            'resources/js/legacy/calendar/custom-calendar.js',
-            'resources/js/legacy/dashboard/dashboard_2.js',
-            'resources/js/legacy/animation/wow/wow.min.js',
-            'resources/js/legacy/script.js',
-            'resources/js/legacy/theme-customizer/customizer.js'
+            'resources/js/chart/apex-chart/moment.min.js',
+            'resources/js/notify/bootstrap-notify.min.js',
+            // Theme Js.
+            'resources/js/script.js',
+
           ],
           refresh: true,
       }),

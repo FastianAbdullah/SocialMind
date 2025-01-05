@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Index from './components/Index.vue';
-import Login from './components/Login.vue';
-import Register from './components/Register.vue';
-import Pricing from './components/Pricing.vue';
-import Privacy from './components/Privacy.vue';
-import Terms from './components/Terms.vue';
-import Dashboard from './components/Dashboard.vue';
+import Index from './pages/Index.vue';
+import Login from './pages/Login.vue';
+import Register from './pages/Register.vue';
+import Pricing from './pages/Pricing.vue';
+import Privacy from './pages/Privacy.vue';
+import Terms from './pages/Terms.vue';
+import Dashboard from './pages/Dashboard.vue';
 // Import other components
 
 const routes = [
