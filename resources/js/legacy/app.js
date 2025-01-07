@@ -133,13 +133,13 @@ document.addEventListener("DOMContentLoaded", function () {
 	};
 	mdScreenSize.addEventListener("change", (e) => {
 		if (e.matches) {
-			window.location.reload();
+			// window.location.reload();
 			mdScreenSizeActive(e);
 		} else {
 			mdScreenSize.removeEventListener("change", (e) => {
 				mdScreenSizeActive(e);
 			});
-			window.location.reload();
+			// window.location.reload();
 		}
 	});
 	mdScreenSizeActive(mdScreenSize);

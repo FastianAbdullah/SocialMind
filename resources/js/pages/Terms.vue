@@ -104,20 +104,20 @@ import Footer from "../components/Footer.vue";
 import CustomCursor from "../components/CustomCursor.vue"
 import Header from "../components/Header.vue"
 import { ref, onMounted } from 'vue';
-import { useDynamicCss } from "../composables/useDynamicCss";
+import { useDynamicResources } from "../composables/useDynamicResources";
 
 // Data properties
 const cssFiles = [
-  'http://[::1]:5173/resources/css/fonts/ff-1.css',
-  'http://[::1]:5173/resources/css/fonts/ff-3.css',
-  'http://[::1]:5173/resources/css/fonts/bootstrap-icons.css',
-  'http://[::1]:5173/resources/css/plugins.min.css',
-  'http://[::1]:5173/resources/css/style.min.css'
+  'resources/css/fonts/ff-1.css',
+  'resources/css/fonts/ff-3.css',
+  'resources/css/fonts/bootstrap-icons.css',
+  'resources/css/plugins.min.css',
+  'resources/css/style.min.css'
 ];
 
 const isLoading = ref(true)
 
-const {removeDynamicCss, initializeCss } = useDynamicCss(isLoading,cssFiles);
+const { initializeCss } = useDynamicResources(isLoading,cssFiles);
 
 
 onMounted(async () => {

@@ -10,7 +10,6 @@ export default defineConfig({
             'resources/js/legacy/plugins.js',
             'resources/js/legacy/app.js',
             'resources/js/legacy/animatedt-title.js',
-            
             //Dashboard JS files.
             // latest jquery
             'resources/js/legacy/jquery.min.js',
