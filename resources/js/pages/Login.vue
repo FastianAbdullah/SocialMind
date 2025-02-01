@@ -79,8 +79,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'; // Import composition API functions
-import { useRouter } from 'vue-router'; // For navigation
+import { ref, reactive, onMounted } from 'vue'; 
+import { useRouter } from 'vue-router'; 
 import { useStore } from 'vuex'; // For Vuex store
 import axios from 'axios';
 import Loader from '../components/Loader.vue';
@@ -145,7 +145,6 @@ const togglePassword = () => {
 };
 
 onMounted(async () => {
-  // await removeDynamicCss();
   await initializeCss();
 });
 </script>

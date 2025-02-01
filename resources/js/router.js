@@ -9,19 +9,34 @@ import Dashboard from './pages/Dashboard.vue';
 // Import other components
 
 const routes = [
-  { path: '/', component: Index },
-  { path: '/login', component: Login },
-  { path: '/register', component: Register },
-  { path: '/pricing', component: Pricing },
-  { path: '/privacy', component: Privacy },
-  { path: '/terms', component: Terms },
-  { path:'/dashboard', component: Dashboard}
+  { path: '/', component: Index, meta: { requiresAuth: false } },
+  { path: '/login', component: Login, meta: { requiresAuth: false }},
+  { path: '/register', component: Register, meta: { requiresAuth: false } },
+  { path: '/pricing', component: Pricing, meta: { requiresAuth: false } },
+  { path: '/privacy', component: Privacy, meta: { requiresAuth: false } },
+  { path: '/terms', component: Terms, meta: { requiresAuth: false }},
+  { path:'/dashboard', component: Dashboard, meta: { requiresAuth: true }}
   // Define other routes
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+// Navigation guard
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = !!localStorage.getItem('token');
+  
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    // Redirect to login if trying to access protected route without auth
+    next('/login');
+  } else if (to.path === '/login' && isAuthenticated) {
+    // Redirect to dashboard if already authenticated
+    next('/dashboard');
+  } else {
+    next();
+  }
 });
 
 export default router;
