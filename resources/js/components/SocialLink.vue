@@ -192,12 +192,33 @@
                       </div>
                       <div class="col-md-6">
                         <button 
-                          class="w-100 btn"
-                          :class="connected.instagram ? 'btn-light' : 'btn-danger'"
+                          class="w-100 btn position-relative"
+                          :class="{
+                            'btn-light': connected.instagram,
+                            'btn-danger': !connected.instagram,
+                            'disabled': socialMediaStore.instagram.connecting || connected.instagram
+                          }"
                           @click="handleConnect('instagram')"
+                          :disabled="connected.instagram"
                         >
-                          <i class="fab fa-instagram me-2"></i>
-                          {{ connected.instagram ? 'Instagram Connected' : 'Connect Instagram' }}
+                          <div class="d-flex align-items-center justify-content-center">
+                            <i class="fab fa-instagram me-2"></i>
+                            <span v-if="!socialMediaStore.instagram.connecting">
+                              {{ connected.instagram ? 'Instagram Connected' : 'Connect Instagram' }}
+                            </span>
+                            <span v-else>
+                              <i class="fas fa-spinner fa-spin me-2"></i>
+                              Connecting...
+                            </span>
+                          </div>
+                          
+                          <div v-if="connected.instagram" 
+                               class="position-absolute top-0 end-0 p-2">
+                            <i class="fas fa-times-circle text-danger cursor-pointer" 
+                               @click.stop="disconnectInstagramAccount"
+                               title="Disconnect Instagram">
+                            </i>
+                          </div>
                         </button>
                       </div>
                       <div class="col-md-6">
@@ -271,11 +292,17 @@ import {
     disconnectFacebook 
 } from '../services/facebookService';
 import axios from 'axios';
+import { 
+    getAuthUrl as getInstagramAuthUrl,
+    disconnectInstagram,
+    checkConnection as checkInstagramConnection
+} from '../services/instagramService';
 
 const socialMediaStore = useSocialMediaStore();
 const isLoading = ref(true);
 const error = ref(null);
 
+// Update the connected computed property
 const connected = computed(() => ({
     facebook: socialMediaStore.facebook.connected,
     instagram: socialMediaStore.instagram.connected,
@@ -339,6 +366,62 @@ const connectFacebook = async () => {
     }
 };
 
+const connectInstagram = async () => {
+    error.value = null;
+    
+    try {
+        console.log('Initiating Instagram connection...');
+        
+        socialMediaStore.$patch({
+            instagram: {
+                ...socialMediaStore.instagram,
+                connecting: true
+            }
+        });
+
+        const authUrl = await getInstagramAuthUrl();
+        
+        // Log before redirect
+        console.log('Redirecting to:', authUrl);
+        
+        // Use notification for user feedback
+        if (window.$) {
+            window.$.notify({
+                title: 'Instagram',
+                message: 'Connecting to Instagram...'
+            }, {
+                type: 'info'
+            });
+        }
+
+        // Use a small delay to ensure logs and notification are visible
+        setTimeout(() => {
+            window.location.href = authUrl;
+        }, 100);
+
+    } catch (err) {
+        console.error('Instagram connection error:', err);
+        error.value = err.message;
+        
+        socialMediaStore.$patch({
+            instagram: {
+                ...socialMediaStore.instagram,
+                connecting: false
+            }
+        });
+
+        // Show error notification
+        if (window.$) {
+            window.$.notify({
+                title: 'Error',
+                message: `Failed to connect to Instagram: ${err.message}`
+            }, {
+                type: 'danger'
+            });
+        }
+    }
+};
+
 // Handle OAuth callback
 const handleOAuthCallback = async () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -382,6 +465,16 @@ const disconnectFacebookAccount = async () => {
     }
 };
 
+const disconnectInstagramAccount = async () => {
+    try {
+        await disconnectInstagram();
+        socialMediaStore.clearInstagramConnection();
+    } catch (err) {
+        console.error('Instagram disconnect error:', err);
+        error.value = err.message;
+    }
+};
+
 const checkFacebookConnection = async () => {
     try {
         const response = await axios.get('/facebook/check-connection');
@@ -413,13 +506,26 @@ const connectedCount = computed(() =>
   Object.values(connected.value).filter(Boolean).length
 );
 
+// Add or update the handleConnect method
 const handleConnect = async (platform) => {
-  try {
-    // TODO: Implement actual OAuth flow
-    connected.value[platform] = true;
-  } catch (error) {
-    console.error(`Failed to connect ${platform}:`, error);
-  }
+    try {
+        switch (platform) {
+            case 'instagram':
+                if (!connected.value.instagram) {
+                    await connectInstagram();
+                }
+                break;
+            case 'facebook':
+                if (!connected.value.facebook) {
+                    await connectFacebook();
+                }
+                break;
+            // ... other platforms
+        }
+    } catch (err) {
+        console.error(`${platform} connection error:`, err);
+        error.value = err.message;
+    }
 };
 
 const statusMessage = ref(null);
@@ -514,6 +620,12 @@ onMounted(async () => {
             // Clear URL parameters
             window.history.replaceState({}, document.title, window.location.pathname);
         }
+        
+        // Check both Facebook and Instagram connections
+        await Promise.all([
+            checkFacebookConnection(),
+            checkInstagramConnection()
+        ]);
         
     } catch (err) {
         console.error('Initialization error:', err);

@@ -26,23 +26,25 @@ const routes = [
       message: route.query.message
     })
   },
-  // Updated Facebook callback route to work with Laravel
+  // Updated OAuth callback route to handle both platforms
   {
     path: '/oauth/callback',
     beforeEnter: (to, from, next) => {
-      const code = to.query.code;
-      if (code) {
-        // Redirect to Laravel backend with the code
-        window.location.href = `/facebook/callback?code=${code}`;
-      } else {
-        next({
-          path: '/social-links',
-          query: { 
-            status: 'error',
-            message: 'Authentication failed: No code provided'
-          }
-        });
-      }
+        const code = to.query.code;
+        const state = to.query.state; // Get the platform from state parameter
+        
+        if (code) {
+            // Redirect to Laravel backend with the code and platform
+            window.location.href = `/${state}/callback?code=${code}`;
+        } else {
+            next({
+                path: '/social-links',
+                query: { 
+                    status: 'error',
+                    message: 'Authentication failed: No code provided'
+                }
+            });
+        }
     }
   }
 ];

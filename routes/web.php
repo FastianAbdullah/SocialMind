@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FacebookController;
+use App\Http\Controllers\InstagramController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
@@ -34,6 +35,14 @@ Route::prefix('facebook')->middleware('auth:sanctum')->group(function () {
     Route::post('/disconnect', [FacebookController::class, 'disconnect']);
     Route::get('/pages', [FacebookController::class, 'getPages']);
     Route::get('/check-connection', [FacebookController::class, 'checkConnection']);
+});
+
+// Instagram Routes
+Route::prefix('instagram')->middleware('auth:sanctum')->group(function () {
+    Route::get('/auth', [InstagramController::class, 'generateAuthUrl']);
+    Route::get('/callback', [InstagramController::class, 'handleCallback'])->name('instagram.callback');
+    Route::post('/disconnect', [InstagramController::class, 'disconnect']);
+    Route::get('/check-connection', [InstagramController::class, 'checkConnection']);
 });
 
 // User Route

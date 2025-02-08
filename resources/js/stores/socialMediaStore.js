@@ -10,12 +10,26 @@ export const useSocialMediaStore = defineStore('socialMedia', {
         },
         instagram: {
             connected: false,
-            accessToken: null,
-            platformId: null
+            connecting: false,
+            platformId: null,
+            accounts: []
         }
     }),
 
     actions: {
+        initializeFromStorage() {
+            try {
+                const stored = localStorage.getItem('socialMediaState');
+                if (stored) {
+                    const parsedState = JSON.parse(stored);
+                    // Update store with saved state
+                    this.$patch(parsedState);
+                }
+            } catch (error) {
+                console.error('Failed to initialize from storage:', error);
+            }
+        },
+
         setFacebookConnection(data) {
             this.facebook = {
                 connected: true,
@@ -23,8 +37,16 @@ export const useSocialMediaStore = defineStore('socialMedia', {
                 platformId: data.platform_id,
                 pages: data.pages || []
             };
+            this.persistToStorage();
+        },
 
-            // Persist to localStorage
+        setInstagramConnection(data) {
+            this.instagram = {
+                connected: true,
+                connecting: false,
+                platformId: data.platform_id,
+                accounts: data.accounts || []
+            };
             this.persistToStorage();
         },
 
@@ -38,24 +60,25 @@ export const useSocialMediaStore = defineStore('socialMedia', {
             this.persistToStorage();
         },
 
-        initializeFromStorage() {
-            const stored = localStorage.getItem('socialMediaState');
-            if (stored) {
-                this.$patch(JSON.parse(stored));
-            }
+        clearInstagramConnection() {
+            this.instagram = {
+                connected: false,
+                connecting: false,
+                platformId: null,
+                accounts: []
+            };
+            this.persistToStorage();
         },
 
         persistToStorage() {
-            localStorage.setItem('socialMediaState', JSON.stringify({
-                facebook: this.facebook
-                // ... other platforms
-            }));
-        }
-    },
-
-    getters: {
-        isConnected: (state) => (platform) => {
-            return state[platform]?.connected || false;
+            try {
+                localStorage.setItem('socialMediaState', JSON.stringify({
+                    facebook: this.facebook,
+                    instagram: this.instagram
+                }));
+            } catch (error) {
+                console.error('Failed to persist to storage:', error);
+            }
         }
     }
 });
