@@ -26,7 +26,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign(columns: 'platform_id')->references('id')->on('platform');
+            $table->foreign('platform_id')->references('id')->on('platform');
         });
     }
 
