@@ -6,6 +6,7 @@ import Pricing from './pages/Pricing.vue';
 import Privacy from './pages/Privacy.vue';
 import Terms from './pages/Terms.vue';
 import Dashboard from './pages/Dashboard.vue';
+import CreatePost from './components/CreatePost.vue';
 // Import other components
 
 const routes = [
@@ -15,7 +16,8 @@ const routes = [
   { path: '/pricing', component: Pricing, meta: { requiresAuth: false } },
   { path: '/privacy', component: Privacy, meta: { requiresAuth: false } },
   { path: '/terms', component: Terms, meta: { requiresAuth: false }},
-  { path:'/dashboard', component: Dashboard, meta: { requiresAuth: true }}
+  { path:'/dashboard', component: Dashboard, meta: { requiresAuth: true }},
+  { path:'/create-post', component: CreatePost, meta: { requiresAuth: true }},
   // Define other routes
 ];
 

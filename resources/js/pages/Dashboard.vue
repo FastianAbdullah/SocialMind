@@ -7,7 +7,7 @@
       <!-- page-wrapper Start-->
       <div class="page-wrapper compact-wrapper" id="pageWrapper">
         <!-- Page Header Start-->
-        <div class="page-header">
+        <div class="page-header" style=" margin-left: 220px; width: calc(100% - 220px);">
           <div class="header-wrapper row m-0">
             <form class="form-inline search-full col" action="#" method="get">
               <div class="form-group w-100">
@@ -62,57 +62,15 @@
             </div>
           </div>
         </div>
-        <!-- Page Header Ends                              -->
+        <!-- Page Header Ends-->
+
         <!-- Page Body Start-->
         <div class="page-body-wrapper">
           <!-- Page Sidebar Start-->
-          <div class="sidebar-wrapper" data-layout="stroke-svg">
-            <div class="logo-wrapper"><a href="index.html"><img class="img-fluid" src="../../../public/assets/images/logo/logo.png" alt=""></a>
-              <div class="back-btn"><i class="fa fa-angle-left"> </i></div>
-              <div class="toggle-sidebar"><i class="status_toggle middle sidebar-toggle" data-feather="grid"> </i></div>
-            </div>
-            <div class="logo-icon-wrapper"><a href="index.html"><img class="img-fluid" src="../../../public/assets/images/logo/logo-icon.png" alt=""></a></div>
-            <nav class="sidebar-main">
-              <div class="left-arrow" id="left-arrow"><i data-feather="arrow-left"></i></div>
-              <div id="sidebar-menu">
-                <ul class="sidebar-links" id="simple-bar">
-                  <li class="back-btn"><a href="index.html"><img class="img-fluid" src="../../../public/assets/images/logo/logo-icon.png" alt=""></a>
-                    <div class="mobile-back text-end"> <span>Back </span><i class="fa fa-angle-right ps-2" aria-hidden="true"></i></div>
-                  </li>
-                  <li class="sidebar-main-title">
-                    <div>
-                      <h6 class="lan-1">General</h6>
-                    </div>
-                  </li>
-                  <li class="sidebar-list"><i class="fa fa-thumb-tack"></i><a class="sidebar-link sidebar-title link-nav" href="file-manager.html">
-                      <svg class="stroke-icon">
-                        <use href="../../../public/assets/svg/icon-sprite.svg#stroke-file"></use>
-                      </svg>
-                      <svg class="fill-icon">
-                        <use href="../../../public/assets/svg/icon-sprite.svg#fill-file"></use>
-                      </svg><span>File manager</span></a>
-                  </li>
-                  <li class="sidebar-list"><i class="fa fa-thumb-tack"></i><a class="sidebar-link sidebar-title link-nav" href="kanban.html">
-                      <svg class="stroke-icon">
-                        <use href="../../../public/assets/svg/icon-sprite.svg#stroke-board"></use>
-                      </svg>
-                      <svg class="fill-icon">
-                        <use href="../../../public/assets/svg/icon-sprite.svg#fill-board"></use>
-                      </svg><span>kanban Board</span></a></li>
-                  <li class="sidebar-list"><i class="fa fa-thumb-tack"></i><a class="sidebar-link sidebar-title link-nav" href="calendar-basic.html">
-                      <svg class="stroke-icon">
-                        <use href="../../../public/assets/svg/icon-sprite.svg#stroke-calendar"></use>
-                      </svg>
-                      <svg class="fill-icon">
-                        <use href="../../../public/assets/svg/icon-sprite.svg#fill-calender"></use>
-                      </svg><span>Calendar</span></a></li>
-                </ul>
-                <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>
-              </div>
-            </nav>
-          </div>
+          <DashboardSidebar />
           <!-- Page Sidebar Ends-->
-          <div class="page-body"> 
+          
+          <div class="page-body" style=" margin-left: 220px; width: calc(100% - 220px);"> 
             <div class="container-fluid">            
               <div class="page-title"> 
                 <div class="row">
@@ -153,7 +111,7 @@
             <!-- Container-fluid Ends -->
           </div>
           <!-- footer start-->
-          <footer class="footer">
+          <footer class="footer" style=" margin-left: 220px; width: calc(100% - 220px);">
             <div class="container-fluid">
               <div class="row">
                 <div class="col-md-12 footer-copyright text-center">
@@ -170,6 +128,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import Loader from '../components/Loader.vue';
+import DashboardSidebar from '../components/DashboardSidebar.vue';
 import { useDynamicResources } from '../composables/useDynamicResources';
 
 const isLoading = ref(true);
@@ -211,3 +170,20 @@ onMounted(async () => {
  await initializeScripts();
 });
 </script>
+
+<style scoped>
+.page-header {
+ margin-left: 220px;
+ width: calc(100% - 220px);
+}
+
+.page-body {
+ margin-left: 220px;
+ width: calc(100% - 220px); 
+}
+
+.footer {
+ margin-left: 220px;
+ width: calc(100% - 220px);
+}
+</style>

@@ -127,10 +127,11 @@ const login = async () => {
 
     // Redirect to dashboard after login
     router.push('/dashboard');
-  } catch (error) {
-    if (error.response && error.response.data.errors) {
+  } catch (err) {
+    if (err.response && err.response.data.errors) {
       // Flatten nested error messages array and join them
-      const errorMessages = Object.values(error.response.data.errors).flat();
+      const errorMessages = Object.values(err.response.data.errors).flat();
+      console.log(errorMessages);
       error.value = errorMessages.join(' ');
     } else {
       error.value = 'An unexpected error occurred. Please try again.';
