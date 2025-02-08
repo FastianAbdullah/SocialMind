@@ -28,6 +28,18 @@
                   </svg><span>Dashboard</span>
                 </router-link>
               </li>
+              <li class="sidebar-list">
+                    <i class="fa fa-thumb-tack"></i>
+                    <router-link class="sidebar-link sidebar-title link-nav" to="/social-links">
+                      <svg class="stroke-icon">
+                        <use href="../../../public/assets/svg/icon-sprite.svg#stroke-user"></use>
+                      </svg>
+                      <svg class="fill-icon">
+                        <use href="../../../public/assets/svg/icon-sprite.svg#fill-user"></use>
+                      </svg>
+                      <span>Social Links</span>
+                    </router-link>
+              </li>
               <li class="sidebar-list"><i class="fa fa-thumb-tack"></i>
                 <router-link class="sidebar-link sidebar-title link-nav" to="/create-post">
                   <svg class="stroke-icon">
