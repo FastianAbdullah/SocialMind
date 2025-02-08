@@ -9,6 +9,8 @@ class UserPlatform extends Model
 {
     use HasFactory;
 
+    public $table = 'user_platform';
+
     protected $fillable = [
         'user_id',
         'platform_id',
@@ -16,7 +18,6 @@ class UserPlatform extends Model
         'connected_at'
     ];
 
-    // cast the connected_at to a datetime
     protected $casts = [
         'connected_at' => 'datetime'
     ];
@@ -35,5 +36,4 @@ class UserPlatform extends Model
     {
         return $this->hasMany(UserPlatformPermission::class);
     }
-    
 }

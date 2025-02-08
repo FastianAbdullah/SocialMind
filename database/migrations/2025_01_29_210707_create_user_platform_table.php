@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('platform_id');
             $table->unique(['user_id', 'platform_id']); // Ensure unique combination of user_id and platform_id
-            $table->string('access_token');
+            $table->text('access_token'); // Changed from string to text
             $table->dateTime('connected_at');
             $table->dateTime('expires_at')->nullable();
             $table->timestamps();

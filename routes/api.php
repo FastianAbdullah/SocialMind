@@ -2,6 +2,15 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FacebookController;
+use App\Http\Controllers\AuthController;
+
+// Handle CORS preflight requests
+Route::options('{any}', function() {
+    return response('', 200)
+        ->header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+})->where('any', '.*');
 
 /*
 |--------------------------------------------------------------------------
@@ -14,13 +23,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Authentication Routes - Remove auth:sanctum middleware from these routes
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    
-    return $request->user();
-});
 
-// Keep your API routes above this catch-all route
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');

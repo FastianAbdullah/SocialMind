@@ -9,6 +9,8 @@ class Platform extends Model
 {
     use HasFactory;
 
+    public $table = 'platform';
+
     protected $fillable = [
         'name'
     ];

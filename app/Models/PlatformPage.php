@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PlatformPage extends Model
 {
     protected $fillable = [
-        'user_platform_id',
+        'user_platform_id', 
         'page_id',
         'name',
         'type',
