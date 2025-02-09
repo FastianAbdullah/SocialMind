@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FacebookController;
 use App\Http\Controllers\LinkedinController;
+use App\Http\Controllers\InstagramController;
 use Illuminate\Http\Request;
 
 /*
@@ -39,6 +40,14 @@ Route::prefix('linkedin')->middleware('auth:sanctum')->group(function() {
     Route::get('/callback', [LinkedinController::class, 'handleCallback'])->name('linkedin.callback');
     Route::post('/disconnect', [LinkedinController::class, 'disconnect']);
     Route::get('/check-connection', [LinkedinController::class, 'checkConnection']);
+});
+
+// Instagram Routes
+Route::prefix('instagram')->middleware('auth:sanctum')->group(function () {
+    Route::get('/auth', [InstagramController::class, 'generateAuthUrl']);
+    Route::get('/callback', [InstagramController::class, 'handleCallback'])->name('instagram.callback');
+    Route::post('/disconnect', [InstagramController::class, 'disconnect']);
+    Route::get('/check-connection', [InstagramController::class, 'checkConnection']);
 });
 
 // User Route
