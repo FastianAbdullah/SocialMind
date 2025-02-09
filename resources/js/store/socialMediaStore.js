@@ -11,8 +11,8 @@ export const useSocialMediaStore = defineStore('socialMedia', {
         instagram: {
             connected: false,
             connecting: false,
-            accessToken: null,
-            platformId: null
+            platformId: null,
+            accounts: []
         },
         linkedin: {
             connected: false,
@@ -35,7 +35,8 @@ export const useSocialMediaStore = defineStore('socialMedia', {
         persistToStorage() {
             localStorage.setItem('socialMediaState', JSON.stringify({
                 facebook: this.facebook,
-                linkedin: this.linkedin
+                linkedin: this.linkedin,
+                instagram: this.instagram
                 // ... other platforms
             }));
         },
@@ -63,6 +64,24 @@ export const useSocialMediaStore = defineStore('socialMedia', {
             };
             this.persistToStorage();
         },
+        setInstagramConnection(data) {
+            this.instagram = {
+                connected: true,
+                connecting: false,
+                platformId: data.platform_id,
+                accounts: data.accounts || []
+            };
+            this.persistToStorage();
+        },
+        clearInstagramConnection() {
+            this.instagram = {
+                connected: false,
+                connecting: false,
+                platformId: null,
+                accounts: []
+            };
+            this.persistToStorage();
+        },
 
         // Clear the Facebook Connection.
         clearFacebookConnection() {
@@ -86,7 +105,7 @@ export const useSocialMediaStore = defineStore('socialMedia', {
             this.persistToStorage();
         },
 
-        // Clear the Social Media Store.
+        // Clear the Social Media Store on Logout.
         clearSocialMediaStore() {
             this.facebook = {
                 connected: false,
@@ -99,6 +118,12 @@ export const useSocialMediaStore = defineStore('socialMedia', {
                 connecting: false,
                 platformId: null,
                 userPlatformId: null
+            };
+            this.instagram = {
+                connected: false,
+                connecting: false,
+                platformId: null,
+                accounts: []
             };
             this.persistToStorage();
         }

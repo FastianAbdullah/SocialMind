@@ -45,12 +45,12 @@ class InstagramController extends Controller
        
         try {
             if (!$request->has('token')) {
-                return redirect()->to('/social-links?status=error&message=No access token provided');
+                return redirect()->to('/dashboard?status=error&message=No access token provided');
             }
 
             DB::beginTransaction();
             
-            $platform = Platform::firstOrCreate(['name' => 'instagram']);
+            $platform = Platform::where('name', 'instagram')->first();
 
             $userPlatform = UserPlatform::updateOrCreate(
                 [
@@ -98,7 +98,7 @@ class InstagramController extends Controller
 
             DB::commit();
 
-            return redirect()->to('/social-links?status=success&message=Instagram account connected successfully&platform=instagram');
+            return redirect()->to('/dashboard?status=success&message=Instagram account connected successfully&platform=instagram');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -107,7 +107,7 @@ class InstagramController extends Controller
                 'user_id' => Auth::id()
             ]);
 
-            return redirect()->to('/social-links?status=error&message=' . urlencode($e->getMessage()));
+            return redirect()->to('/dashboard?status=error&message=' . urlencode($e->getMessage()));
         }
     }
 
