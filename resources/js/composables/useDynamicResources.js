@@ -25,7 +25,8 @@ export function useDynamicResources(isLoading,initialCssFiles = [],initialJsFile
       const existingLink = document.querySelector(`link[href="${href}"]`)
       if (existingLink) {
         console.log(`${href} already loaded.`)
-        return resolve()
+        resolve()
+        return
       }
 
       const link = document.createElement('link')
@@ -33,12 +34,19 @@ export function useDynamicResources(isLoading,initialCssFiles = [],initialJsFile
       link.href = href
       link.dataset.dynamic = 'true'
 
+      // Add timeout for error handling
+      const timeout = setTimeout(() => {
+        reject(new Error(`Timeout loading CSS: ${href}`))
+      }, 5000)
+
       link.onload = () => {
+        clearTimeout(timeout)
         console.log(`${href} loaded successfully.`)
         resolve()
       }
 
       link.onerror = () => {
+        clearTimeout(timeout)
         console.error(`Failed to load CSS: ${href}`)
         reject(new Error(`Failed to load CSS: ${href}`))
       }
@@ -48,13 +56,13 @@ export function useDynamicResources(isLoading,initialCssFiles = [],initialJsFile
   }
 
   const initializeCss = async () => {
-    const baseUrl = 'http://[::1]:5173';
+    isLoading.value = true
+    const baseUrl = 'http://[::1]:5173'
     try {
-      for (const file of cssFiles.value) {
-        await loadCss(`${baseUrl}/${file}`)
-      }
+      const loadPromises = cssFiles.value.map(file => loadCss(`${baseUrl}/${file}`))
+      await Promise.all(loadPromises)
     } catch (error) {
-      console.log('Error Occurred While Initializing CSS files', error)
+      console.error('Error Occurred While Initializing CSS files', error)
     } finally {
       isLoading.value = false
     }

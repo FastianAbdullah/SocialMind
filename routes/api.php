@@ -11,7 +11,6 @@ Route::options('{any}', function() {
         ->header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
         ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 })->where('any', '.*');
-
 /*
 |--------------------------------------------------------------------------
 | API Routes

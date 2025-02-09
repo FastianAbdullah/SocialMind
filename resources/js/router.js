@@ -7,7 +7,6 @@ import Privacy from './pages/Privacy.vue';
 import Terms from './pages/Terms.vue';
 import Dashboard from './pages/Dashboard.vue';
 import CreatePost from './components/CreatePost.vue';
-import SocialLink from './components/SocialLink.vue';
 
 const routes = [
   { path: '/', component: Index, meta: { requiresAuth: false } },
@@ -17,36 +16,7 @@ const routes = [
   { path: '/privacy', component: Privacy, meta: { requiresAuth: false } },
   { path: '/terms', component: Terms, meta: { requiresAuth: false }},
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true }},
-  { path:'/create-post', component: CreatePost, meta: { requiresAuth: true }},,
-  {
-    path: '/social-links',
-    component: SocialLink,
-    meta: { requiresAuth: true },
-    props: route => ({
-      token: route.query.token,
-      status: route.query.status,
-      message: route.query.message
-    })
-  },
-  // Updated Facebook callback route to work with Laravel
-  {
-    path: '/oauth/callback',
-    beforeEnter: (to, from, next) => {
-      const code = to.query.code;
-      if (code) {
-        // Redirect to Laravel backend with the code
-        window.location.href = `/facebook/callback?code=${code}`;
-      } else {
-        next({
-          path: '/social-links',
-          query: { 
-            status: 'error',
-            message: 'Authentication failed: No code provided'
-          }
-        });
-      }
-    }
-  }
+  { path:'/create-post', component: CreatePost, meta: { requiresAuth: true }}
 ];
 
 const router = createRouter({

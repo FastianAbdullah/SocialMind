@@ -1,9 +1,12 @@
 <template>
+  <Loader v-show="isLoading"></Loader>
+  <div v-show="!isLoading">
       <!-- tap on top starts-->
       <div class="tap-top"><i data-feather="chevrons-up"></i></div>
       <!-- tap on tap ends-->
       <!-- page-wrapper Start-->
       <div class="page-wrapper compact-wrapper" id="pageWrapper">
+
         <!-- Page Header Start-->
         <!-- Page Header Ends-->
 
@@ -13,7 +16,7 @@
           <DashboardSidebar />
           <!-- Page Sidebar Ends-->
           
-          <div class="page-body" style="margin-left: 220px; width: calc(100% - 220px); min-height: 100vh;"> 
+          <div class="page-body" style="margin-left: 220px; width: calc(100% - 220px); min-height: 100vh; margin-top: 0;"> 
             <div class="container-fluid">            
               <div class="page-title"> 
                 <div class="row">
@@ -100,10 +103,13 @@
 
         </div>
       </div>
+  </div>
 </template>
 
+
+
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import Loader from '../components/Loader.vue';
 import DashboardSidebar from '../components/DashboardSidebar.vue';
 import { useDynamicResources } from '../composables/useDynamicResources';
@@ -138,7 +144,7 @@ const JsFiles = [
   'resources/js/legacy/script.js'
 ]
 
-const {removeDynamicCss, initializeCss, removeDynamicJs,initializeScripts } = useDynamicResources(isLoading,cssFiles,JsFiles);
+const { initializeCss, initializeScripts, removeDynamicCss, removeDynamicJs } = useDynamicResources(isLoading, cssFiles, JsFiles);
 
 const postDescription = ref('');
 const variants = ref(1);
@@ -166,11 +172,21 @@ const surpriseMe = () => {
 };
 
 onMounted(async () => {
- await removeDynamicCss();
- await removeDynamicJs();
- await initializeCss();
- await initializeScripts();
+  // Remove existing resources before initializing new ones
+  await removeDynamicCss();
+  await removeDynamicJs();
+  
+  // Initialize new resources
+  await initializeCss();
+  await initializeScripts();
 });
+
+// Cleanup when component is destroyed
+onBeforeUnmount(async () => {
+  await removeDynamicCss();
+  await removeDynamicJs();
+});
+
 </script>
 
 <style scoped>

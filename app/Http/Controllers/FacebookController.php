@@ -39,17 +39,19 @@ class FacebookController extends Controller
         }
     }
 
+    //Handle The Callback by Flask Backend.
     public function handleCallback(Request $request)
     {
         try {
+            // dd($request->all());
             if (!$request->has('token')) {
-                return redirect()->to('/social-links?status=error&message=No access token provided');
+                return redirect()->to('/dashboard?status=error&message=No access token provided');
             }
     
             DB::beginTransaction();
             
             // Get or create Facebook platform
-            $platform = Platform::firstOrCreate(['name' => 'facebook']);
+            $platform = Platform::where('name', 'facebook')->first();
     
             // Store user platform connection
             $userPlatform = UserPlatform::updateOrCreate(
@@ -101,7 +103,7 @@ class FacebookController extends Controller
             DB::commit();
     
             // Redirect to social links page with success message
-            return redirect()->to('/social-links?status=success&message=Facebook account connected successfully&platform=facebook');
+            return redirect()->to('/dashboard?status=success&message=Facebook account connected successfully&platform=facebook');
     
         } catch (\Exception $e) {
             DB::rollBack();
@@ -110,7 +112,7 @@ class FacebookController extends Controller
                 'user_id' => Auth::id()
             ]);
     
-            return redirect()->to('/social-links?status=error&message=' . urlencode($e->getMessage()));
+            return redirect()->to('/dashboard?status=error&message=' . urlencode($e->getMessage()));
         }
     }
     public function disconnect()

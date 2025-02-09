@@ -3,11 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FacebookController;
+use App\Http\Controllers\LinkedinController;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Platform;
-use App\Models\UserPlatform;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,7 +33,16 @@ Route::prefix('facebook')->middleware('auth:sanctum')->group(function () {
     Route::get('/check-connection', [FacebookController::class, 'checkConnection']);
 });
 
+// LinkedIn Routes
+Route::prefix('linkedin')->middleware('auth:sanctum')->group(function() {
+    Route::get('/auth', [LinkedinController::class, 'generateAuthUrl']);
+    Route::get('/callback', [LinkedinController::class, 'handleCallback'])->name('linkedin.callback');
+    Route::post('/disconnect', [LinkedinController::class, 'disconnect']);
+    Route::get('/check-connection', [LinkedinController::class, 'checkConnection']);
+});
+
 // User Route
+// Return the user object by calling the api/user endpoint
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });

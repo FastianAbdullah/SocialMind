@@ -39,12 +39,12 @@
                     </RouterLink>
                   </li>
                   <li class="menu-list" v-else>
-                    <a href="#" @click.prevent="handleLogout" class="link d-inline-flex align-items-center gap-2 py-2 px-3 rounded-1 bg-grad-6 clr-white fw-bold fs-14">
+                    <router-link to="/login" @click.prevent="handleLogout" class="link d-inline-flex align-items-center gap-2 py-2 px-3 rounded-1 bg-grad-6 clr-white fw-bold fs-14">
                       <span class="d-inline-block ff-3">Log Out</span>
                       <span class="d-inline-block fs-12">
                         <i class="bi bi-box-arrow-right"></i>
                       </span>
-                    </a>
+                    </router-link>
                   </li>
                 </ul>
               </div>
