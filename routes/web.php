@@ -6,6 +6,7 @@ use App\Http\Controllers\FacebookController;
 use App\Http\Controllers\LinkedinController;
 use App\Http\Controllers\InstagramController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\PostManagerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +55,12 @@ Route::prefix('instagram')->middleware('auth:sanctum')->group(function () {
 // Return the user object by calling the api/user endpoint
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+// Post management routes
+Route::middleware(['auth'])->group(function () {
+    Route::post('/posts/create', [PostManagerController::class, 'create']);
+    Route::post('/posts/save', [PostManagerController::class, 'save']);
 });
 
 // Catch-all route for Vue frontend

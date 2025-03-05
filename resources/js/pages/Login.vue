@@ -44,9 +44,12 @@
                   </div>
                   <a href="#" class="link clr-neutral-80 fs-12 :clr-primary-key">Forgot Password ?</a>
                 </div>
-                <button type="submit" class="link d-inline-flex justify-content-center align-items-center gap-2 py-4 px-6 border border-primary-key bg-primary-key rounded-1 fw-bold clr-white border-0 w-100 mt-8 :arrow-btn">
-                  <span>Login Now</span>
-                  <i class="bi bi-arrow-right"></i>
+                <button type="submit" class="link d-inline-flex justify-content-center align-items-center gap-2 py-4 px-6 border border-primary-key bg-primary-key rounded-1 fw-bold clr-white border-0 w-100 mt-8 :arrow-btn" :disabled="isSubmitting">
+                  <span v-if="!isSubmitting">Login Now</span>
+                  <span v-else>
+                    <i class="bi bi-arrow-repeat spinner"></i> Logging in...
+                  </span>
+                  <i v-if="!isSubmitting" class="bi bi-arrow-right"></i>
                 </button>
                 <p class="mb-0 clr-neutral-80 text-center mt-8">
                   Don't have an Account?
@@ -116,8 +119,17 @@ const showPassword = ref(false);
 // Error message state using ref
 const error = ref(null);
 
+// Add loading state for form submission
+const isSubmitting = ref(false);
+
 // Login method
 const login = async () => {
+  // Reset error message
+  error.value = null;
+  
+  // Set loading state
+  isSubmitting.value = true;
+  
   try {
     const response = await axios.post(`/login`, form);
     const token = response.data.token;
@@ -137,6 +149,9 @@ const login = async () => {
       error.value = 'An unexpected error occurred. Please try again.';
     }
     console.error('Login error:', error.value);
+  } finally {
+    // Reset loading state regardless of success or failure
+    isSubmitting.value = false;
   }
 };
 
@@ -149,3 +164,14 @@ onMounted(async () => {
   await initializeCss();
 });
 </script>
+
+<style scoped>
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>
