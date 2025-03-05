@@ -441,7 +441,7 @@ def get_trending_hashtags():
 @app.route('/content/generate-optimized', methods=['POST'])
 def generate_optimized_content():
     """Generate optimized content using user text, analyzing purpose, and top performing posts"""
-    access_token = request.headers.get('Authorization')
+    access_token = request.headers.get('Authorization') # Need to Have Instagram Access Token.
     if not access_token:
         return jsonify({'error': 'No access token provided'}), 401
 

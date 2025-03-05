@@ -8,11 +8,7 @@ class MixtralClient:
   
     def __init__(self, model: str = "mistralai/Mixtral-8x7B-Instruct-v0.1", token: Optional[str] = None):
         load_dotenv()
-        
-        self.token = token or os.getenv("API_TOKEN")
-       
-       
-        
+        self.token = token or os.getenv("API_TOKEN") 
         if not self.token:
             raise ValueError(
                 "No Hugging Face token found. "
@@ -190,10 +186,7 @@ class MixtralClient:
        
 
         return optimized_response
-
-
-
-     
+      
 # Example usage
 def main():
     # Initialize client
