@@ -7,6 +7,7 @@ use App\Http\Controllers\LinkedinController;
 use App\Http\Controllers\InstagramController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\PostManagerController;
+use App\Http\Controllers\HashtagController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,6 +62,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::middleware(['auth'])->group(function () {
     Route::post('/posts/create', [PostManagerController::class, 'create']);
     Route::post('/posts/save', [PostManagerController::class, 'save']);
+    Route::post('/hashtags/search', [HashtagController::class, 'search']);
+    Route::post('/hashtags/analyze', [HashtagController::class, 'analyze']);
 });
 
 // Catch-all route for Vue frontend
