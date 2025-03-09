@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Post;
+use App\Models\UserPlatform;
+use App\Models\PlatformPage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -225,9 +227,13 @@ class PostManagerController extends Controller
                 'text' => 'required|string|min:5',
             ]);
 
-            // Get the user's Instagram page ID from the database
-            $instagramPage = DB::table('platform_pages')
-            ->where('user_platform_id', Auth::id())
+        // First, find the user's Instagram platform connection
+        $userPlatform = UserPlatform::where('user_id', Auth::id())
+            ->where('platform_id', 2) // Instagram platform_id
+            ->first();
+        
+        // Now find the active Instagram page using the user_platform_id
+        $instagramPage = PlatformPage::where('user_platform_id', $userPlatform->id)
             ->where('type', 'instagram_account')
             ->where('is_active', 1)
             ->first();
@@ -238,12 +244,6 @@ class PostManagerController extends Controller
                 'message' => 'No active Instagram account found. Please connect your Instagram account first.'
             ], 400);
         }
-
-        // Get the user's access token from the user_platform table
-        $userPlatform = DB::table('user_platform')
-            ->where('user_id', Auth::id())
-            ->where('platform_id', 2) // Assuming 2 is Instagram's platform_id
-            ->first();
 
         
         if (!$userPlatform || !$userPlatform->access_token) {
