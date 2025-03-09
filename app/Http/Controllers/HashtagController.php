@@ -7,8 +7,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use App\Models\UserPlatform;
-use App\Models\PlatformPage;
 
 class HashtagController extends Controller
 {
@@ -18,25 +16,14 @@ class HashtagController extends Controller
             $request->validate([
                 'hashtag' => 'required|string|min:2',
             ]);
-            
-            // First, find the user's Instagram platform connection
-            $userPlatform = UserPlatform::where('user_id', Auth::id())
-                ->where('platform_id', 2) // Instagram platform_id
-                ->first();
-                
-            if (!$userPlatform || !$userPlatform->access_token) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No valid Instagram connection found. Please connect your Instagram account.'
-                ], 400);
-            }
 
-            // Now find the active Instagram page using the user_platform_id
-            $instagramPage = PlatformPage::where('user_platform_id', $userPlatform->id)
+            // Get the user's Instagram page ID from the database
+            $instagramPage = DB::table('platform_pages')
+                ->where('user_platform_id', Auth::id())
                 ->where('type', 'instagram_account')
                 ->where('is_active', 1)
                 ->first();
-                
+
             if (!$instagramPage) {
                 return response()->json([
                     'success' => false,
@@ -44,6 +31,24 @@ class HashtagController extends Controller
                 ], 400);
             }
 
+            // Get the user's access token from the user_platform table
+            $userPlatform = DB::table('user_platform')
+                ->where('user_id', Auth::id())
+                ->where('platform_id', 2) // Assuming 2 is Instagram's platform_id
+                ->first();
+
+            
+            if (!$userPlatform || !$userPlatform->access_token) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid access token found. Please reconnect your Instagram account.'
+                ], 400);
+            }
+
+           
+
+            // Uncomment this when your API is ready
+           
             $response = Http::withoutVerifying()
                 ->withHeaders([
                     'Authorization' => $userPlatform->access_token
@@ -70,6 +75,7 @@ class HashtagController extends Controller
                 'success' => true,
                 'data' => $response->json()
             ]);
+            
             
         } catch (\Exception $e) {
             Log::error('Hashtag search failed', [

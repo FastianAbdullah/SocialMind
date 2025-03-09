@@ -139,30 +139,36 @@
 
                     <!-- Emoji Usage -->
                     <div class="analysis-item mb-4">
-                      <h6 class="text-primary mb-2">Recommended Emojis</h6>
-                      <div class="emoji-list">
-                        <span 
-                          v-for="(emoji, index) in generatedContent.analysis.emoji_usage" 
-                          :key="index"
-                          class="me-2"
+                      <h6 class="text-primary mb-3">Recommended Emojis</h6>
+                      <div class="emoji-grid">
+                        <div v-for="(count, emoji) in generatedContent.analysis.emoji_usage" 
+                             :key="emoji"
+                             class="emoji-item"
                         >
-                          {{ emoji }}
-                        </span>
+                          <span class="emoji">{{ emoji }}</span>
+                          <span class="emoji-count">{{ count }}</span>
+                        </div>
                       </div>
                     </div>
 
                     <!-- Structure Patterns -->
                     <div class="analysis-item">
-                      <h6 class="text-primary mb-2">Structure Patterns</h6>
-                      <ul class="list-unstyled">
-                        <li v-for="(pattern, index) in generatedContent.analysis.structure_patterns" 
-                            :key="index"
-                            class="mb-2"
+                      <h6 class="text-primary mb-3">Structure Patterns</h6>
+                      <div class="patterns-grid">
+                        <div v-for="(value, key) in generatedContent.analysis.structure_patterns" 
+                             :key="key"
+                             class="pattern-item"
                         >
-                          <i class="fas fa-list text-primary me-2"></i>
-                          {{ pattern }}
-                        </li>
-                      </ul>
+                          <div class="pattern-label">
+                            {{ formatPatternLabel(key) }}
+                          </div>
+                          <div class="pattern-bar-container">
+                            <div class="pattern-bar" :style="{ width: `${value}%` }">
+                              {{ value }}%
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -318,6 +324,15 @@ onMounted(async () => {
   await initializeCss();
   await initializeScripts();
 });
+
+const formatPatternLabel = (key) => {
+  return key
+    .replace(/_/g, ' ')
+    .replace('has ', '')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 </script>
 
 <style scoped>
@@ -359,9 +374,82 @@ onMounted(async () => {
   border-bottom: none;
 }
 
-.emoji-list {
-  font-size: 1.2rem;
-  letter-spacing: 0.5rem;
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 1rem;
+  padding: 0.5rem;
+  background: #1c1c29;
+  border-radius: 8px;
+}
+
+.emoji-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem;
+  background: linear-gradient(145deg, #21272c, #2a323a);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.emoji-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.emoji {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.emoji-count {
+  font-size: 0.85rem;
+  color: #00a3a3;
+  font-weight: 600;
+}
+
+.patterns-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: #1c1c29;
+  border-radius: 8px;
+}
+
+.pattern-item {
+  padding: 0.75rem;
+  background: linear-gradient(145deg, #21272c, #2a323a);
+  border-radius: 8px;
+}
+
+.pattern-label {
+  color: #ffffff;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.pattern-bar-container {
+  width: 100%;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.pattern-bar {
+  height: 100%;
+  background: linear-gradient(135deg, #006666 0%, #00a3a3 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0.75rem;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: width 0.6s ease-in-out;
 }
 
 .card {
@@ -457,5 +545,38 @@ onMounted(async () => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .emoji-grid {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .emoji {
+    font-size: 1.25rem;
+  }
+
+  .pattern-label {
+    font-size: 0.85rem;
+  }
+
+  .pattern-bar {
+    font-size: 0.75rem;
+    padding: 0 0.5rem;
+  }
+}
+
+/* Dark theme enhancements */
+.analysis-item {
+  background: #1c1c29;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.text-primary {
+  color: #00a3a3 !important;
 }
 </style> 

@@ -227,30 +227,31 @@ class PostManagerController extends Controller
 
             // Get the user's Instagram page ID from the database
             $instagramPage = DB::table('platform_pages')
-                ->where('user_platform_id', Auth::id())
-                ->where('type', 'instagram_account')
-                ->where('is_active', 1)
-                ->first();
+            ->where('user_platform_id', Auth::id())
+            ->where('type', 'instagram_account')
+            ->where('is_active', 1)
+            ->first();
 
-            if (!$instagramPage) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No active Instagram account found. Please connect your Instagram account first.'
-                ], 400);
-            }
+        if (!$instagramPage) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active Instagram account found. Please connect your Instagram account first.'
+            ], 400);
+        }
 
-            // Get the user's access token from the user_platform table
-            $userPlatform = DB::table('user_platform')
-                ->where('user_id', Auth::id())
-                ->where('platform_id', 2) // Assuming 2 is Instagram's platform_id
-                ->first();
+        // Get the user's access token from the user_platform table
+        $userPlatform = DB::table('user_platform')
+            ->where('user_id', Auth::id())
+            ->where('platform_id', 2) // Assuming 2 is Instagram's platform_id
+            ->first();
 
-            if (!$userPlatform || !$userPlatform->access_token) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No valid access token found. Please reconnect your Instagram account.'
-                ], 400);
-            }
+        
+        if (!$userPlatform || !$userPlatform->access_token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No valid access token found. Please reconnect your Instagram account.'
+            ], 400);
+        }
 
             // Make request to Flask API with proper authorization
             $response = Http::withoutVerifying()
