@@ -440,8 +440,8 @@ def get_trending_hashtags():
 
 @app.route('/content/generate-optimized', methods=['POST'])
 def generate_optimized_content():
-    """Generate optimized content using user text, analyzing purpose, and top performing posts"""
-    access_token = request.headers.get('Authorization') # Need to Have Instagram Access Token.
+    """Generate optimized content using enhanced pipeline"""
+    access_token = request.headers.get('Authorization')
     if not access_token:
         return jsonify({'error': 'No access token provided'}), 401
 
@@ -465,36 +465,35 @@ def generate_optimized_content():
 
         ig_user_id = accounts[0]['instagram_account_id']
 
-        # 2. Get hashtag from user text (optional)
-        hashtag = data.get('hashtag', 'programming')  # default hashtag if none provided
+        # 2. Analyze text to get purpose and hashtags
+        mixtral_analysis = mixtral_client.process_text(data['text'])
+        hashtags = mixtral_analysis['hashtags']
         
-        # 3. Get top posts for the hashtag
+        # 3. Get top posts for all extracted hashtags
         content_analyzer = InstagramContentAnalyzer(access_token)
-        top_posts = content_analyzer.get_top_posts(ig_user_id, hashtag)
+        top_posts = content_analyzer.get_top_posts_for_hashtags(ig_user_id, hashtags)
         
-        # 4. Analyze the posts
-        analysis = content_analyzer.analyze_descriptions(top_posts)
+        # 4. Get optimized set of example posts
+        example_posts = content_analyzer.get_optimized_examples(top_posts, num_examples=4)
         
-        # 5. Generate template based on analysis
+        # 5. Analyze the selected examples
+        analysis = content_analyzer.analyze_descriptions(example_posts)
+        
+        # 6. Generate template based on analysis
         template = content_analyzer.generate_description_template(analysis)
         
-        # 6. Get purpose and hashtags from user text using Mixtral
-        mixtral_analysis = mixtral_client.process_text(data['text'])
-        
-        # 7. Generate optimized content using all gathered data
+        # 7. Generate optimized content
         optimized_content = mixtral_client.generate_optimized_response(
             purpose=mixtral_analysis['purpose'],
-            descriptions=[{
-                'caption': post['caption']
-            } for post in analysis['top_performing_posts']]
+            descriptions=[{'caption': post['caption']} for post in example_posts]
         )
 
         return jsonify({
             'status': 'success',
             'analysis': {
                 'purpose': mixtral_analysis['purpose'],
-                'suggested_hashtags': mixtral_analysis['hashtags'],
-                'top_performing_posts': analysis['top_performing_posts'],
+                'suggested_hashtags': hashtags,
+                'example_posts': example_posts,
                 'common_phrases': analysis['common_phrases'],
                 'emoji_usage': analysis['emoji_usage'],
                 'structure_patterns': analysis['structure_patterns']
