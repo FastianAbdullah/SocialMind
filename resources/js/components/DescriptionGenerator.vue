@@ -93,13 +93,13 @@
                       </div>
                       
                       <!-- Hashtags -->
-                      <div class="hashtags-section">
-                        <label class="form-label">Suggested Hashtags:</label>
-                        <div class="hashtag-chips">
+                      <div class="hashtags-section mb-4">
+                        <label class="form-label fw-bold mb-3">Suggested Hashtags</label>
+                        <div class="hashtag-container">
                           <span 
                             v-for="hashtag in generatedContent.analysis.suggested_hashtags" 
                             :key="hashtag"
-                            class="badge bg-light text-dark me-2 mb-2"
+                            class="hashtag-pill"
                           >
                             #{{ hashtag }}
                           </span>
@@ -339,7 +339,7 @@ onMounted(async () => {
 }
 
 .generated-content {
-  background-color: #f8f9fa;
+  background-color: #21272c;
   border-radius: 8px;
   padding: 1rem;
 }
@@ -365,9 +365,11 @@ onMounted(async () => {
 }
 
 .card {
+  border-radius: 12px;
   border: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
+  overflow: hidden;
 }
 
 .card:hover {
@@ -395,5 +397,65 @@ onMounted(async () => {
 .btn-outline-primary:hover:not(:disabled) {
   background-color: #006666;
   color: white;
+}
+
+.hashtags-section {
+  background: linear-gradient(145deg, #f8f9fa, #1c1c29);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.hashtag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.hashtag-pill {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #006666 0%, #00a3a3 100%);
+  color: white;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 102, 102, 0.2);
+}
+
+.hashtag-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 102, 102, 0.3);
+  background: linear-gradient(135deg, #005555 0%, #008f8f 100%);
+}
+
+.form-control {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #006666;
+  box-shadow: 0 0 0 3px rgba(0, 102, 102, 0.1);
+}
+
+.generated-content {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style> 

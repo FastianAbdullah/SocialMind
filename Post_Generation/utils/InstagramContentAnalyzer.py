@@ -184,3 +184,60 @@ class InstagramContentAnalyzer:
             template_parts.append(f"Popular phrases: {', '.join(common_phrases[:3])}")
 
         return "\n".join(template_parts) if template_parts else "No specific patterns found"
+
+    def get_top_posts_for_hashtags(self, ig_user_id: str, hashtags: List[str]) -> List[Dict]:
+        """
+        Get top posts for multiple hashtags and combine results
+        """
+        all_posts = []
+        for hashtag in hashtags:
+            posts = self.get_top_posts(ig_user_id, hashtag.strip('#'))
+            all_posts.extend(posts)
+        
+        # Sort by engagement and remove duplicates
+        seen_ids = set()
+        unique_posts = []
+        for post in sorted(all_posts, key=lambda x: x['engagement_score'], reverse=True):
+            if post['id'] not in seen_ids:
+                seen_ids.add(post['id'])
+                unique_posts.append(post)
+        
+        # Return top 25 unique posts
+        return unique_posts[:25]
+
+    def get_optimized_examples(self, posts: List[Dict], num_examples: int = 4) -> List[Dict]:
+        """
+        Get optimized set of example posts ensuring diversity
+        """
+        if not posts:
+            return []
+        
+        # Sort by engagement score
+        sorted_posts = sorted(posts, key=lambda x: x.get('engagement_score', 0), reverse=True)
+        
+        # Get top performing posts with different styles
+        selected_posts = []
+        seen_patterns = set()
+        
+        for post in sorted_posts:
+            caption = post.get('caption', '')
+            
+            # Create a simple pattern signature
+            pattern = (
+                bool(re.search(r'[\U0001F300-\U0001F9FF]', caption)),  # has emoji
+                bool(re.search(r'(check|click|tap|follow|share)', caption.lower())),  # has CTA
+                len(caption) > 300,  # is long form
+                bool(re.findall(r'#\w+', caption))  # has hashtags
+            )
+            
+            if pattern not in seen_patterns and len(selected_posts) < num_examples:
+                seen_patterns.add(pattern)
+                selected_posts.append({
+                    'caption': caption,
+                    'likes': post.get('likes', 0),
+                    'comments': post.get('comments', 0),
+                    'engagement_score': post.get('engagement_score', 0),
+                    'permalink': post.get('permalink', '')
+                })
+        
+        return selected_posts

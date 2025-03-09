@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Post;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class PostManagerController extends Controller
 {
@@ -219,15 +220,46 @@ class PostManagerController extends Controller
      */
     public function generateOptimizedContent(Request $request)
     {
-       
         try {
             $request->validate([
                 'text' => 'required|string|min:5',
             ]);
 
+            // Get the user's Instagram page ID from the database
+            $instagramPage = DB::table('platform_pages')
+                ->where('user_platform_id', Auth::id())
+                ->where('type', 'instagram_account')
+                ->where('is_active', 1)
+                ->first();
+
+            if (!$instagramPage) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No active Instagram account found. Please connect your Instagram account first.'
+                ], 400);
+            }
+
+            // Get the user's access token from the user_platform table
+            $userPlatform = DB::table('user_platform')
+                ->where('user_id', Auth::id())
+                ->where('platform_id', 2) // Assuming 2 is Instagram's platform_id
+                ->first();
+
+            if (!$userPlatform || !$userPlatform->access_token) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid access token found. Please reconnect your Instagram account.'
+                ], 400);
+            }
+
+            // Make request to Flask API with proper authorization
             $response = Http::withoutVerifying()
+                ->withHeaders([
+                    'Authorization' => $userPlatform->access_token
+                ])
                 ->post('https://localhost:8443/content/generate-optimized', [
-                    'text' => $request->input('text')
+                    'text' => $request->input('text'),
+                    'ig_user_id' => $instagramPage->page_id
                 ]);
 
             if ($response->failed()) {
@@ -244,22 +276,35 @@ class PostManagerController extends Controller
             }
 
             $data = $response->json();
+            
+            // Check if we have a valid response structure
+            if (!isset($data['status']) || $data['status'] !== 'success') {
+                throw new \Exception('Invalid response format from optimization service');
+            }
+
             return response()->json([
                 'success' => true,
                 'optimized_content' => $data['optimized_content'] ?? '',
                 'analysis' => [
                     'purpose' => $data['analysis']['purpose'] ?? '',
                     'suggested_hashtags' => $data['analysis']['suggested_hashtags'] ?? [],
+                    'example_posts' => $data['analysis']['example_posts'] ?? [],
                     'common_phrases' => $data['analysis']['common_phrases'] ?? [],
                     'emoji_usage' => $data['analysis']['emoji_usage'] ?? [],
                     'structure_patterns' => $data['analysis']['structure_patterns'] ?? []
+                ],
+                'template' => $data['template'] ?? '',
+                'metrics' => [
+                    'avg_length' => $data['metrics']['avg_length'] ?? 0,
+                    'engagement_patterns' => $data['metrics']['engagement_patterns'] ?? []
                 ]
             ]);
 
         } catch (\Exception $e) {
             Log::error('Content generation failed', [
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
