@@ -2,27 +2,27 @@ import os
 from typing import List, Dict, Optional
 from huggingface_hub import InferenceClient
 from dotenv import load_dotenv
+from openai import OpenAI
 
 
 class MixtralClient:
-  
-    def __init__(self, model: str = "mistralai/Mixtral-8x7B-Instruct-v0.1", token: Optional[str] = None):
+    def __init__(self):
         load_dotenv()
-        self.token = token or os.getenv("API_TOKEN") 
-        if not self.token:
+        self.api_key = os.getenv("OPENAI_API_KEY")
+        if not self.api_key:
             raise ValueError(
-                "No Hugging Face token found. "
-                "Please set HUGGINGFACE_TOKEN in .env or pass token directly."
+                "No OpenAI API key found. "
+                "Please set OPENAI_API_KEY in .env file."
             )
         
-        # Initialize inference client
-        self.client = InferenceClient(model=model, token=self.token)
-    
-    def generate_completion(self, messages: List[Dict[str, str]], max_tokens: int = 1000,temperature: float = 0.7) -> str:
+        # Initialize OpenAI client
+        self.client = OpenAI(api_key=self.api_key)
+        self.model = "gpt-4o-mini-2024-07-18"  # or your specific model ID for GPT-4-0mini
 
+    def generate_completion(self, messages: List[Dict[str, str]], max_tokens: int = 1000, temperature: float = 0.7) -> str:
         try:
             completion = self.client.chat.completions.create(
-                model=self.client.model,
+                model=self.model,
                 messages=messages,
                 max_tokens=max_tokens,
                 temperature=temperature
