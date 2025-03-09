@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard.vue';
 import CreatePost from './components/CreatePost.vue';
 import HashtagFinder from './components/HashtagFinder.vue';
 import DescriptionGenerator from './components/DescriptionGenerator.vue';
+import SentimentAnalysis from './components/SentimentAnalysis.vue';
 
 
 const routes = [
@@ -22,11 +23,13 @@ const routes = [
   { path:'/create-post', component: CreatePost, meta: { requiresAuth: true }},
   { path: '/hashtags-finder', component: HashtagFinder, meta: { requiresAuth: true }},
   { path: '/description-generator', component: DescriptionGenerator, meta: { requiresAuth: true }},
+  { path: '/sentiment-analysis', component: SentimentAnalysis, meta: { requiresAuth: true }},
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  linkActiveClass: 'active',
 });
 
 // Navigation guard
@@ -46,6 +49,7 @@ router.beforeEach((to, from, next) => {
     // Redirect to dashboard if already authenticated
     next('/dashboard');
   } else {
+    document.title = to.meta.title || 'SocialMind';
     next();
   }
 });

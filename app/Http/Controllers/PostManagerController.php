@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Post;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class PostManagerController extends Controller
 {
@@ -414,6 +415,150 @@ class PostManagerController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to optimize content: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get comments for a post and analyze sentiment
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function analyzePostSentiment(Request $request)
+    {
+        // Validate request
+        $validator = Validator::make($request->all(), [
+            'post_id' => 'required|string',
+            'platform' => 'required|string|in:instagram,facebook'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        // Get user information
+        $user = Auth::user();
+        
+        // Get platform data
+        $platform = $request->platform;
+        $postId = $request->post_id;
+        
+        // Get access token
+        $userPlatform = DB::table('user_platforms')
+            ->where('user_id', $user->id)
+            ->where('platform', $platform)
+            ->first();
+        
+        if (!$userPlatform || !$userPlatform->access_token) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "No $platform account connected"
+            ], 400);
+        }
+
+        $accessToken = $userPlatform->access_token;
+        
+        // Call Flask API endpoint
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => $accessToken
+            ])->post('https://localhost:8443/post/sentiment-analysis', [
+                'post_id' => $postId,
+                'platform' => $platform
+            ]);
+            
+            if ($response->successful()) {
+                return response()->json($response->json());
+            } else {
+                Log::error('Failed to analyze post sentiment: ' . $response->body());
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Failed to analyze post sentiment',
+                    'details' => $response->json()
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception analyzing post sentiment: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while analyzing post sentiment'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get comments for a post
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getPostComments(Request $request)
+    {
+        // Validate request
+        $validator = Validator::make($request->all(), [
+            'post_id' => 'required|string',
+            'platform' => 'required|string|in:instagram,facebook'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        // Get user information
+        $user = Auth::user();
+        
+        // Get platform data
+        $platform = $request->platform;
+        $postId = $request->post_id;
+        
+        // Get access token
+        $userPlatform = DB::table('user_platforms')
+            ->where('user_id', $user->id)
+            ->where('platform', $platform)
+            ->first();
+        
+        if (!$userPlatform || !$userPlatform->access_token) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "No $platform account connected"
+            ], 400);
+        }
+
+        $accessToken = $userPlatform->access_token;
+        
+        // Call Flask API endpoint
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => $accessToken
+            ])->post('https://localhost:8443/post/comments', [
+                'post_id' => $postId,
+                'platform' => $platform
+            ]);
+            
+            if ($response->successful()) {
+                return response()->json($response->json());
+            } else {
+                Log::error('Failed to fetch post comments: ' . $response->body());
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Failed to fetch post comments',
+                    'details' => $response->json()
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception fetching post comments: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while fetching post comments'
             ], 500);
         }
     }

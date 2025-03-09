@@ -78,8 +78,17 @@
                   </svg><span>Hashtags Finder</span>
                 </router-link>
               </li>
+              <li class="sidebar-list"><i class="fa fa-thumb-tack"></i>
+                <router-link class="sidebar-link sidebar-title link-nav" to="/sentiment-analysis">
+                  <svg class="stroke-icon">
+                    <use href="../../../public/assets/svg/icon-sprite.svg#stroke-chart"></use>
+                  </svg>
+                  <svg class="fill-icon">
+                    <use href="../../../public/assets/svg/icon-sprite.svg#fill-chart"></use>
+                  </svg><span>Sentiment Analysis</span>
+                </router-link>
+              </li>
             </ul>
-
 
             <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>
           </div>

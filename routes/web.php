@@ -67,9 +67,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/content/generate-optimized', [PostManagerController::class, 'generateOptimizedContent']);
     Route::post('/content/analyze', [PostManagerController::class, 'analyzeContent']);
     Route::post('/content/optimize', [PostManagerController::class, 'optimizeContent']);
+    Route::post('/post/comments', [PostManagerController::class, 'getPostComments'])->name('post.comments');
+    Route::post('/post/sentiment-analysis', [PostManagerController::class, 'analyzePostSentiment'])->name('post.sentiment-analysis');
 });
 
 // Catch-all route for Vue frontend
 Route::get('/{any?}', function () {
     return view('welcome');
 })->where('any', '.*');
+
+// Add route for the sentiment analysis frontend page
+Route::get('/sentiment-analysis', function () {
+    return view('home');
+})->middleware(['auth'])->name('sentiment-analysis');

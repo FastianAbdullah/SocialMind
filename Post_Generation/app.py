@@ -6,7 +6,9 @@ from utils.LinkedInManager import LinkedInManager
 from utils.MixtralClient import MixtralClient
 from utils.SocialMediaAuth import SocialMediaAuth
 from utils.UserPostHistory import UserPostHistory
+from utils.SentimentAnalyzer import SentimentAnalyzer
 from dotenv import load_dotenv
+import textblob
 import os
 
 import ssl
@@ -55,6 +57,10 @@ auth = SocialMediaAuth(
 )
 post_history = UserPostHistory()
 mixtral_client = MixtralClient()
+
+# Create an instance of SentimentAnalyzer
+sentiment_analyzer = SentimentAnalyzer()
+
 
 
 @app.route('/', methods=['GET'])
@@ -600,6 +606,128 @@ def get_linkedin_profile():
         return jsonify({
             'status': 'error',
             'message': str(e)
+        }), 500
+
+@app.route('/post/comments', methods=['POST'])
+def get_post_comments():
+    """Get comments for a specific post"""
+    try:
+        # Validate request
+        access_token = request.headers.get('Authorization')
+        if not access_token:
+            return jsonify({
+                'status': 'error',
+                'message': 'No access token provided'
+            }), 401
+
+        data = request.json
+        if not data or 'post_id' not in data or 'platform' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Post ID and platform are required'
+            }), 400
+
+        post_id = data['post_id']
+        platform = data['platform'].lower()
+        limit = data.get('limit', 50)
+
+        # Fetch comments based on platform
+        comments = []
+        if platform == 'instagram':
+            ig_manager = InstagramManager(access_token)
+            comments = ig_manager.get_post_comments(post_id, limit)
+        elif platform == 'facebook':
+            fb_manager = FacebookManager(access_token)
+            comments = fb_manager.get_post_comments(post_id, limit)
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Unsupported platform'
+            }), 400
+
+        return jsonify({
+            'status': 'success',
+            'comments': comments,
+            'count': len(comments)
+        })
+
+    except Exception as e:
+        Log.error(f"Error fetching post comments: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': 'An error occurred while fetching comments'
+        }), 500
+
+@app.route('/post/sentiment-analysis', methods=['POST'])
+def analyze_post_comments():
+    """Simple sentiment analysis of post comments"""
+    try:
+        # Validate request
+        access_token = request.headers.get('Authorization')
+        if not access_token:
+            return jsonify({
+                'status': 'error',
+                'message': 'No access token provided'
+            }), 401
+
+        data = request.json
+        if not data or 'post_id' not in data or 'platform' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Post ID and platform are required'
+            }), 400
+
+        post_id = data['post_id']
+        platform = data['platform'].lower()
+        
+        # Debug info
+        print(f"Analyzing comments for {platform} post: {post_id}")
+
+        # Fetch comments
+        comments = []
+        try:
+            if platform == 'instagram':
+                ig_manager = InstagramManager(access_token)
+                comments = ig_manager.get_post_comments(post_id)
+            elif platform == 'facebook':
+                fb_manager = FacebookManager(access_token)
+                comments = fb_manager.get_post_comments(post_id)
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Unsupported platform'
+                }), 400
+                
+            print(f"Retrieved {len(comments)} comments")
+        except Exception as e:
+            print(f"Error fetching comments: {str(e)}")
+            return jsonify({
+                'status': 'error',
+                'message': f'Error fetching comments: {str(e)}'
+            }), 500
+
+        # Perform sentiment analysis
+        try:
+            analyzer = SentimentAnalyzer()
+            analysis = analyzer.analyze_comments(comments)
+            
+            return jsonify({
+                'status': 'success',
+                'overall_sentiment': analysis['overall_sentiment'],
+                'comment_count': analysis['comment_count']
+            })
+        except Exception as e:
+            print(f"Error analyzing comments: {str(e)}")
+            return jsonify({
+                'status': 'error',
+                'message': f'Error in sentiment analysis: {str(e)}'
+            }), 500
+
+    except Exception as e:
+        print(f"Unexpected error in analyze_post_comments: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': f'An unexpected error occurred: {str(e)}'
         }), 500
 
 if __name__ == '__main__':
