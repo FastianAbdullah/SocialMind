@@ -210,4 +210,165 @@ class PostManagerController extends Controller
         
         return implode(' ', $sentences);
     }
+
+    /**
+     * Generate optimized content using AI analysis and top-performing posts
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function generateOptimizedContent(Request $request)
+    {
+       
+        try {
+            $request->validate([
+                'text' => 'required|string|min:5',
+            ]);
+
+            $response = Http::withoutVerifying()
+                ->post('https://localhost:8443/content/generate-optimized', [
+                    'text' => $request->input('text')
+                ]);
+
+            if ($response->failed()) {
+                Log::error('Content generation failed', [
+                    'status' => $response->status(),
+                    'response' => $response->body(),
+                    'user_id' => Auth::id()
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to generate optimized content'
+                ], 500);
+            }
+
+            $data = $response->json();
+            return response()->json([
+                'success' => true,
+                'optimized_content' => $data['optimized_content'] ?? '',
+                'analysis' => [
+                    'purpose' => $data['analysis']['purpose'] ?? '',
+                    'suggested_hashtags' => $data['analysis']['suggested_hashtags'] ?? [],
+                    'common_phrases' => $data['analysis']['common_phrases'] ?? [],
+                    'emoji_usage' => $data['analysis']['emoji_usage'] ?? [],
+                    'structure_patterns' => $data['analysis']['structure_patterns'] ?? []
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Content generation failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate content: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Analyze text content for purpose and hashtags
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function analyzeContent(Request $request)
+    {
+        try {
+            $request->validate([
+                'text' => 'required|string|min:5',
+            ]);
+
+            $response = Http::withoutVerifying()
+                ->post('https://localhost:8443/content/analyze', [
+                    'text' => $request->input('text')
+                ]);
+
+            if ($response->failed()) {
+                Log::error('Content analysis failed', [
+                    'status' => $response->status(),
+                    'response' => $response->body(),
+                    'user_id' => Auth::id()
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to analyze content'
+                ], 500);
+            }
+
+            $data = $response->json();
+            return response()->json([
+                'success' => true,
+                'purpose' => $data['purpose'] ?? '',
+                'hashtags' => $data['hashtags'] ?? []
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Content analysis failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to analyze content: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Optimize content based on purpose and examples
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function optimizeContent(Request $request)
+    {
+        try {
+            $request->validate([
+                'purpose' => 'required|string',
+                'descriptions' => 'sometimes|array'
+            ]);
+
+            $response = Http::withoutVerifying()
+                ->post('https://localhost:8443/content/optimize', [
+                    'purpose' => $request->input('purpose'),
+                    'descriptions' => $request->input('descriptions', [])
+                ]);
+
+            if ($response->failed()) {
+                Log::error('Content optimization failed', [
+                    'status' => $response->status(),
+                    'response' => $response->body(),
+                    'user_id' => Auth::id()
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to optimize content'
+                ], 500);
+            }
+
+            $data = $response->json();
+            return response()->json([
+                'success' => true,
+                'optimized_content' => $data['optimized_content'] ?? ''
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Content optimization failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to optimize content: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

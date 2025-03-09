@@ -80,7 +80,7 @@
           <!-- Container-fluid starts -->
           <div class="container-fluid">
             <div class="row">
-              <div class="col-xl-6 box-col-7">
+              <div class="col-xl-12 box-col-7">
                 <div class="card">
                   <div class="card-header sales-chart card-no-border pb-0">
                     <h4>Link Your Social Media Accounts</h4>
@@ -95,7 +95,7 @@
                   <div class="card-body p-4">
                     <p class="mb-4">Connect your social profiles to start managing them in one place</p>
                     <div class="row g-3">
-                      <div class="col-md-6">
+                      <div class="col-md-4">
                         <button 
                           class="w-100 btn" 
                           :class="connected.facebook ? 'btn-light' : 'btn-primary'"
@@ -106,7 +106,7 @@
                           {{ connected.facebook ? 'Facebook Connected' : 'Connect Facebook' }}
                         </button>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-md-4">
                         <button 
                           class="w-100 btn position-relative"
                           :class="{
@@ -137,7 +137,7 @@
                           </div>
                         </button>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-md-4">
                         <button 
                           class="w-100 btn"
                           :class="connected.linkedin ? 'btn-light' : 'btn-info'" 
@@ -148,15 +148,7 @@
                           {{ connected.linkedin ? 'LinkedIn Connected' : 'Connect LinkedIn' }}
                         </button>
                       </div>
-                      <div class="col-md-6">
-                        <button 
-                          class="w-100 btn"
-                          :class="connected.twitter ? 'btn-light' : 'btn-dark'"
-                        >
-                          <i class="fab fa-twitter me-2"></i>
-                          {{ connected.twitter ? 'Twitter Connected' : 'Connect Twitter' }}
-                        </button>
-                      </div>
+                  
                     </div>
                     <div v-if="Object.values(connected).some(Boolean)" class="alert alert-success mt-4">
                       {{ connectedCount }} accounts successfully connected. You can now manage your social media presence from one dashboard.
@@ -167,19 +159,14 @@
                   </div>
                 </div>
               </div>
-              <div class="col-xl-3 col-md-6 special-Offer-banner box-col-none">
-                <div class="card">
-                  <div class="special-Offer">
-                    <div class="offer-contain">
-                      <h4>Today's Special Offer</h4>
-                      <p class="mt-2 text-center">You can flat get 20% off on your next pro version if your sale break your last record.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+             
             </div>
           </div>
           <!-- Container-fluid Ends -->
+          <div class="container-fluid">
+                <DashboardStats />
+          </div>
+
         </div>
         <!-- footer start-->
         <footer class="footer" style="margin-left: 220px; width: calc(100% - 220px);">
@@ -203,6 +190,7 @@ import { useDynamicResources } from '../composables/useDynamicResources.js';
 import { useSocialMediaStore } from '../store/socialMediaStore.js';
 import DashboardSidebar from '../components/DashboardSidebar.vue';
 import { getAuthUrl } from '../services/SocialMediaAuthService.js';
+import DashboardStats from '../components/DashboardStats.vue';
 import { 
     getAuthUrl as getInstagramAuthUrl,
     disconnectInstagram,

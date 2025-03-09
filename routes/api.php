@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FacebookController;
 use App\Http\Controllers\AuthController;
 
+
 // Handle CORS preflight requests
 Route::options('{any}', function() {
     return response('', 200)
@@ -23,5 +24,6 @@ Route::options('{any}', function() {
 */
 
 // Authentication Routes - Remove auth:sanctum middleware from these routes
+
 
 

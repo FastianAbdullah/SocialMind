@@ -7,6 +7,9 @@ import Privacy from './pages/Privacy.vue';
 import Terms from './pages/Terms.vue';
 import Dashboard from './pages/Dashboard.vue';
 import CreatePost from './components/CreatePost.vue';
+import HashtagFinder from './components/HashtagFinder.vue';
+import DescriptionGenerator from './components/DescriptionGenerator.vue';
+
 
 const routes = [
   { path: '/', component: Index, meta: { requiresAuth: false } },
@@ -16,7 +19,9 @@ const routes = [
   { path: '/privacy', component: Privacy, meta: { requiresAuth: false } },
   { path: '/terms', component: Terms, meta: { requiresAuth: false }},
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true }},
-  { path:'/create-post', component: CreatePost, meta: { requiresAuth: true }}
+  { path:'/create-post', component: CreatePost, meta: { requiresAuth: true }},
+  { path: '/hashtags-finder', component: HashtagFinder, meta: { requiresAuth: true }},
+  { path: '/description-generator', component: DescriptionGenerator, meta: { requiresAuth: true }},
 ];
 
 const router = createRouter({
