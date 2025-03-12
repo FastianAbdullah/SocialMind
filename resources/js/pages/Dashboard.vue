@@ -34,24 +34,12 @@
           <div class="left-header col-xxl-5 col-xl-6 col-lg-5 col-md-4 col-sm-3 p-0">
             <div> <a class="toggle-sidebar" href="#"> <i class="iconly-Category icli"> </i></a>
               <div class="d-flex align-items-center gap-2 ">
-                <h4 class="f-w-600">Welcome {{ user.name }}</h4><img class="mt-0" src="../../../public/assets/images/hand.gif" alt="hand-gif">
+                <h4 class="f-w-600">Welcome {{user.name}}</h4><img class="mt-0" src="../../../public/assets/images/hand.gif" alt="hand-gif">
               </div>
             </div>
           </div>
           <div class="nav-right col-xxl-7 col-xl-6 col-md-7 col-8 pull-right right-header p-0 ms-auto">
             <ul class="nav-menus">
-              <li class="d-md-block d-none">
-                <div class="form search-form mb-0">
-                  <div class="input-group"><span class="input-icon">
-                      <svg>
-                        <use href="../../../public/assets/svg/icon-sprite.svg#search-header"></use>
-                      </svg>
-                      <input class="w-100" type="search" placeholder="Search"></span></div>
-                </div>
-              </li>
-              <li>
-                <div class="mode"><i class="moon" data-feather="moon"> </i></div>
-              </li>
               <li class="profile-nav">
                 <button @click="handleLogout" class="btn btn-pill btn-outline-primary btn-sm">Log Out</button>
               </li>
@@ -184,7 +172,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeMount } from 'vue';
+import { ref, computed, onMounted, onBeforeMount, onBeforeUnmount } from 'vue';
 import Loader from '../components/Loader.vue';
 import { useDynamicResources } from '../composables/useDynamicResources.js';
 import { useSocialMediaStore } from '../store/socialMediaStore.js';
@@ -206,7 +194,7 @@ const router = useRouter();
 const socialMediaStore = useSocialMediaStore();
 const isLoading = ref(true);
 const error = ref(null);
-const user = ref(null);
+const user = ref("User");
 const statusMessage = ref(null);
 const statusType = ref('info');
 const cssFiles = [
@@ -262,8 +250,13 @@ const statusIcon = computed(() => {
 // Handle Logout Logic.
 const handleLogout = async () => {
   try {
-    await store.dispatch('logout');
+    // First clear the social media store
     await socialMediaStore.clearSocialMediaStore();
+    
+    // Then dispatch logout action to the main store
+    await store.dispatch('logout');
+    
+    // Navigate to login page
     router.push('/login');
   } catch (error) {
     console.error('Logout failed:', error);
@@ -380,16 +373,6 @@ const connectInstagram = async () => {
     }
 };
 
-const disconnectInstagramAccount = async () => {
-    try {
-        await disconnectInstagram();
-        socialMediaStore.clearInstagramConnection();
-    } catch (err) {
-        console.error('Instagram disconnect error:', err);
-        error.value = err.message;
-    }
-};
-
 // Linkedin Connection Handler.
 const connectLinkedin = async () => {
     error.value = null;
@@ -463,6 +446,8 @@ const checkFacebookConnection = async () => {
                     pages: response.data.pages
                 }
             });
+        } else { // If the connection is not successful, set the store to the default values.
+          socialMediaStore.clearFacebookConnection();
         }
     } catch (err) {
         console.error('Failed to check Facebook connection:', err);
@@ -484,6 +469,8 @@ const checkLinkedinConnection = async () => {
         const response = await axios.get('/linkedin/check-connection');
         if (response.data.connected) {
             socialMediaStore.setLinkedinConnection(response.data);
+        } else { // If the connection is not successful, set the store to the default values.
+            socialMediaStore.clearLinkedinConnection();
         }
     } catch (err) {
         console.error('Failed to check Linkedin connection:', err);
@@ -534,7 +521,15 @@ onMounted(async () => {
         await initializeCss();
         await initializeScripts();
         
-        // Initialize store from localStorage
+        // First validate the session before initializing from storage
+        const isAuthenticated = await socialMediaStore.validateSession();
+        if (!isAuthenticated) {
+            // Redirect to login if not authenticated
+            router.push('/login');
+            return;
+        }
+        
+        // Initialize store from localStorage only if authenticated
         socialMediaStore.initializeFromStorage();
         
         // Check connections and log results for debugging
@@ -543,6 +538,8 @@ onMounted(async () => {
             checkInstagramConnection().then(result => {
                 if (result.connected) {
                     socialMediaStore.setInstagramConnection(result);
+                } else { // If the connection is not successful, set the store to the default values.
+                  socialMediaStore.clearInstagramConnection();
                 }
             })
         ]);
@@ -603,6 +600,35 @@ onMounted(async () => {
     } finally {
         isLoading.value = false;
     }
+});
+
+// Add activity tracking to keep the session alive
+const trackActivity = () => {
+    socialMediaStore.updateTimestamp();
+};
+
+// Add these to your onMounted hook
+onMounted(() => {
+    // ... existing code ...
+    
+    // Set up activity tracking
+    window.addEventListener('mousemove', trackActivity);
+    window.addEventListener('keydown', trackActivity);
+    window.addEventListener('click', trackActivity);
+    
+    // Set up beforeunload event
+    window.addEventListener('beforeunload', () => {
+        // This won't clear the store but will update the timestamp
+        // which is used to validate the session on next load
+        socialMediaStore.updateTimestamp();
+    });
+});
+
+// Clean up event listeners
+onBeforeUnmount(() => {
+    window.removeEventListener('mousemove', trackActivity);
+    window.removeEventListener('keydown', trackActivity);
+    window.removeEventListener('click', trackActivity);
 });
 </script>
 

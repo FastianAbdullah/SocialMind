@@ -28,24 +28,36 @@
                   <li class="menu-list">
                     <RouterLink to="/terms" class="link menu-link">Terms</RouterLink>
                   </li>
-                  <li class="menu-list" v-if="!isLoggedIn">
-                    <RouterLink to="/login">
-                      <div class="link d-inline-flex align-items-center gap-2 py-2 px-3 rounded-1 bg-grad-6 clr-white fw-bold fs-14">
-                        <span class="d-inline-block ff-3">Get Started</span>
+                  <template v-if="!isAuthenticated">
+                    <li class="menu-list">
+                      <RouterLink to="/login">
+                        <div class="link d-inline-flex align-items-center gap-2 py-2 px-3 rounded-1 bg-grad-6 clr-white fw-bold fs-14">
+                          <span class="d-inline-block ff-3">Get Started</span>
+                          <span class="d-inline-block fs-12">
+                            <i class="bi bi-arrow-up-right"></i>
+                          </span>
+                        </div>
+                      </RouterLink>
+                    </li>
+                  </template>
+                  <template v-else>
+                    <li class="menu-list">
+                      <RouterLink to="/dashboard" class="link d-inline-flex align-items-center gap-2 py-2 px-3 rounded-1 bg-primary-key clr-white fw-bold fs-14 me-2">
+                        <span class="d-inline-block ff-3">Dashboard</span>
                         <span class="d-inline-block fs-12">
-                          <i class="bi bi-arrow-up-right"></i>
+                          <i class="bi bi-speedometer2"></i>
                         </span>
-                      </div>
-                    </RouterLink>
-                  </li>
-                  <li class="menu-list" v-else>
-                    <router-link to="/login" @click.prevent="handleLogout" class="link d-inline-flex align-items-center gap-2 py-2 px-3 rounded-1 bg-grad-6 clr-white fw-bold fs-14">
-                      <span class="d-inline-block ff-3">Log Out</span>
-                      <span class="d-inline-block fs-12">
-                        <i class="bi bi-box-arrow-right"></i>
-                      </span>
-                    </router-link>
-                  </li>
+                      </RouterLink>
+                    </li>
+                    <li class="menu-list">
+                      <a href="#" @click.prevent="handleLogout" class="link d-inline-flex align-items-center gap-2 py-2 px-3 rounded-1 bg-grad-6 clr-white fw-bold fs-14">
+                        <span class="d-inline-block ff-3">Log Out</span>
+                        <span class="d-inline-block fs-12">
+                          <i class="bi bi-box-arrow-right"></i>
+                        </span>
+                      </a>
+                    </li>
+                  </template>
                 </ul>
               </div>
             </nav>
@@ -55,24 +67,56 @@
     </header>
 </template>
   
-<script>
-  import { mapState, mapActions } from 'vuex';
-  
-  export default {
-    computed: {
-      ...mapState(['isLoggedIn']),
-    },
-    methods: {
-      ...mapActions(['logout']),
-      async handleLogout() {
-        try {
-          await this.logout();
-          this.$router.push('/login');
-        } catch (error) {
-          console.error('Logout failed:', error);
-        }
-      }
-    },
+<script setup>
+import { ref, onMounted, computed } from 'vue';
+import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
+import { useSocialMediaStore } from '../store/socialMediaStore';
+
+const store = useStore();
+const router = useRouter();
+const socialMediaStore = useSocialMediaStore();
+const isAuthenticated = ref(false);
+
+// Check authentication on component mount
+onMounted(async () => {
+  try {
+    // Try to validate the session
+    isAuthenticated.value = await socialMediaStore.validateSession();
+    
+    // If not authenticated but Vuex still thinks we are, fix that
+    if (!isAuthenticated.value && store.state.isLoggedIn) {
+      await handleLogout();
+    }
+  } catch (error) {
+    console.error('Authentication check failed:', error);
+    isAuthenticated.value = false;
+    await handleLogout();
+  } finally {
+
   }
+});
+
+// Handle logout
+const handleLogout = async () => {
+  try {
+    // Clear social media store
+    socialMediaStore.clearSocialMediaStore();
+    
+    // Logout via Vuex
+    await store.dispatch('logout');
+    
+    // Redirect to login
+    router.push('/login');
+  } catch (error) {
+    console.error('Logout failed:', error);
+    
+    // Force logout even if API call fails
+    localStorage.removeItem('token');
+    localStorage.removeItem('socialMediaState');
+    store.commit('setLoggedIn', false);
+    router.push('/login');
+  }
+};
 </script>
   

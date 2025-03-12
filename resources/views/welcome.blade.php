@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 </head>
-<body class="bg-black body-clip dark-only">
+<body class="bg-black body-clip light">
   <div id="app"></div>
   @vite([
     'resources/js/app.js',

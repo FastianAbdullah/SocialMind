@@ -17,8 +17,6 @@ load_dotenv()
 
 app = Flask(__name__)
 
-
-
 CORS(app, resources={
     r"/*": {
         "origins": ["http://127.0.0.1:8000", "http://localhost:8000", "https://localhost:8080"],
@@ -35,7 +33,6 @@ CORS(app, resources={
         "expose_headers": ["Content-Type", "Authorization"]
     }
 })
-
 
 # Certificate paths
 CERT_FILE = "cert.pem"
@@ -372,6 +369,7 @@ def post_to_instagram():
             'message': f'Missing required fields. Required: {required_fields}'
         }), 400
     
+
     ig_manager = InstagramManager(access_token)
     result = ig_manager.post_content(
         data['ig_user_id'],
@@ -379,6 +377,7 @@ def post_to_instagram():
         data['caption']
     )
     
+    print(f"Result is: {result}")
     if result:
         post_history.add_post('Instagram', result)  # If you're using post history
         return jsonify({
@@ -417,6 +416,8 @@ def get_trending_hashtags():
     try:
         ig_manager = InstagramManager(access_token)
         trending_hashtags = ig_manager.get_trending_hashtags(ig_user_id, hashtag)
+        print(f"Trending hashtags: {trending_hashtags}")
+        print(f"Length of trending hashtags: {len(trending_hashtags)}")
         
         if trending_hashtags:
             return jsonify({
@@ -466,13 +467,16 @@ def generate_optimized_content():
         ig_user_id = accounts[0]['instagram_account_id']
 
         # 2. Analyze text to get purpose and hashtags
+        single_hashtag = []
         mixtral_analysis = mixtral_client.process_text(data['text'])
-        hashtags = mixtral_analysis['hashtags']
+        hashtags = mixtral_analysis['hashtags'][0] # Use a single hashtag
+        single_hashtag.append(hashtags)
+        print(f"Selected Hashtag: {single_hashtag}")
         
         # 3. Get top posts for all extracted hashtags
         content_analyzer = InstagramContentAnalyzer(access_token)
-        top_posts = content_analyzer.get_top_posts_for_hashtags(ig_user_id, hashtags)
-        
+        top_posts = content_analyzer.get_top_posts_for_hashtags(ig_user_id, single_hashtag)
+        print(f"Top Posts: {top_posts}")
         # 4. Get optimized set of example posts
         example_posts = content_analyzer.get_optimized_examples(top_posts, num_examples=4)
         
@@ -492,7 +496,7 @@ def generate_optimized_content():
             'status': 'success',
             'analysis': {
                 'purpose': mixtral_analysis['purpose'],
-                'suggested_hashtags': hashtags,
+                'suggested_hashtags': single_hashtag,
                 'example_posts': example_posts,
                 'common_phrases': analysis['common_phrases'],
                 'emoji_usage': analysis['emoji_usage'],

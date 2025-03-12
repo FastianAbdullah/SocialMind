@@ -90,6 +90,7 @@ class InstagramManager:
             response = requests.post(media_url, params=media_params)
             response.raise_for_status()
             result = response.json()
+         
             
             if 'id' in result:
                 creation_id = result['id']

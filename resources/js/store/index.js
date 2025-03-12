@@ -39,9 +39,22 @@ export default createStore({
       localStorage.setItem('token', token);
       commit('setLoggedIn', true);
     },
-    logout({ commit }) {
+    async logout({ commit }) {
+      // Clear authentication token
       localStorage.removeItem('token');
+      
+      // Clear social media store data
+      localStorage.removeItem('socialMediaState');
+      
       commit('setLoggedIn', false);
+      
+      // Attempt to call logout API endpoint
+      try {
+        await axios.post('/logout');
+      } catch (error) {
+        console.error('Error during API logout:', error);
+        // Continue with client-side logout even if API fails
+      }
     },
   },
 });

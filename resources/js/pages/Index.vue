@@ -844,6 +844,8 @@ import Header from "../components/Header.vue";
 import Loader from '../components/Loader.vue';
 import { ref, onMounted } from 'vue';
 import { useDynamicResources } from "../composables/useDynamicResources";
+import { useSocialMediaStore } from '../store/socialMediaStore.js';
+import { useRouter } from 'vue-router';
 
 // Data properties
 const cssFiles = [
@@ -864,12 +866,25 @@ const isLoading = ref(true)
 
 const {removeDynamicCss, initializeCss, removeDynamicJs,initializeScripts } = useDynamicResources(isLoading,cssFiles,JsFiles);
 
+const socialMediaStore = useSocialMediaStore();
+const router = useRouter();
 
 onMounted(async () => {
   await removeDynamicCss();
   await removeDynamicJs();
   await initializeCss();
   await initializeScripts();
+  
+  // Check authentication status
+  const isAuthenticated = await socialMediaStore.validateSession();
+  
+  // If not authenticated but we have social media data, clear it
+  if (!isAuthenticated && 
+      (socialMediaStore.facebook.connected || 
+       socialMediaStore.instagram.connected || 
+       socialMediaStore.linkedin.connected)) {
+      socialMediaStore.clearSocialMediaStore();
+  }
 });
 
 </script>

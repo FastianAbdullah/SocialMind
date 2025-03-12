@@ -7,14 +7,17 @@ axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[nam
 /**
  * Create a post by analyzing content and generating optimized versions
  * @param {string} content - The content to analyze and optimize
- * @returns {Promise<Array>} - Array of generated posts
+ * @returns {Promise<Object>} - Object containing generated posts and trending hashtags
  */
 export async function createPost(content) {
     try {
         const response = await axios.post('/posts/create', { content });
         
         if (response.data.success) {
-            return response.data.posts;
+            return {
+                posts: response.data.posts,
+                trendingHashtags: response.data.trending_hashtags || []
+            };
         } else {
             throw new Error(response.data.message || 'Failed to create post');
         }
@@ -56,4 +59,55 @@ export async function savePost(post) {
         console.error('Save post error:', error);
         throw error;
     }
-} 
+}
+
+/**
+ * Publish posts to selected social media platforms
+ * @param {Array} platformsData - Array of platform data objects
+ * @returns {Promise<Object>} - Object containing publish results
+ */
+export async function publishPosts(platformsData) {
+  try {
+    // Create FormData to handle file uploads
+    const formData = new FormData();
+    
+    // Add platforms data as JSON
+    formData.append('platforms', JSON.stringify(platformsData));
+    console.log("Platforms Data is: ", platformsData);
+    console.log("Form Data is: ", formData);
+
+    // Add media files if present
+    platformsData.forEach((platform, index) => {
+      if (platform.media) {
+        formData.append(`media_${platform.platform_id}`, platform.media);
+      }
+    });
+
+    console.log("Form Data is: ", formData);
+    
+    const response = await axios.post('/posts/publish', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    if (response.data.success) {
+      return response.data.results;
+    } else {
+      throw new Error(response.data.message || 'Failed to publish posts');
+    }
+  } catch (error) {
+    console.error('Publish posts error:', error);
+    
+    if (error.response) {
+      console.error('Server error:', error.response.data);
+      throw new Error(error.response.data.message || 'Server error occurred');
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+      throw new Error('No response received from server');
+    } else {
+      console.error('Request setup error:', error.message);
+      throw error;
+    }
+  }
+}

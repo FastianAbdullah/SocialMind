@@ -11,6 +11,8 @@ use App\Models\UserPlatform;
 use App\Models\PlatformPage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 
 class PostManagerController extends Controller
 {
@@ -30,7 +32,7 @@ class PostManagerController extends Controller
             $content = $request->input('content');
             
             // Step 1: Analyze the content to get purpose and hashtags
-            $analysisResponse = Http::withoutVerifying()
+            $analysisResponse = Http::withoutVerifying()->timeout(80)
                 ->post('https://localhost:8443/content/analyze', [
                     'text' => $content
                 ]);
@@ -52,66 +54,145 @@ class PostManagerController extends Controller
             $purpose = $analysisData['purpose'] ?? 'informational';
             $hashtags = $analysisData['hashtags'] ?? [];
             
-            // Step 2: Generate optimized content based on purpose
-            $optimizationResponse = Http::withoutVerifying()
-                ->post('https://localhost:8443/content/optimize', [
-                    'text' => $content,
-                    'purpose' => $purpose
-                ]);
-                
-            if ($optimizationResponse->failed()) {
-                Log::error('Content optimization failed', [
-                    'status' => $optimizationResponse->status(),
-                    'response' => $optimizationResponse->body(),
+            // Find admin user for Instagram API calls
+            $adminUser = User::where('name', 'admin')->first();
+            
+            if (!$adminUser) {
+                Log::error('Admin user not found', [
                     'user_id' => Auth::id()
                 ]);
                 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to optimize content'
+                    'message' => 'Admin configuration not found'
                 ], 500);
             }
             
-            $optimizationData = $optimizationResponse->json();
-            $optimizedContent = $optimizationData['optimized_content'] ?? [];
+            // Get admin's Instagram platform
+            $instagramPlatform = UserPlatform::where('user_id', $adminUser->id)
+                ->where('platform_id', 2) // Instagram platform_id
+                ->first();
+                
+            if (!$instagramPlatform || !$instagramPlatform->access_token) {
+                Log::error('Admin Instagram platform not found', [
+                    'user_id' => Auth::id(),
+                    'admin_id' => $adminUser->id
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Instagram configuration not found'
+                ], 500);
+            }
             
-            // Create three post variations
+            // Get active Instagram page
+            $instagramPage = PlatformPage::where('user_platform_id', $instagramPlatform->id)
+                ->where('type', 'instagram_account')
+                ->where('is_active', 1)
+                ->first();
+                
+            if (!$instagramPage) {
+                Log::error('Admin Instagram page not found', [
+                    'user_id' => Auth::id(),
+                    'admin_id' => $adminUser->id,
+                    'platform_id' => $instagramPlatform->id
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Instagram page not found'
+                ], 500);
+            }
+            
+            // Get trending hashtags if we have at least one hashtag from analysis
+            $trendingHashtags = [];
+            if (!empty($hashtags)) {
+                $seedHashtag = $hashtags[0]; // Use the first hashtag as seed
+                
+                $trendingResponse = Http::withoutVerifying()->timeout(80)
+                    ->withHeaders([
+                        'Authorization' => $instagramPlatform->access_token
+                    ])
+                    ->post('https://localhost:8443/instagram/hashtags', [
+                        'hashtag' => $seedHashtag,
+                        'ig_user_id' => $instagramPage->page_id
+                    ]);
+                    
+                if (!$trendingResponse->failed()) {
+                    $trendingData = $trendingResponse->json();
+                    if (isset($trendingData['status']) && $trendingData['status'] === 'success') {
+                        $trendingHashtags = array_column($trendingData['trending_hashtags'], 'hashtag');
+                    }
+                }
+            }
+            
+            // Create three optimized post variations
             $posts = [];
             
-            // If we have optimized content, use it for the first post
-            if (!empty($optimizedContent)) {
+            // Make three optimization requests with different seed texts
+            for ($i = 0; $i < 3; $i++) {
+                // Optimization using our enhanced API
+                $optimizationResponse = Http::withoutVerifying()->timeout(90)
+                    ->withHeaders([
+                        'Authorization' => $instagramPlatform->access_token
+                    ])
+                    ->post('https://localhost:8443/content/generate-optimized', [
+                        'text' => $content,
+                        'ig_user_id' => $instagramPage->page_id
+                    ]);
+                    
+                if ($optimizationResponse->failed()) {
+                    Log::error('Content optimization failed', [
+                        'status' => $optimizationResponse->status(),
+                        'response' => $optimizationResponse->body(),
+                        'user_id' => Auth::id(),
+                        'attempt' => $i + 1
+                    ]);
+                    
+                    continue; // Skip this iteration and try the next one
+                }
+                
+                $optimizationData = $optimizationResponse->json();
+                
+                if (isset($optimizationData['status']) && $optimizationData['status'] === 'success') {
+                    $optimizedContent = $optimizationData['optimized_content'] ?? '';
+                    
+                    // Extract hashtags from the optimized content
+                    preg_match_all('/#(\w+)/', $optimizedContent, $matches);
+                    $extractedHashtags = $matches[1] ?? []; // This gets the actual hashtags without the # symbol
+                    
+                    // If no hashtags found in content, use a subset of the analyzed hashtags as fallback
+                    if (empty($extractedHashtags)) {
+                        $extractedHashtags = array_slice($hashtags, 0, min(count($hashtags), $i == 0 ? count($hashtags) : ($i == 1 ? 5 : 3)));
+                    }
+                    
+                    $posts[] = [
+                        'content' => $optimizedContent,
+                        'purpose' => $purpose,
+                        'hashtags' => $extractedHashtags
+                    ];
+                }
+            }
+            
+            // Fallback: If we couldn't get any optimized content, use the original
+            if (empty($posts)) {
                 $posts[] = [
-                    'content' => $optimizedContent,
+                    'content' => $content,
                     'purpose' => $purpose,
                     'hashtags' => $hashtags
                 ];
             }
             
-            // Generate two more variations with slight differences
-            // In a real implementation, you might want to make additional API calls
-            // or use different optimization parameters
-            
-            // For now, we'll create simple variations
-            $posts[] = [
-                'content' => $this->createVariation($content, $optimizedContent ?? $content),
-                'purpose' => $purpose,
-                'hashtags' => array_slice($hashtags, 0, min(5, count($hashtags)))
-            ];
-            
-            $posts[] = [
-                'content' => $this->createVariation($content, $optimizedContent ?? $content, true),
-                'purpose' => $purpose,
-                'hashtags' => array_slice($hashtags, 0, min(3, count($hashtags)))
-            ];
-            
             return response()->json([
                 'success' => true,
-                'posts' => $posts
+                'posts' => $posts,
+                'trending_hashtags' => $trendingHashtags
             ]);
             
         } catch (\Exception $e) {
             Log::error('Post creation failed', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'user_id' => Auth::id()
             ]);
             
@@ -162,57 +243,6 @@ class PostManagerController extends Controller
             ], 500);
         }
     }
-    
-    /**
-     * Create a variation of the content
-     *
-     * @param string $originalContent
-     * @param string $baseContent
-     * @param bool $shorterVersion
-     * @return string
-     */
-    private function createVariation($originalContent, $baseContent, $shorterVersion = false)
-    {
-        // In a real implementation, you would use more sophisticated methods
-        // to create variations, possibly with AI assistance
-        
-        // For this example, we'll just make some simple modifications
-        $sentences = preg_split('/(?<=[.!?])\s+/', $baseContent, -1, PREG_SPLIT_NO_EMPTY);
-        
-        if (empty($sentences)) {
-            return $baseContent;
-        }
-        
-        if ($shorterVersion && count($sentences) > 2) {
-            // Create a shorter version by removing some sentences
-            $sentencesToKeep = max(1, floor(count($sentences) * 0.7));
-            $sentences = array_slice($sentences, 0, $sentencesToKeep);
-        }
-        
-        // Shuffle the order of some sentences (except the first one)
-        if (count($sentences) > 2) {
-            $firstSentence = array_shift($sentences);
-            shuffle($sentences);
-            array_unshift($sentences, $firstSentence);
-        }
-        
-        // Add some filler words or phrases to make it different
-        $fillerPhrases = [
-            "Interestingly, ",
-            "It's worth noting that ",
-            "As many experts suggest, ",
-            "According to recent trends, ",
-            "Surprisingly, "
-        ];
-        
-        if (!empty($sentences) && !$shorterVersion) {
-            $randomIndex = array_rand($sentences);
-            $randomFiller = $fillerPhrases[array_rand($fillerPhrases)];
-            $sentences[$randomIndex] = $randomFiller . lcfirst($sentences[$randomIndex]);
-        }
-        
-        return implode(' ', $sentences);
-    }
 
     /**
      * Generate optimized content using AI analysis and top-performing posts
@@ -227,31 +257,43 @@ class PostManagerController extends Controller
                 'text' => 'required|string|min:5',
             ]);
 
-        // First, find the user's Instagram platform connection
-        $userPlatform = UserPlatform::where('user_id', Auth::id())
-            ->where('platform_id', 2) // Instagram platform_id
-            ->first();
-        
-        // Now find the active Instagram page using the user_platform_id
-        $instagramPage = PlatformPage::where('user_platform_id', $userPlatform->id)
-            ->where('type', 'instagram_account')
-            ->where('is_active', 1)
-            ->first();
+            // Find admin user instead of using authenticated user
+            $adminUser = User::where('name', 'admin')->first();
+            
+            if (!$adminUser) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin user not found for Instagram integration'
+                ], 400);
+            }
 
-        if (!$instagramPage) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No active Instagram account found. Please connect your Instagram account first.'
-            ], 400);
-        }
+            // Find the admin's Instagram platform connection
+            $userPlatform = UserPlatform::where('user_id', $adminUser->id)
+                ->where('platform_id', 2) // Instagram platform_id
+                ->first();
+            
+            // Now find the active Instagram page using the user_platform_id
+            $instagramPage = null;
+            if ($userPlatform) {
+                $instagramPage = PlatformPage::where('user_platform_id', $userPlatform->id)
+                    ->where('type', 'instagram_account')
+                    ->where('is_active', 1)
+                    ->first();
+            }
 
-        
-        if (!$userPlatform || !$userPlatform->access_token) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No valid access token found. Please reconnect your Instagram account.'
-            ], 400);
-        }
+            if (!$instagramPage) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No active Instagram account found for admin user.'
+                ], 400);
+            }
+            
+            if (!$userPlatform || !$userPlatform->access_token) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid access token found for admin Instagram account.'
+                ], 400);
+            }
 
             // Make request to Flask API with proper authorization
             $response = Http::withoutVerifying()
@@ -414,6 +456,211 @@ class PostManagerController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to optimize content: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Publish posts to selected social media platforms
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function publish(Request $request)
+    {
+        try {
+            // Validate the request
+            $request->validate([
+                'platforms' => 'required|json',
+            ]);
+            
+            // Decode platforms data
+            $platformsData = json_decode($request->input('platforms'), true);
+            
+            if (!is_array($platformsData) || empty($platformsData)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No platforms selected for publishing'
+                ], 400);
+            }
+            
+            $results = [];
+            $userId = Auth::id();
+            
+            // Process each platform
+            foreach ($platformsData as $platform) {
+                $platformId = $platform['platform_id'] ?? null;
+                $pageId = $platform['page_id'] ?? null;
+                $content = $platform['content'] ?? '';
+                
+                if (!$platformId) {
+                    continue;
+                }
+                
+                // Get user platform data
+                $userPlatform = UserPlatform::where('user_id', $userId)
+                    ->where('platform_id', $platformId)
+                    ->first();
+                
+                if (!$userPlatform || !$userPlatform->access_token) {
+                    Log::info('No valid user platform found', [
+                        'user_id' => $userId,
+                        'platform_id' => $platformId
+                    ]);
+                    
+                    $results[$platformId] = [
+                        'success' => false,
+                        'message' => 'Platform not connected or missing access token'
+                    ];
+                    continue;
+                }
+                
+                // For Facebook and Instagram, get the page
+                $platformPage = null;
+                if (in_array($platformId, [1, 2])) { // Facebook or Instagram
+                    $platformPage = PlatformPage::where('user_platform_id', $userPlatform->id)
+                        ->first();
+                    
+                    if (!$platformPage) {
+                        Log::info('Platform page not found', [
+                            'user_id' => $userId,
+                            'platform_id' => $platformId,
+                            'page_id' => $pageId
+                        ]);
+                        
+                        $results[$platformId] = [
+                            'success' => false,
+                            'message' => 'Selected page not found'
+                        ];
+                        continue;
+                    }
+                }
+                
+                // Check for media file
+                $mediaFile = $request->file("media_{$platformId}");
+                $mediaPath = null;
+                
+                if ($mediaFile) {
+                    // Store the file temporarily
+                    $mediaPath = $mediaFile->getPathname();
+                    Log::info('Media file received', [
+                        'platform_id' => $platformId,
+                        'file_name' => $mediaFile->getClientOriginalName(),
+                        'file_size' => $mediaFile->getSize(),
+                        'mime_type' => $mediaFile->getMimeType()
+                    ]);
+                }
+                
+                // Log the data we've gathered
+                Log::info('Publishing post data', [
+                    'user_id' => $userId,
+                    'platform_id' => $platformId,
+                    'platform_name' => $platformId == 1 ? 'Facebook' : ($platformId == 2 ? 'Instagram' : 'LinkedIn'),
+                    'access_token' => substr($userPlatform->access_token, 0, 10) . '...',
+                    'page_id' => $platformPage ? $platformPage->page_id : 'N/A',
+                    'page_name' => $platformPage ? $platformPage->name : 'N/A',
+                    'content_length' => strlen($content),
+                    'has_media' => $mediaFile ? 'yes' : 'no'
+                ]);
+                
+                // Publish to Instagram
+                if ($platformId == 2 && $platformPage && $mediaFile) { // Instagram with media
+                    try {
+                        // First, we need to upload the image to a publicly accessible URL
+                        // For this example, we'll store it temporarily in the public storage
+                        $imagePath = $mediaFile->store('temp_uploads', 'public');
+                        $imageUrl = asset('storage/' . $imagePath);
+                        
+                        // Now make a JSON request to the Instagram API
+                        $response = Http::withoutVerifying()
+                            ->withHeaders([
+                                'Authorization' => $userPlatform->access_token,
+                                'Content-Type' => 'application/json'
+                            ])
+                            ->post('https://localhost:8443/instagram/post', [
+                                'ig_user_id' => $platformPage->page_id,
+                                'image_url' => $imageUrl,
+                                'caption' => $content
+                            ]);
+                        
+                        // Log the request details for debugging
+                        Log::info('Instagram API request', [
+                            'endpoint' => 'https://localhost:8443/instagram/post',
+                            'payload' => [
+                                'ig_user_id' => $platformPage->page_id,
+                                'image_url' => $imageUrl,
+                                'caption_length' => strlen($content)
+                            ]
+                        ]);
+                        
+                        if ($response->successful()) {
+                            $responseData = $response->json();
+                            $results[$platformId] = [
+                                'success' => true,
+                                'message' => 'Post published successfully to Instagram',
+                                'platform_id' => $platformId,
+                                'platform_name' => 'Instagram',
+                                'post_id' => $responseData['post_id'] ?? null
+                            ];
+                            
+                            // Clean up the temporary file
+                            Storage::disk('public')->delete($imagePath);
+                        } else {
+                            Log::error('Instagram post failed', [
+                                'status' => $response->status(),
+                                'response' => $response->body(),
+                                'user_id' => $userId
+                            ]);
+                            
+                            $results[$platformId] = [
+                                'success' => false,
+                                'message' => 'Failed to publish to Instagram: ' . ($response->json()['message'] ?? 'Unknown error'),
+                                'platform_id' => $platformId,
+                                'platform_name' => 'Instagram'
+                            ];
+                            
+                            // Clean up the temporary file
+                            Storage::disk('public')->delete($imagePath);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Instagram post exception', [
+                            'error' => $e->getMessage(),
+                            'user_id' => $userId
+                        ]);
+                        
+                        $results[$platformId] = [
+                            'success' => false,
+                            'message' => 'Error publishing to Instagram: ' . $e->getMessage(),
+                            'platform_id' => $platformId,
+                            'platform_name' => 'Instagram'
+                        ];
+                    }
+                } else {
+                    // For now, just return success for other platforms
+                    $results[$platformId] = [
+                        'success' => true,
+                        'message' => 'Post data logged successfully',
+                        'platform_id' => $platformId,
+                        'platform_name' => $platformId == 1 ? 'Facebook' : ($platformId == 2 ? 'Instagram' : 'LinkedIn')
+                    ];
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'results' => $results
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Post publishing failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to publish posts: ' . $e->getMessage()
             ], 500);
         }
     }

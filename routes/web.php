@@ -54,14 +54,20 @@ Route::prefix('instagram')->middleware('auth:sanctum')->group(function () {
 
 // User Route
 // Return the user object by calling the api/user endpoint
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware(['auth'])->get('/user', function (Request $request) {
     return $request->user();
+});
+
+
+Route::middleware(['auth'])->get('/check-auth', function () {
+    return response()->json(['authenticated' => true]);
 });
 
 // Post management routes
 Route::middleware(['auth'])->group(function () {
     Route::post('/posts/create', [PostManagerController::class, 'create']);
     Route::post('/posts/save', [PostManagerController::class, 'save']);
+    Route::post('/posts/publish', [PostManagerController::class, 'publish']);
     Route::post('/hashtags/search', [HashtagController::class, 'search']);
     Route::post('/hashtags/analyze', [HashtagController::class, 'analyze']);
     Route::post('/content/generate-optimized', [PostManagerController::class, 'generateOptimizedContent']);

@@ -27,3 +27,4 @@ Route::options('{any}', function() {
 
 
 
+
