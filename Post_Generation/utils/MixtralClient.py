@@ -18,7 +18,7 @@ class MixtralClient:
         # Initialize OpenAI client
         self.client = OpenAI(api_key=self.api_key)
         self.model = "gpt-4o-mini-2024-07-18"  # or your specific model ID for GPT-4-0mini
-
+    
     def generate_completion(self, messages: List[Dict[str, str]], max_tokens: int = 1000, temperature: float = 0.7) -> str:
         try:
             completion = self.client.chat.completions.create(

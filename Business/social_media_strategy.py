@@ -8,7 +8,7 @@ class SocialMediaStrategyGenerator:
     A tool that generates social media marketing strategies using the DeepSeek R1 LLM.
     """
     
-    def __init__(self, api_key: Optional[str] = None, site_url: str = "Your Website", site_name: str = "Social Media Strategy Generator"):
+    def __init__(self, api_key: Optional[str] = None):
         """
         Initialize the strategy generator.
         
@@ -18,11 +18,10 @@ class SocialMediaStrategyGenerator:
             site_name: Your site name for OpenRouter rankings
         """
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
+      
         if not self.api_key:
             raise ValueError("API key must be provided or set as OPENROUTER_API_KEY environment variable")
-        
-        self.site_url = site_url
-        self.site_name = site_name
+    
         self.api_url = "https://openrouter.ai/api/v1/chat/completions"
     
     def generate_strategy(self, 
@@ -62,7 +61,7 @@ class SocialMediaStrategyGenerator:
             current_challenges=current_challenges
         )
         
-        # Call the API with the prompt
+      
         response = self._call_api(prompt)
         
         # Extract and return the generated strategy
@@ -118,8 +117,7 @@ class SocialMediaStrategyGenerator:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": self.site_url,
-            "X-Title": self.site_name,
+         
         }
         
         data = {

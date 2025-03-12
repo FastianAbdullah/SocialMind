@@ -67,7 +67,7 @@
                             @click="toggleHashtagSelection(tag)"
                             :class="{ 'selected': selectedHashtags.includes(tag.name) }"
                           >
-                            <span class="hashtag-name">#{{ tag.name }}</span>
+                            <span class="hashtag-name">{{ tag.name }}</span>
                             <span class="hashtag-count">{{ formatCount(tag.count) }}</span>
                           </div>
                         </div>
@@ -94,7 +94,7 @@
                             @click="toggleHashtagSelection(tag)"
                             :class="{ 'selected': selectedHashtags.includes(tag.name) }"
                           >
-                            <span class="hashtag-name">#{{ tag.name }}</span>
+                            <span class="hashtag-name">{{ tag.name }}</span>
                             <span class="hashtag-count">{{ formatCount(tag.count) }}</span>
                           </div>
                         </div>
@@ -139,7 +139,7 @@
                         :key="tag"
                         class="badge bg-light text-dark me-2 mb-2 p-2"
                       >
-                        #{{ tag }}
+                        {{ tag }}
                         <i 
                           class="fas fa-times-circle ms-1" 
                           @click.stop="removeHashtag(tag)"
@@ -187,13 +187,13 @@ const searchHashtags = async () => {
     if (searchQuery.value.includes(' ')) {
       const analysisResult = await analyzeContent(searchQuery.value);
       popularHashtags.value = analysisResult.hashtags.map(tag => ({
-        name: tag,
+        name: `#${tag.replace(/^#/, '')}`, // Ensure single # and add if missing
         count: 0
       }));
     } else {
       // If it's a single hashtag, search trending
       const result = await searchHashtagsAPI(
-        searchQuery.value.replace('#', '')
+        searchQuery.value.replace(/^#/, '') // Remove # if present
       );
       
       console.log('API response:', result);
@@ -201,7 +201,7 @@ const searchHashtags = async () => {
       if (result && result.trending_hashtags) {
         // Process the hashtags
         const allHashtags = result.trending_hashtags.map(tag => ({
-          name: tag.hashtag,
+          name: `#${tag.hashtag.replace(/^#/, '')}`, // Ensure single # and add if missing
           count: tag.count
         }));
         
@@ -210,15 +210,8 @@ const searchHashtags = async () => {
         
         // Split between popular and related
         if (allHashtags.length > 0) {
-          // Take top 5 for popular
           popularHashtags.value = allHashtags.slice(0, 5);
-          
-          // Rest for related
-          if (allHashtags.length > 5) {
-            relatedHashtags.value = allHashtags.slice(5);
-          } else {
-            relatedHashtags.value = [];
-          }
+          relatedHashtags.value = allHashtags.length > 5 ? allHashtags.slice(5) : [];
         } else {
           popularHashtags.value = [];
           relatedHashtags.value = [];
@@ -261,7 +254,7 @@ const clearSelection = () => {
 };
 
 const copyHashtags = async () => {
-  const hashtags = selectedHashtags.value.map(tag => `#${tag}`).join(' ');
+  const hashtags = selectedHashtags.value.join(' '); // No need to add # as it's already in the tags
   try {
     await navigator.clipboard.writeText(hashtags);
     if (window.$) {
@@ -340,15 +333,18 @@ onMounted(async () => {
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 }
 
 .hashtag-item:hover {
+  background: #ffffff;
+  border-color: #74c0fc;
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .hashtag-item.selected {
-  background: #ffffff;
+  background: #e7f5ff;
   border-color: #74c0fc;
 }
 
@@ -356,6 +352,7 @@ onMounted(async () => {
   font-weight: 500;
   margin-bottom: 0.25rem;
   color: #000000;
+  font-size: 0.95rem;
 }
 
 .hashtag-count {
@@ -364,16 +361,19 @@ onMounted(async () => {
 }
 
 .selected-hashtags .badge {
-  font-size: 1rem;
-  background-color: #ffffff ;
-  color: #ffffff !important;
+  font-size: 0.95rem;
+  background-color: #f8f9fa !important;
+  color: #000000 !important;
   border: 1px solid #dee2e6;
+  padding: 0.5rem 0.75rem !important;
+  border-radius: 6px;
 }
 
 .selected-hashtags .badge i {
   cursor: pointer;
   opacity: 0.7;
   transition: opacity 0.2s ease;
+  color: #dc3545;
 }
 
 .selected-hashtags .badge i:hover {

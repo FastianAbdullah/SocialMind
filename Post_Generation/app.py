@@ -7,8 +7,8 @@ from utils.MixtralClient import MixtralClient
 from utils.SocialMediaAuth import SocialMediaAuth
 from utils.UserPostHistory import UserPostHistory
 from utils.SentimentAnalyzer import SentimentAnalyzer
+from utils.social_media_strategy import SocialMediaStrategyGenerator
 from dotenv import load_dotenv
-import textblob
 import os
 
 import ssl
@@ -60,6 +60,9 @@ mixtral_client = MixtralClient()
 
 # Create an instance of SentimentAnalyzer
 sentiment_analyzer = SentimentAnalyzer()
+api_key = os.environ.get("GROQ_API_KEY")
+print(api_key)
+strategy_generator = SocialMediaStrategyGenerator(api_key=api_key)
 
 
 
@@ -652,7 +655,7 @@ def get_post_comments():
         })
 
     except Exception as e:
-        Log.error(f"Error fetching post comments: {str(e)}")
+       
         return jsonify({
             'status': 'error',
             'message': 'An error occurred while fetching comments'
@@ -728,6 +731,48 @@ def analyze_post_comments():
         return jsonify({
             'status': 'error',
             'message': f'An unexpected error occurred: {str(e)}'
+        }), 500
+
+@app.route('/generate-strategy', methods=['POST'])
+def generate_strategy():
+    """
+    Endpoint to generate a social media marketing strategy.
+    """
+    try:
+        # Set a longer timeout for this long-running operation
+        # Get JSON data from request
+        data = request.get_json()
+        
+        # Check for required fields
+        required_fields = ['business_type', 'target_demographics', 'platform', 'business_goals']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+        
+        # Prepare kwargs for the generator
+        kwargs = {field: data.get(field) for field in required_fields}
+        
+        # Add optional fields if they exist
+        optional_fields = ['content_preferences', 'budget', 'timeframe', 'current_challenges']
+        for field in optional_fields:
+            if field in data:
+                kwargs[field] = data[field]
+        
+        # Generate the strategy (this is the long-running operation)
+        print(f"Starting strategy generation for business type: {data['business_type']}")
+        strategy = strategy_generator.generate_strategy(**kwargs)
+        print(f"Strategy generation complete, length: {len(strategy)}")
+        
+        # Return the generated strategy
+        return jsonify({
+            "status": "success",
+            "strategy": strategy
+        })
+    except Exception as e:
+        print(f"Error generating strategy: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": f"An error occurred: {str(e)}"
         }), 500
 
 if __name__ == '__main__':

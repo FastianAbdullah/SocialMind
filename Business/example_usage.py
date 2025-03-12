@@ -1,7 +1,7 @@
-from social_media_strategy import SocialMediaStrategyGenerator
+from Post_Generation.utils.social_media_strategy import SocialMediaStrategyGenerator
 
 # Create an instance of the generator
-generator = SocialMediaStrategyGenerator(api_key="api_key")
+generator = SocialMediaStrategyGenerator(api_key="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")
 
 # Generate a strategy
 strategy = generator.generate_strategy(

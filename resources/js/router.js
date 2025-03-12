@@ -10,6 +10,7 @@ import CreatePost from './components/CreatePost.vue';
 import HashtagFinder from './components/HashtagFinder.vue';
 import DescriptionGenerator from './components/DescriptionGenerator.vue';
 import SentimentAnalysis from './components/SentimentAnalysis.vue';
+import BusinessPlanGenerator from './components/BusinessPlanGenerator.vue';
 
 
 const routes = [
@@ -24,6 +25,7 @@ const routes = [
   { path: '/hashtags-finder', component: HashtagFinder, meta: { requiresAuth: true }},
   { path: '/description-generator', component: DescriptionGenerator, meta: { requiresAuth: true }},
   { path: '/sentiment-analysis', component: SentimentAnalysis, meta: { requiresAuth: true }},
+  { path: '/business-plan-generator', component: BusinessPlanGenerator, meta: { requiresAuth: true }},
 ];
 
 const router = createRouter({
