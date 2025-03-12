@@ -6,7 +6,15 @@ from utils.LinkedInManager import LinkedInManager
 from utils.MixtralClient import MixtralClient
 from utils.SocialMediaAuth import SocialMediaAuth
 from utils.UserPostHistory import UserPostHistory
+from utils.SentimentAnalyzer import SentimentAnalyzer
+from utils.social_media_strategy import SocialMediaStrategyGenerator
 from dotenv import load_dotenv
+<<<<<<< Updated upstream
+=======
+from utils.social_media_strategy import SocialMediaStrategyGenerator
+
+import textblob
+>>>>>>> Stashed changes
 import os
 
 import ssl
@@ -53,6 +61,17 @@ auth = SocialMediaAuth(
 post_history = UserPostHistory()
 mixtral_client = MixtralClient()
 
+# Create an instance of SentimentAnalyzer
+sentiment_analyzer = SentimentAnalyzer()
+api_key = os.environ.get("GROQ_API_KEY")
+print(api_key)
+strategy_generator = SocialMediaStrategyGenerator(api_key=api_key)
+
+# Load API key from environment variables
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+
+# Initialize the strategy generator
+strategy_generator = SocialMediaStrategyGenerator(api_key=DEEPSEEK_API_KEY)
 
 @app.route('/', methods=['GET'])
 def hello():
@@ -604,6 +623,228 @@ def get_linkedin_profile():
         return jsonify({
             'status': 'error',
             'message': str(e)
+        }), 500
+
+@app.route('/post/comments', methods=['POST'])
+def get_post_comments():
+    """Get comments for a specific post"""
+    try:
+        # Validate request
+        access_token = request.headers.get('Authorization')
+        if not access_token:
+            return jsonify({
+                'status': 'error',
+                'message': 'No access token provided'
+            }), 401
+
+        data = request.json
+        if not data or 'post_id' not in data or 'platform' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Post ID and platform are required'
+            }), 400
+
+        post_id = data['post_id']
+        platform = data['platform'].lower()
+        limit = data.get('limit', 50)
+
+        # Fetch comments based on platform
+        comments = []
+        if platform == 'instagram':
+            ig_manager = InstagramManager(access_token)
+            comments = ig_manager.get_post_comments(post_id, limit)
+        elif platform == 'facebook':
+            fb_manager = FacebookManager(access_token)
+            comments = fb_manager.get_post_comments(post_id, limit)
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Unsupported platform'
+            }), 400
+
+        return jsonify({
+            'status': 'success',
+            'comments': comments,
+            'count': len(comments)
+        })
+
+    except Exception as e:
+       
+        return jsonify({
+            'status': 'error',
+            'message': 'An error occurred while fetching comments'
+        }), 500
+
+@app.route('/post/sentiment-analysis', methods=['POST'])
+def analyze_post_comments():
+    """Simple sentiment analysis of post comments"""
+    try:
+        # Validate request
+        access_token = request.headers.get('Authorization')
+        if not access_token:
+            return jsonify({
+                'status': 'error',
+                'message': 'No access token provided'
+            }), 401
+
+        data = request.json
+        if not data or 'post_id' not in data or 'platform' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Post ID and platform are required'
+            }), 400
+
+        post_id = data['post_id']
+        platform = data['platform'].lower()
+        
+        # Debug info
+        print(f"Analyzing comments for {platform} post: {post_id}")
+
+        # Fetch comments
+        comments = []
+        try:
+            if platform == 'instagram':
+                ig_manager = InstagramManager(access_token)
+                comments = ig_manager.get_post_comments(post_id)
+            elif platform == 'facebook':
+                fb_manager = FacebookManager(access_token)
+                comments = fb_manager.get_post_comments(post_id)
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Unsupported platform'
+                }), 400
+                
+            print(f"Retrieved {len(comments)} comments")
+        except Exception as e:
+            print(f"Error fetching comments: {str(e)}")
+            return jsonify({
+                'status': 'error',
+                'message': f'Error fetching comments: {str(e)}'
+            }), 500
+
+        # Perform sentiment analysis
+        try:
+            analyzer = SentimentAnalyzer()
+            analysis = analyzer.analyze_comments(comments)
+            
+            return jsonify({
+                'status': 'success',
+                'overall_sentiment': analysis['overall_sentiment'],
+                'comment_count': analysis['comment_count']
+            })
+        except Exception as e:
+            print(f"Error analyzing comments: {str(e)}")
+            return jsonify({
+                'status': 'error',
+                'message': f'Error in sentiment analysis: {str(e)}'
+            }), 500
+
+    except Exception as e:
+        print(f"Unexpected error in analyze_post_comments: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': f'An unexpected error occurred: {str(e)}'
+        }), 500
+
+<<<<<<< Updated upstream
+@app.route('/generate-strategy', methods=['POST'])
+def generate_strategy():
+    """
+    Endpoint to generate a social media marketing strategy.
+    """
+    try:
+        # Set a longer timeout for this long-running operation
+        # Get JSON data from request
+        data = request.get_json()
+        
+        # Check for required fields
+        required_fields = ['business_type', 'target_demographics', 'platform', 'business_goals']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+        
+        # Prepare kwargs for the generator
+        kwargs = {field: data.get(field) for field in required_fields}
+        
+        # Add optional fields if they exist
+        optional_fields = ['content_preferences', 'budget', 'timeframe', 'current_challenges']
+        for field in optional_fields:
+            if field in data:
+                kwargs[field] = data[field]
+        
+        # Generate the strategy (this is the long-running operation)
+        print(f"Starting strategy generation for business type: {data['business_type']}")
+        strategy = strategy_generator.generate_strategy(**kwargs)
+        print(f"Strategy generation complete, length: {len(strategy)}")
+        
+        # Return the generated strategy
+        return jsonify({
+            "status": "success",
+            "strategy": strategy
+        })
+    except Exception as e:
+        print(f"Error generating strategy: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": f"An error occurred: {str(e)}"
+=======
+@app.route('/business/generate-strategy', methods=['POST'])
+def generate_business_strategy():
+    """Generate a social media business strategy"""
+    try:
+        # Get API key from environment
+        DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+        print(f"API Key available: {bool(DEEPSEEK_API_KEY)}")
+        
+        # Initialize strategy generator with the API key
+        from utils.social_media_strategy import SocialMediaStrategyGenerator
+        strategy_generator = SocialMediaStrategyGenerator(api_key=DEEPSEEK_API_KEY)
+        
+        # Validate request
+        data = request.json
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'message': 'No data provided'
+            }), 400
+            
+        # Required parameters
+        required_fields = ['business_type', 'target_demographics', 'platform', 'business_goals']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'status': 'error', 
+                    'message': f'Missing required field: {field}'
+                }), 400
+        
+        print(f"Generating strategy for: {data['business_type']} on {data['platform']}")
+        
+        # Generate strategy
+        strategy = strategy_generator.generate_strategy(
+            business_type=data['business_type'],
+            target_demographics=data['target_demographics'],
+            platform=data['platform'],
+            business_goals=data['business_goals'],
+            content_preferences=data.get('content_preferences'),
+            budget=data.get('budget'),
+            timeframe=data.get('timeframe'),
+            current_challenges=data.get('current_challenges')
+        )
+        
+        print(f"Strategy generated, length: {len(strategy)}")
+        
+        return jsonify({
+            'status': 'success',
+            'strategy': strategy
+        })
+        
+    except Exception as e:
+        print(f"Error generating business strategy: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to generate strategy: {str(e)}'
+>>>>>>> Stashed changes
         }), 500
 
 if __name__ == '__main__':

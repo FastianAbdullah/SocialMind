@@ -205,7 +205,7 @@ class InstagramContentAnalyzer:
         # Return top 25 unique posts
         return unique_posts[:25]
 
-    def get_optimized_examples(self, posts: List[Dict], num_examples: int = 4) -> List[Dict]:
+    def  get_optimized_examples(self, posts: List[Dict], num_examples: int = 4) -> List[Dict]:
         """
         Get optimized set of example posts ensuring diversity
         """

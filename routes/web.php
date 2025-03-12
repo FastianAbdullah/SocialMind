@@ -8,6 +8,7 @@ use App\Http\Controllers\InstagramController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\PostManagerController;
 use App\Http\Controllers\HashtagController;
+use App\Http\Controllers\BusinessPlanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,9 +74,23 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/content/generate-optimized', [PostManagerController::class, 'generateOptimizedContent']);
     Route::post('/content/analyze', [PostManagerController::class, 'analyzeContent']);
     Route::post('/content/optimize', [PostManagerController::class, 'optimizeContent']);
+    Route::post('/post/comments', [PostManagerController::class, 'getPostComments'])->name('post.comments');
+    Route::post('/post/sentiment-analysis', [PostManagerController::class, 'analyzePostSentiment'])->name('post.sentiment-analysis');
+    Route::post('/generate-strategy', [PostManagerController::class, 'generateStrategy'])->name('generate-strategy');
+    Route::post('/business-plan/generate', [BusinessPlanController::class, 'generateStrategy'])->name('business-plan.generate');
 });
 
 // Catch-all route for Vue frontend
 Route::get('/{any?}', function () {
     return view('welcome');
 })->where('any', '.*');
+
+// Add route for the sentiment analysis frontend page
+Route::get('/sentiment-analysis', function () {
+    return view('home');
+})->middleware(['auth'])->name('sentiment-analysis');
+
+// Add the page route
+Route::get('/business-plan-generator', function () {
+    return view('home');
+})->middleware(['auth'])->name('business-plan-generator');

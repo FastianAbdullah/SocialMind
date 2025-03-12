@@ -1,0 +1,45 @@
+body {
+  background-color: #f8f9fa !important;
+  color: #333 !important;
+}
+
+body.dark-only {
+  background-color: #f8f9fa !important;
+  color: #333 !important;
+}
+
+.page-wrapper .page-body-wrapper .page-header {
+  background-color: #fff !important; 
+}
+
+.card {
+  background-color: #fff !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.card .card-header {
+  background-color: #fff !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.sidebar-wrapper {
+  background-color: #fff !important;
+  box-shadow: 0 0 15px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Force all text to appropriate colors for light theme */
+h1, h2, h3, h4, h5, h6, p, span, div, a:not(.btn) {
+  color: #333 !important;
+}
+
+/* Force all inputs, selects and form controls to light theme */
+input, select, textarea, .form-control {
+  background-color: #fff !important;
+  color: #333 !important;
+  border-color: #dee2e6 !important;
+}
+
+/* Make sure borders are visible in light theme */
+.border-bottom, .border-top, .border-left, .border-right, .border {
+  border-color: #dee2e6 !important;
+} 

@@ -38,3 +38,39 @@ class FacebookManager:
             st.error(f"Error posting to Facebook: {str(e)}")
             return None
 
+    def get_post_comments(self, post_id: str, limit: int = 50) -> List[Dict]:
+        """
+        Fetch comments on a Facebook post
+        """
+        try:
+            endpoint = f"/{post_id}/comments"
+            params = {
+                "access_token": self.access_token,
+                "fields": "id,message,from,created_time,like_count",
+                "limit": limit
+            }
+            
+            response = requests.get(f"{self.graph_url}{endpoint}", params=params)
+            data = response.json()
+            
+            if "error" in data:
+                Log.error(f"Error fetching Facebook comments: {data['error']['message']}")
+                return []
+            
+            comments = []
+            for comment in data.get("data", []):
+                comments.append({
+                    "id": comment.get("id", ""),
+                    "text": comment.get("message", ""),
+                    "username": comment.get("from", {}).get("name", ""),
+                    "timestamp": comment.get("created_time", ""),
+                    "like_count": comment.get("like_count", 0),
+                    "platform": "facebook"
+                })
+            
+            return comments
+        
+        except Exception as e:
+            Log.error(f"Exception fetching Facebook comments: {str(e)}")
+            return []
+

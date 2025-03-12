@@ -354,7 +354,7 @@ const formatPatternLabel = (key) => {
 }
 
 .generated-content {
-  background-color: #21272c;
+  background-color: #c8c8c8;
   border-radius: 8px;
   padding: 1rem;
 }
@@ -379,7 +379,7 @@ const formatPatternLabel = (key) => {
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 1rem;
   padding: 0.5rem;
-  background: #1c1c29;
+  background: #e1e1e1;
   border-radius: 8px;
 }
 
@@ -388,7 +388,7 @@ const formatPatternLabel = (key) => {
   flex-direction: column;
   align-items: center;
   padding: 0.75rem;
-  background: linear-gradient(145deg, #21272c, #2a323a);
+  background: linear-gradient(145deg, #a4a4a4, #ffffff);
   border-radius: 8px;
   transition: all 0.3s ease;
 }
@@ -414,18 +414,18 @@ const formatPatternLabel = (key) => {
   flex-direction: column;
   gap: 1rem;
   padding: 0.5rem;
-  background: #1c1c29;
+  background: #ffffff;
   border-radius: 8px;
 }
 
 .pattern-item {
   padding: 0.75rem;
-  background: linear-gradient(145deg, #21272c, #2a323a);
+  background: linear-gradient(145deg, #ffffff, #d0d0d0);
   border-radius: 8px;
 }
 
 .pattern-label {
-  color: #ffffff;
+  color: #000000;
   font-size: 0.9rem;
   margin-bottom: 0.5rem;
 }
@@ -488,7 +488,7 @@ const formatPatternLabel = (key) => {
 }
 
 .hashtags-section {
-  background: linear-gradient(145deg, #f8f9fa, #1c1c29);
+  background: linear-gradient(145deg, #f8f9fa, #d9d9d9);
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -570,7 +570,7 @@ const formatPatternLabel = (key) => {
 
 /* Dark theme enhancements */
 .analysis-item {
-  background: #1c1c29;
+  background: #d4d4d4;
   border-radius: 12px;
   margin-bottom: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);

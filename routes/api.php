@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FacebookController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PostManagerController;
 
 
 // Handle CORS preflight requests
@@ -24,6 +25,10 @@ Route::options('{any}', function() {
 */
 
 // Authentication Routes - Remove auth:sanctum middleware from these routes
+
+// Sentiment Analysis Routes
+Route::middleware('auth:sanctum')->post('/post/comments', [PostManagerController::class, 'getPostComments']);
+Route::middleware('auth:sanctum')->post('/post/sentiment-analysis', [PostManagerController::class, 'analyzePostSentiment']);
 
 
 

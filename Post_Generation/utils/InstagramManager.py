@@ -153,3 +153,40 @@ class InstagramManager:
         except Exception as e:
             st.error(f"Error fetching trending hashtags: {str(e)}")
             return []
+
+    def get_post_comments(self, post_id: str, limit: int = 50) -> List[Dict]:
+        """
+        Fetch comments on an Instagram post
+        """
+        try:
+            endpoint = f'https://graph.facebook.com/v20.0/{post_id}/comments'
+            params = {
+                "access_token": self.access_token,
+                "fields": "id,text,username,timestamp,like_count",
+                "limit": limit
+            }
+            
+            response = requests.get(endpoint, params=params)
+            data = response.json()
+            
+            # Check for API errors
+            if "error" in data:
+                print(f"Instagram API error: {data['error']['message']}")
+                return []
+            
+            comments = []
+            for comment in data.get("data", []):
+                comments.append({
+                    "id": comment.get("id", ""),
+                    "text": comment.get("text", ""),
+                    "username": comment.get("username", ""),
+                    "timestamp": comment.get("timestamp", ""),
+                    "like_count": comment.get("like_count", 0),
+                    "platform": "instagram"
+                })
+            
+            return comments
+        
+        except Exception as e:
+            print(f"Exception fetching Instagram comments: {str(e)}")
+            return []
