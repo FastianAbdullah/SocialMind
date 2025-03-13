@@ -9,12 +9,6 @@ from utils.UserPostHistory import UserPostHistory
 from utils.SentimentAnalyzer import SentimentAnalyzer
 from utils.social_media_strategy import SocialMediaStrategyGenerator
 from dotenv import load_dotenv
-<<<<<<< Updated upstream
-=======
-from utils.social_media_strategy import SocialMediaStrategyGenerator
-
-import textblob
->>>>>>> Stashed changes
 import os
 
 import ssl
@@ -63,9 +57,7 @@ mixtral_client = MixtralClient()
 
 # Create an instance of SentimentAnalyzer
 sentiment_analyzer = SentimentAnalyzer()
-api_key = os.environ.get("GROQ_API_KEY")
-print(api_key)
-strategy_generator = SocialMediaStrategyGenerator(api_key=api_key)
+
 
 # Load API key from environment variables
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
@@ -747,7 +739,6 @@ def analyze_post_comments():
             'message': f'An unexpected error occurred: {str(e)}'
         }), 500
 
-<<<<<<< Updated upstream
 @app.route('/generate-strategy', methods=['POST'])
 def generate_strategy():
     """
@@ -788,65 +779,7 @@ def generate_strategy():
         return jsonify({
             "status": "error",
             "message": f"An error occurred: {str(e)}"
-=======
-@app.route('/business/generate-strategy', methods=['POST'])
-def generate_business_strategy():
-    """Generate a social media business strategy"""
-    try:
-        # Get API key from environment
-        DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
-        print(f"API Key available: {bool(DEEPSEEK_API_KEY)}")
-        
-        # Initialize strategy generator with the API key
-        from utils.social_media_strategy import SocialMediaStrategyGenerator
-        strategy_generator = SocialMediaStrategyGenerator(api_key=DEEPSEEK_API_KEY)
-        
-        # Validate request
-        data = request.json
-        if not data:
-            return jsonify({
-                'status': 'error',
-                'message': 'No data provided'
-            }), 400
-            
-        # Required parameters
-        required_fields = ['business_type', 'target_demographics', 'platform', 'business_goals']
-        for field in required_fields:
-            if field not in data:
-                return jsonify({
-                    'status': 'error', 
-                    'message': f'Missing required field: {field}'
-                }), 400
-        
-        print(f"Generating strategy for: {data['business_type']} on {data['platform']}")
-        
-        # Generate strategy
-        strategy = strategy_generator.generate_strategy(
-            business_type=data['business_type'],
-            target_demographics=data['target_demographics'],
-            platform=data['platform'],
-            business_goals=data['business_goals'],
-            content_preferences=data.get('content_preferences'),
-            budget=data.get('budget'),
-            timeframe=data.get('timeframe'),
-            current_challenges=data.get('current_challenges')
-        )
-        
-        print(f"Strategy generated, length: {len(strategy)}")
-        
-        return jsonify({
-            'status': 'success',
-            'strategy': strategy
-        })
-        
-    except Exception as e:
-        print(f"Error generating business strategy: {str(e)}")
-        return jsonify({
-            'status': 'error',
-            'message': f'Failed to generate strategy: {str(e)}'
->>>>>>> Stashed changes
         }), 500
-
 if __name__ == '__main__':
     
     app.run(
