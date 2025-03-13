@@ -166,6 +166,7 @@ def post_to_facebook():
         data['image_url'],
         data['message']
     )
+    print(f"Result is: {result}")
     
     if result:
         post_history.add_post('Facebook', result)

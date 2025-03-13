@@ -708,8 +708,138 @@ class PostManagerController extends Controller
                     'has_media' => $mediaFile ? 'yes' : 'no'
                 ]);
                 
-                // Publish to Instagram
-                if ($platformId == 2 && $platformPage && $mediaFile) { // Instagram with media
+                // Publish to LinkedIn
+                if ($platformId == 3) { // LinkedIn
+                    try {
+                        // Prepare the request data
+                        $requestData = [
+                            'content' => $content
+                        ];
+                        
+                        // Handle media file if present
+                        if ($mediaFile) {
+                            // Convert the file to base64
+                            $base64Media = base64_encode(file_get_contents($mediaFile->getPathname()));
+                            $requestData['media_file'] = $base64Media;
+                            $requestData['media_type'] = 'image'; // Assuming it's an image, adjust if needed
+                        }
+                        
+                        // Make the API request
+                        $response = Http::withoutVerifying()
+                            ->withHeaders([
+                                'Authorization' => $userPlatform->access_token,
+                                'Content-Type' => 'application/json'
+                            ])
+                            ->post('https://localhost:8443/linkedin/post', $requestData);
+                        
+                        // Log the request details
+                        Log::info('LinkedIn API request', [
+                            'endpoint' => 'https://localhost:8443/linkedin/post',
+                            'has_media' => $mediaFile ? 'yes' : 'no',
+                            'content_length' => strlen($content)
+                        ]);
+                        
+                        if ($response->successful()) {
+                            $responseData = $response->json();
+                            $results[$platformId] = [
+                                'success' => true,
+                                'message' => 'Post published successfully to LinkedIn',
+                                'platform_id' => $platformId,
+                                'platform_name' => 'LinkedIn',
+                                'post_id' => $responseData['post_id'] ?? null
+                            ];
+                        } else {
+                            Log::error('LinkedIn post failed', [
+                                'status' => $response->status(),
+                                'response' => $response->body(),
+                                'user_id' => $userId
+                            ]);
+                            
+                            $results[$platformId] = [
+                                'success' => false,
+                                'message' => 'Failed to publish to LinkedIn: ' . ($response->json()['message'] ?? 'Unknown error'),
+                                'platform_id' => $platformId,
+                                'platform_name' => 'LinkedIn'
+                            ];
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('LinkedIn post exception', [
+                            'error' => $e->getMessage(),
+                            'user_id' => $userId
+                        ]);
+                        
+                        $results[$platformId] = [
+                            'success' => false,
+                            'message' => 'Error publishing to LinkedIn: ' . $e->getMessage(),
+                            'platform_id' => $platformId,
+                            'platform_name' => 'LinkedIn'
+                        ];
+                    }
+                } else if ($platformId == 1 && $platformPage && $mediaFile) { // Facebook with media
+                    try {
+                        // First, we need to upload the image to a publicly accessible URL
+                        $imagePath = $mediaFile->store('temp_uploads', 'public');
+                        $imageUrl = asset('storage/' . $imagePath);
+                        
+                        // Make a JSON request to the Facebook API
+                        $response = Http::withoutVerifying()
+                            ->post('https://localhost:8443/facebook/post', [
+                                'page_id' => $platformPage->page_id,
+                                'page_token' => $userPlatform->access_token,
+                                'image_url' => $imageUrl,
+                                'message' => $content
+                            ]);
+                        
+                        // Log the request details
+                        Log::info('Facebook API request', [
+                            'endpoint' => 'https://localhost:8443/facebook/post',
+                            'page_id' => $platformPage->page_id,
+                            'image_url' => $imageUrl
+                        ]);
+                        
+                        if ($response->successful()) {
+                            $responseData = $response->json();
+                            $results[$platformId] = [
+                                'success' => true,
+                                'message' => 'Post published successfully to Facebook',
+                                'platform_id' => $platformId,
+                                'platform_name' => 'Facebook',
+                                'post_id' => $responseData['post_id'] ?? null
+                            ];
+                            
+                            // Clean up the temporary file
+                            Storage::disk('public')->delete($imagePath);
+                        } else {
+                            Log::error('Facebook post failed', [
+                                'status' => $response->status(),
+                                'response' => $response->body(),
+                                'user_id' => $userId
+                            ]);
+                            
+                            $results[$platformId] = [
+                                'success' => false,
+                                'message' => 'Failed to publish to Facebook: ' . ($response->json()['message'] ?? 'Unknown error'),
+                                'platform_id' => $platformId,
+                                'platform_name' => 'Facebook'
+                            ];
+                            
+                            // Clean up the temporary file
+                            Storage::disk('public')->delete($imagePath);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Facebook post exception', [
+                            'error' => $e->getMessage(),
+                            'user_id' => $userId
+                        ]);
+                        
+                        $results[$platformId] = [
+                            'success' => false,
+                            'message' => 'Error publishing to Facebook: ' . $e->getMessage(),
+                            'platform_id' => $platformId,
+                            'platform_name' => 'Facebook'
+                        ];
+                    }
+                } else if ($platformId == 2 && $platformPage && $mediaFile) { // Instagram with media
                     try {
                         // First, we need to upload the image to a publicly accessible URL
                         // For this example, we'll store it temporarily in the public storage
