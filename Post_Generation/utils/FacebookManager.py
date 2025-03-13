@@ -31,6 +31,7 @@ class FacebookManager:
             'access_token': page_token
         }
         try:
+            print(f"Posting to Facebook: {data}")
             response = requests.post(post_url, data=data)
             response.raise_for_status()
             return response.json()
