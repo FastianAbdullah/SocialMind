@@ -370,6 +370,7 @@ def get_instagram_accounts():
 def post_to_instagram():
     """Post content to Instagram"""
     access_token = request.headers.get('Authorization')
+   
     if not access_token:
         return jsonify({'error': 'No access token provided'}), 401
     
@@ -455,6 +456,7 @@ def get_trending_hashtags():
 def generate_optimized_content():
     """Generate optimized content using enhanced pipeline"""
     access_token = request.headers.get('Authorization')
+    print(access_token)
     if not access_token:
         return jsonify({'error': 'No access token provided'}), 401
 

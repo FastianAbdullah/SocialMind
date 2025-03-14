@@ -3,6 +3,10 @@ from collections import Counter
 import requests
 import re
 import streamlit as st
+import os
+import base64
+import tempfile
+from urllib.parse import urlparse
 
 #Class To handle Instagram Operations.
 class InstagramManager:
@@ -80,17 +84,50 @@ class InstagramManager:
 
     def post_content(self, ig_user_id: str, image_url: str, caption: str) -> Optional[Dict]:
         """Post image with caption to Instagram business account"""
+        
+        print(ig_user_id)
+        print(image_url)
+        print(caption)
+        print(self.access_token)
+        
+        # Check if image URL is a localhost URL
+        parsed_url = urlparse(image_url)
+        is_localhost = parsed_url.netloc.startswith(('localhost', '127.0.0.1', '[::1]'))
+        
+        # If localhost URL, try to download the image and upload to a temporary public host
+        if is_localhost:
+            try:
+                # OPTION 1: Download image and upload to a service like imgbb.com
+                # This requires setting up an account and API key
+                
+                # OPTION 2: For testing only - use a known public image URL instead
+                print("Converting localhost URL to a public test image URL")
+                image_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/280px-PNG_transparency_demonstration_1.png"
+                
+                # OPTION 3: Create a base64 image and use data URL (not recommended for production)
+                # response = requests.get(image_url, verify=False)
+                # img_data = base64.b64encode(response.content).decode('utf-8')
+                # image_url = f"data:image/jpeg;base64,{img_data}"
+            except Exception as e:
+                print(f"Error processing local image: {str(e)}")
+                return None
+        
         media_url = f'https://graph.facebook.com/v20.0/{ig_user_id}/media'
         media_params = {
             'image_url': image_url,
             'caption': caption,
             'access_token': self.access_token
         }
+        
         try:
+            # Add detailed error logging
+            print(f"Calling Instagram API with params: {media_params}")
             response = requests.post(media_url, params=media_params)
+            print(f"Response status: {response.status_code}")
+            print(f"Response body: {response.text}")
+            
             response.raise_for_status()
             result = response.json()
-         
             
             if 'id' in result:
                 creation_id = result['id']
@@ -104,7 +141,9 @@ class InstagramManager:
                 return publish_response.json()
             return result
         except Exception as e:
-            st.error(f"Error posting to Instagram: {str(e)}")
+            print(f"Detailed error posting to Instagram: {str(e)}")
+            if 'response' in locals():
+                print(f"Error response: {response.text}")
             return None
 
     def get_trending_hashtags(self, ig_user_id: str, seed_hashtag: str) -> List[Tuple[str, int]]:
