@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FacebookController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PostManagerController;
+use App\Http\Controllers\AIAssistantController;
 
 
 // Handle CORS preflight requests
@@ -29,6 +30,14 @@ Route::options('{any}', function() {
 // Sentiment Analysis Routes
 Route::middleware('auth:sanctum')->post('/post/comments', [PostManagerController::class, 'getPostComments']);
 Route::middleware('auth:sanctum')->post('/post/sentiment-analysis', [PostManagerController::class, 'analyzePostSentiment']);
+
+// AI Assistant Routes
+Route::prefix('ai-assistant')->group(function () {
+    Route::post('/process-query', [AIAssistantController::class, 'processQuery']);
+    Route::post('/generate-content', [AIAssistantController::class, 'generateContent']);
+    Route::get('/suggest-times/{platform}', [AIAssistantController::class, 'suggestPostingTimes']);
+    Route::post('/analyze-performance', [AIAssistantController::class, 'analyzePerformance']);
+});
 
 
 

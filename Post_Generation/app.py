@@ -65,6 +65,14 @@ DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 # Initialize the strategy generator
 strategy_generator = SocialMediaStrategyGenerator(api_key=DEEPSEEK_API_KEY)
 
+# After the existing imports
+from utils.AIAgent import AIAgent
+from utils.AgentConnector import AgentConnector
+
+# Initialize AIAgent
+ai_agent = AIAgent(api_key=os.getenv("OPENAI_API_KEY"))
+agent_connector = AgentConnector()
+
 @app.route('/', methods=['GET'])
 def hello():
     """Simple test endpoint"""
@@ -783,6 +791,175 @@ def generate_strategy():
             "status": "error",
             "message": f"An error occurred: {str(e)}"
         }), 500
+
+@app.route('/business/generate-plan', methods=['POST'])
+def generate_business_plan():
+    """Generate a comprehensive business plan"""
+    try:
+        # Get request data
+        data = request.json
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'message': 'No data provided'
+            }), 400
+            
+        # Required parameters
+        required_fields = ['business_name', 'industry', 'target_market', 'business_goals']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'status': 'error', 
+                    'message': f'Missing required field: {field}'
+                }), 400
+        
+        # Get API key in order of preference
+        api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            return jsonify({
+                'status': 'error',
+                'message': 'No API key found in environment variables'
+            }), 500
+            
+        print(f"API key available: {bool(api_key)}")
+        
+        # Use direct import to avoid unnecessary dependencies
+        from utils.social_media_strategy import SocialMediaStrategyGenerator
+        business_planner = SocialMediaStrategyGenerator(api_key=api_key)
+        
+        print(f"Generating business plan for: {data['business_name']} in {data['industry']}")
+        
+        # Generate plan
+        plan = business_planner.generate_plan(
+            business_name=data['business_name'],
+            industry=data['industry'],
+            target_market=data['target_market'],
+            business_goals=data['business_goals'],
+            unique_value=data.get('unique_value_proposition'),
+            funding_needs=data.get('funding_needs'),
+            timeline=data.get('timeline'),
+            challenges=data.get('current_challenges')
+        )
+        
+        return jsonify({
+            'status': 'success',
+            'business_plan': plan
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Error generating business plan: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to generate business plan: {str(e)}'
+        }), 500
+
+@app.route('/agent/query', methods=['POST'])
+def process_agent_query():
+    """Process a query through the AI agent"""
+    data = request.json
+    if not data or 'query' not in data:
+        return jsonify({
+            'status': 'error',
+            'message': 'Query is required'
+        }), 400
+    
+    access_token = request.headers.get('Authorization')
+    
+    
+    try:
+        response = ai_agent.process_query(data['query'], access_token)
+        return jsonify(response)
+    except Exception as e:
+        print(f"Error processing query: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'response': 'I apologize, but I encountered an error while processing your request.'
+        }), 500
+
+@app.route('/agent/suggest-times/<platform>', methods=['GET'])
+def suggest_posting_times(platform):
+    """Get optimal posting time suggestions for a platform"""
+    try:
+        suggestions = ai_agent.suggest_optimal_times(platform)
+        return jsonify({
+            'status': 'success',
+            'suggestions': suggestions
+        })
+    except Exception as e:
+        print(f"Error suggesting times: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/agent/post-content', methods=['POST'])
+def post_content_through_agent():
+    """Post content to platforms through the AI agent"""
+    print("DEBUG APP: /agent/post-content endpoint called")
+    
+    data = request.json
+    if not data or 'content' not in data or 'platforms' not in data:
+        print("DEBUG APP: Missing required fields in request")
+        return jsonify({
+            'status': 'error',
+            'message': 'Content and platforms are required',
+            'intent': 'error'
+        }), 400
+    
+    print(f"DEBUG APP: Received data: {data}")
+    access_token = request.headers.get('Authorization')
+    print(f"DEBUG APP: Access token available: {bool(access_token)}")
+    
+    try:
+        # Extract data
+        content = data['content']
+        platforms = data['platforms']
+        schedule_time = data.get('schedule_time')
+        context = data.get('context', {})
+        autonomous_mode = data.get('autonomous_mode', False)
+        
+        print(f"DEBUG APP: Posting to platforms: {platforms}")
+        print(f"DEBUG APP: Content (first 50 chars): '{content[:50]}...'")
+        print(f"DEBUG APP: Schedule time: {schedule_time}")
+        print(f"DEBUG APP: Autonomous mode: {autonomous_mode}")
+        
+        # Check if agent_connector has access tokens
+        print(f"DEBUG APP: Agent connector has tokens: {bool(agent_connector.access_tokens)}")
+        
+        # If access token in request, make sure agent_connector has it
+        if access_token:
+            # Update tokens for all platforms using the same token for testing
+            for platform in platforms:
+                platform_key = platform.lower()
+                agent_connector.access_tokens[platform_key] = access_token
+                print(f"DEBUG APP: Set access token for {platform_key}")
+        
+        # Try to post
+        result = agent_connector.post_content(
+            platforms[0] if len(platforms) == 1 else platforms,
+            content,
+            image_url=None,  # You could extract from context if needed
+            schedule_time=schedule_time
+        )
+        
+        # Add intent for frontend handling
+        result['intent'] = 'confirmation'
+        
+        print(f"DEBUG APP: Posting result: {result}")
+        return jsonify(result)
+    except Exception as e:
+        print(f"ERROR APP: Error posting content through agent: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'intent': 'error'
+        }), 500
+
 if __name__ == '__main__':
     
     app.run(
