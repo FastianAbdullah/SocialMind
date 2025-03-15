@@ -66,7 +66,7 @@ export async function savePost(post) {
  * @param {Array} platformsData - Array of platform data objects
  * @returns {Promise<Object>} - Object containing publish results
  */
-export async function publishPosts(platformsData) {
+export async function publishPosts(platformsData, initialPostDescription) {
   try {
     // Create FormData to handle file uploads
     const formData = new FormData();
@@ -85,6 +85,9 @@ export async function publishPosts(platformsData) {
 
     console.log("Form Data is: ", formData);
     
+    // Add initial post description to form data
+    formData.append('initial_post_description', initialPostDescription);
+    console.log("Initial Post Description Within Service is: ", initialPostDescription);
     const response = await axios.post('/posts/publish', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'

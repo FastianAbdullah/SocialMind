@@ -9,10 +9,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Post;
 use App\Models\UserPlatform;
 use App\Models\PlatformPage;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class PostManagerController extends Controller
@@ -617,11 +615,13 @@ class PostManagerController extends Controller
             // Validate the request
             $request->validate([
                 'platforms' => 'required|json',
+                'initial_post_description' => 'nullable|string',
             ]);
             
-            // Decode platforms data
+            // Decode platforms data and intial description
             $platformsData = json_decode($request->input('platforms'), true);
-            
+            $initialPostDescription = $request->input('initial_post_description');
+            Log::info('Initial post description', ['initial_post_description' => $initialPostDescription]);
             if (!is_array($platformsData) || empty($platformsData)) {
                 return response()->json([
                     'success' => false,
@@ -643,16 +643,9 @@ class PostManagerController extends Controller
                 }
                 
                 // Get user platform data
-                $userPlatform = UserPlatform::where('user_id', $userId)
-                    ->where('platform_id', $platformId)
-                    ->first();
+                $userPlatform = $this->getUserPlatform($userId, $platformId);
                 
-                if (!$userPlatform || !$userPlatform->access_token) {
-                    Log::info('No valid user platform found', [
-                        'user_id' => $userId,
-                        'platform_id' => $platformId
-                    ]);
-                    
+                if (!$userPlatform) {
                     $results[$platformId] = [
                         'success' => false,
                         'message' => 'Platform not connected or missing access token'
@@ -663,16 +656,9 @@ class PostManagerController extends Controller
                 // For Facebook and Instagram, get the page
                 $platformPage = null;
                 if (in_array($platformId, [1, 2])) { // Facebook or Instagram
-                    $platformPage = PlatformPage::where('user_platform_id', $userPlatform->id)
-                        ->first();
+                    $platformPage = $this->getPlatformPage($userPlatform->id);
                     
                     if (!$platformPage) {
-                        Log::info('Platform page not found', [
-                            'user_id' => $userId,
-                            'platform_id' => $platformId,
-                            'page_id' => $pageId
-                        ]);
-                        
                         $results[$platformId] = [
                             'success' => false,
                             'message' => 'Selected page not found'
@@ -684,246 +670,23 @@ class PostManagerController extends Controller
                 // Check for media file
                 $mediaFile = $request->file("media_{$platformId}");
                 
-                if ($mediaFile) {
-                    Log::info('Media file received', [
-                        'platform_id' => $platformId,
-                        'file_name' => $mediaFile->getClientOriginalName(),
-                        'file_size' => $mediaFile->getSize(),
-                        'mime_type' => $mediaFile->getMimeType()
-                    ]);
-                }
+                $this->logMediaFileInfo($mediaFile, $platformId);
+                $this->logPublishingData($userId, $platformId, $userPlatform, $platformPage, $content, $mediaFile);
                 
-                // Log the data we've gathered
-                Log::info('Publishing post data', [
-                    'user_id' => $userId,
-                    'platform_id' => $platformId,
-                    'platform_name' => $platformId == 1 ? 'Facebook' : ($platformId == 2 ? 'Instagram' : 'LinkedIn'),
-                    'access_token' => substr($userPlatform->access_token, 0, 10) . '...',
-                    'page_id' => $platformPage ? $platformPage->page_id : 'N/A',
-                    'page_name' => $platformPage ? $platformPage->name : 'N/A',
-                    'content_length' => strlen($content),
-                    'has_media' => $mediaFile ? 'yes' : 'no'
-                ]);
-                
-                // Publish to LinkedIn
+                // Publish to appropriate platform
                 if ($platformId == 3) { // LinkedIn
-                    try {
-                        // Prepare the request data
-                        $requestData = [
-                            'content' => $content
-                        ];
-                        
-                        // Handle media file if present
-                        if ($mediaFile) {
-                            // Convert the file to base64
-                            $base64Media = base64_encode(file_get_contents($mediaFile->getPathname()));
-                            $requestData['media_file'] = $base64Media;
-                            $requestData['media_type'] = 'image'; // Assuming it's an image, adjust if needed
-                        }
-                        
-                        // Make the API request
-                        $response = Http::withoutVerifying()
-                            ->withHeaders([
-                                'Authorization' => $userPlatform->access_token,
-                                'Content-Type' => 'application/json'
-                            ])
-                            ->post('https://localhost:8443/linkedin/post', $requestData);
-                        
-                        // Log the request details
-                        Log::info('LinkedIn API request', [
-                            'endpoint' => 'https://localhost:8443/linkedin/post',
-                            'has_media' => $mediaFile ? 'yes' : 'no',
-                            'content_length' => strlen($content)
-                        ]);
-                        
-                        if ($response->successful()) {
-                            $responseData = $response->json();
-                            $results[$platformId] = [
-                                'success' => true,
-                                'message' => 'Post published successfully to LinkedIn',
-                                'platform_id' => $platformId,
-                                'platform_name' => 'LinkedIn',
-                                'post_id' => $responseData['post_id'] ?? null
-                            ];
-                        } else {
-                            Log::error('LinkedIn post failed', [
-                                'status' => $response->status(),
-                                'response' => $response->body(),
-                                'user_id' => $userId
-                            ]);
-                            
-                            $results[$platformId] = [
-                                'success' => false,
-                                'message' => 'Failed to publish to LinkedIn: ' . ($response->json()['message'] ?? 'Unknown error'),
-                                'platform_id' => $platformId,
-                                'platform_name' => 'LinkedIn'
-                            ];
-                        }
-                    } catch (\Exception $e) {
-                        Log::error('LinkedIn post exception', [
-                            'error' => $e->getMessage(),
-                            'user_id' => $userId
-                        ]);
-                        
-                        $results[$platformId] = [
-                            'success' => false,
-                            'message' => 'Error publishing to LinkedIn: ' . $e->getMessage(),
-                            'platform_id' => $platformId,
-                            'platform_name' => 'LinkedIn'
-                        ];
-                    }
+                    $results[$platformId] = $this->publishToLinkedIn($userPlatform, $content, $mediaFile, $userId, $initialPostDescription);
                 } else if ($platformId == 1 && $platformPage && $mediaFile) { // Facebook with media
-                    try {
-                        // Save the file to a location accessible by the Flask app
-                        // This should be the same directory where your Flask app is running
-                        $filename = time() . '_' . $mediaFile->getClientOriginalName();
-                        
-                        // Assuming your Flask app is in the project root
-                        // Adjust this path as needed to match your setup
-                        $flaskAppPath = base_path('Post_Generation');
-                        
-                        // Move the file to the Flask app directory
-                        $mediaFile->move($flaskAppPath, $filename);
-                        
-                        // Make a JSON request to the Facebook API
-                        $response = Http::withoutVerifying()
-                            ->post('https://localhost:8443/facebook/post', [
-                                'page_id' => $platformPage->page_id,
-                                'page_token' => $userPlatform->access_token,
-                                'filename' => $filename,
-                                'message' => $content
-                            ]);
-                        
-                        // Log the request details
-                        Log::info('Facebook API request', [
-                            'endpoint' => 'https://localhost:8443/facebook/post',
-                            'page_id' => $platformPage->page_id,
-                            'filename' => $filename
-                        ]);
-                        
-                        if ($response->successful()) {
-                            $responseData = $response->json();
-                            // Log the result of That Platform.
-                            $results[$platformId] = [
-                                'success' => true,
-                                'message' => 'Post published successfully to Facebook',
-                                'platform_id' => $platformId,
-                                'platform_name' => 'Facebook',
-                                'post_id' => $responseData['post_id'] ?? null
-                            ];
-                        } else {
-                            Log::error('Facebook post failed', [
-                                'status' => $response->status(),
-                                'response' => $response->body(),
-                                'user_id' => $userId
-                            ]);
-                            
-                            $results[$platformId] = [
-                                'success' => false,
-                                'message' => 'Failed to publish to Facebook: ' . ($response->json()['message'] ?? 'Unknown error'),
-                                'platform_id' => $platformId,
-                                'platform_name' => 'Facebook'
-                            ];
-                            
-                            // Clean up the temporary file
-                            @unlink($flaskAppPath . '/' . $filename);
-                        }
-                    } catch (\Exception $e) {
-                        Log::error('Facebook post exception', [
-                            'error' => $e->getMessage(),
-                            'user_id' => $userId
-                        ]);
-                        
-                        $results[$platformId] = [
-                            'success' => false,
-                            'message' => 'Error publishing to Facebook: ' . $e->getMessage(),
-                            'platform_id' => $platformId,
-                            'platform_name' => 'Facebook'
-                        ];
-                    }
+                    $results[$platformId] = $this->publishToFacebook($userPlatform, $platformPage, $content, $mediaFile, $userId, $initialPostDescription);
                 } else if ($platformId == 2 && $platformPage && $mediaFile) { // Instagram with media
-                    try {
-                        // Save the file to a location accessible by the Flask app
-                        // This should be the same directory where your Flask app is running
-                        $filename = time() . '_' . $mediaFile->getClientOriginalName();
-                        
-                        // Assuming your Flask app is in the project root
-                        // Adjust this path as needed to match your setup
-                        $flaskAppPath = base_path('Post_Generation');
-                        
-                        // Move the file to the Flask app directory
-                        $mediaFile->move($flaskAppPath, $filename);
-                        
-                        // Make the API request
-                        $response = Http::withoutVerifying()
-                            ->withHeaders([
-                                'Authorization' => $userPlatform->access_token,
-                                'Content-Type' => 'application/json'
-                            ])
-                            ->post('https://localhost:8443/instagram/post', [
-                                'ig_user_id' => $platformPage->page_id,
-                                'filename' => $filename,
-                                'caption' => $content
-                            ]);
-                        
-                        // Log the request details
-                        Log::info('Instagram API request', [
-                            'endpoint' => 'https://localhost:8443/instagram/post',
-                            'payload' => [
-                                'ig_user_id' => $platformPage->page_id,
-                                'filename' => $filename,
-                                'caption_length' => strlen($content)
-                            ]
-                        ]);
-                        
-                        if ($response->successful()) {
-                            $responseData = $response->json();
-                            $results[$platformId] = [
-                                'success' => true,
-                                'message' => 'Post published successfully to Instagram',
-                                'platform_id' => $platformId,
-                                'platform_name' => 'Instagram',
-                                'post_id' => $responseData['post_id'] ?? null
-                            ];
-                            
-                            // File will be cleaned up by the Flask app
-                        } else {
-                            Log::error('Instagram post failed', [
-                                'status' => $response->status(),
-                                'response' => $response->body(),
-                                'user_id' => $userId
-                            ]);
-                            
-                            $results[$platformId] = [
-                                'success' => false,
-                                'message' => 'Failed to publish to Instagram: ' . ($response->json()['message'] ?? 'Unknown error'),
-                                'platform_id' => $platformId,
-                                'platform_name' => 'Instagram'
-                            ];
-                            
-                            // Clean up the file
-                            @unlink($flaskAppPath . '/' . $filename);
-                        }
-                    } catch (\Exception $e) {
-                        Log::error('Instagram post exception', [
-                            'error' => $e->getMessage(),
-                            'user_id' => $userId
-                        ]);
-                        
-                        $results[$platformId] = [
-                            'success' => false,
-                            'message' => 'Error publishing to Instagram: ' . $e->getMessage(),
-                            'platform_id' => $platformId,
-                            'platform_name' => 'Instagram'
-                        ];
-                    }
+                    $results[$platformId] = $this->publishToInstagram($userPlatform, $platformPage, $content, $mediaFile, $userId, $initialPostDescription);
                 } else {
                     // For now, just return success for other platforms
                     $results[$platformId] = [
                         'success' => true,
                         'message' => 'Post data logged successfully',
                         'platform_id' => $platformId,
-                        'platform_name' => $platformId == 1 ? 'Facebook' : ($platformId == 2 ? 'Instagram' : 'LinkedIn')
+                        'platform_name' => $this->getPlatformName($platformId)
                     ];
                 }
             }
@@ -944,6 +707,499 @@ class PostManagerController extends Controller
                 'success' => false,
                 'message' => 'Failed to publish posts: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Get user platform data
+     *
+     * @param int $userId
+     * @param int $platformId
+     * @return UserPlatform|null
+     */
+    private function getUserPlatform($userId, $platformId)
+    {
+        $userPlatform = UserPlatform::where('user_id', $userId)
+            ->where('platform_id', $platformId)
+            ->first();
+        
+        if (!$userPlatform || !$userPlatform->access_token) {
+            Log::info('No valid user platform found', [
+                'user_id' => $userId,
+                'platform_id' => $platformId
+            ]);
+            return null;
+        }
+        
+        return $userPlatform;
+    }
+
+    /**
+     * Get platform page
+     *
+     * @param int $userPlatformId
+     * @return PlatformPage|null
+     */
+    private function getPlatformPage($userPlatformId)
+    {
+        $platformPage = PlatformPage::where('user_platform_id', $userPlatformId)
+            ->first();
+        
+        if (!$platformPage) {
+            Log::info('Platform page not found', [
+                'user_platform_id' => $userPlatformId
+            ]);
+            return null;
+        }
+        
+        return $platformPage;
+    }
+
+    /**
+     * Log media file information
+     *
+     * @param mixed $mediaFile
+     * @param int $platformId
+     * @return void
+     */
+    private function logMediaFileInfo($mediaFile, $platformId)
+    {
+        if ($mediaFile) {
+            Log::info('Media file received', [
+                'platform_id' => $platformId,
+                'file_name' => $mediaFile->getClientOriginalName(),
+                'file_size' => $mediaFile->getSize(),
+                'mime_type' => $mediaFile->getMimeType()
+            ]);
+        }
+    }
+
+    /**
+     * Log publishing data
+     *
+     * @param int $userId
+     * @param int $platformId
+     * @param UserPlatform $userPlatform
+     * @param PlatformPage|null $platformPage
+     * @param string $content
+     * @param mixed $mediaFile
+     * @return void
+     */
+    private function logPublishingData($userId, $platformId, $userPlatform, $platformPage, $content, $mediaFile)
+    {
+        Log::info('Publishing post data', [
+            'user_id' => $userId,
+            'platform_id' => $platformId,
+            'platform_name' => $this->getPlatformName($platformId),
+            'access_token' => substr($userPlatform->access_token, 0, 10) . '...',
+            'page_id' => $platformPage ? $platformPage->page_id : 'N/A',
+            'page_name' => $platformPage ? $platformPage->name : 'N/A',
+            'content_length' => strlen($content),
+            'has_media' => $mediaFile ? 'yes' : 'no'
+        ]);
+    }
+
+    /**
+     * Get platform name by ID
+     *
+     * @param int $platformId
+     * @return string
+     */
+    private function getPlatformName($platformId)
+    {
+        $platforms = [
+            1 => 'Facebook',
+            2 => 'Instagram',
+            3 => 'LinkedIn'
+        ];
+        
+        return $platforms[$platformId] ?? 'Unknown';
+    }
+
+    /**
+     * Create a post record in the database
+     *
+     * @param int $userId
+     * @param int $platformId
+     * @param string $initialDescription
+     * @param string $content
+     * @param string $status
+     * @param string|null $responsePostId
+     * @param array $metadata
+     * @return Post
+     */
+    private function createPostRecord($userId, $platformId, $initialDescription, $content, $status, $responsePostId, $metadata)
+    {
+        $post = new Post();
+        $post->user_id = $userId;
+        $post->platform_id = $platformId;
+        $post->initial_description = $initialDescription;
+        $post->AI_generated_description = $content;
+        $post->status = $status;
+        $post->response_post_id = $responsePostId;
+        $post->metadata = json_encode($metadata);
+        
+        // Set the table name explicitly to 'post' instead of the default 'posts'
+        $post->setTable('post');
+        
+        $post->save();
+        
+        return $post;
+    }
+
+    /**
+     * Publish to LinkedIn
+     *
+     * @param UserPlatform $userPlatform
+     * @param string $content
+     * @param mixed $mediaFile
+     * @param int $userId
+     * @param string $initialPostDescription
+     * @return array
+     */
+    private function publishToLinkedIn($userPlatform, $content, $mediaFile, $userId, $initialPostDescription)
+    {
+        try {
+            // Prepare the request data
+            $requestData = [
+                'content' => $content
+            ];
+            
+            // Handle media file if present
+            if ($mediaFile) {
+                // Convert the file to base64
+                $base64Media = base64_encode(file_get_contents($mediaFile->getPathname()));
+                $requestData['media_file'] = $base64Media;
+                $requestData['media_type'] = 'image'; // Assuming it's an image, adjust if needed
+            }
+            
+            // Make the API request with increased timeout
+            $response = Http::withoutVerifying()
+                ->timeout(60) // Increase timeout to 60 seconds
+                ->withHeaders([
+                    'Authorization' => $userPlatform->access_token,
+                    'Content-Type' => 'application/json'
+                ])
+                ->post('https://localhost:8443/linkedin/post', $requestData);
+            
+            // Log the request details
+            Log::info('LinkedIn API request', [
+                'endpoint' => 'https://localhost:8443/linkedin/post',
+                'has_media' => $mediaFile ? 'yes' : 'no',
+                'content_length' => strlen($content)
+            ]);
+            
+            if ($response->successful()) {
+                $responseData = $response->json();
+                Log::info('LinkedIn post response', [
+                    'response' => $responseData
+                ]);
+
+                // Create a new post record in the database with correct column names
+                $metadata = [
+                    'published_at' => now()->toDateTimeString(),
+                    'has_media' => $mediaFile ? true : false,
+                    'media_type' => $mediaFile ? $mediaFile->getMimeType() : null,
+                    'media_name' => $mediaFile ? $mediaFile->getClientOriginalName() : null,
+                ];
+                
+                // Create a new post record in the database with correct column names
+                $post = $this->createPostRecord(
+                    $userId, 
+                    3, // LinkedIn platform_id
+                    $initialPostDescription, 
+                    $content, 
+                    'published',
+                    $responseData['post_id'] ?? null,
+                    $metadata
+                );
+                
+
+                return [
+                    'success' => true,
+                    'message' => 'Post published successfully to LinkedIn',
+                    'platform_id' => 3,
+                    'platform_name' => 'LinkedIn',
+                    'post_id' => $responseData['post_id'] ?? null,
+                    'database_id' => $post->id
+                ];
+            } else {
+                Log::error('LinkedIn post failed', [
+                    'status' => $response->status(),
+                    'response' => $response->body(),
+                    'user_id' => $userId
+                ]);
+                
+                return [
+                    'success' => false,
+                    'message' => 'Failed to publish to LinkedIn: ' . ($response->json()['message'] ?? 'Unknown error'),
+                    'platform_id' => 3,
+                    'platform_name' => 'LinkedIn'
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('LinkedIn post exception', [
+                'error' => $e->getMessage(),
+                'user_id' => $userId
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Error publishing to LinkedIn: ' . $e->getMessage(),
+                'platform_id' => 3,
+                'platform_name' => 'LinkedIn'
+            ];
+        }
+    }
+
+    /**
+     * Publish to Facebook
+     *
+     * @param UserPlatform $userPlatform
+     * @param PlatformPage $platformPage
+     * @param string $content
+     * @param mixed $mediaFile
+     * @param int $userId
+     * @param string $initialPostDescription
+     * @return array
+     */
+    private function publishToFacebook($userPlatform, $platformPage, $content, $mediaFile, $userId, $initialPostDescription)
+    {
+        try {
+            // Save the file to a location accessible by the Flask app
+            $filename = time() . '_' . $mediaFile->getClientOriginalName();
+
+            // Save mediafile Original Name and type for Metadata
+            $mediaFileName = $mediaFile->getClientOriginalName();
+            $mediaFileType = $mediaFile->getMimeType();
+
+            $flaskAppPath = base_path('Post_Generation');
+            $mediaFile->move($flaskAppPath, $filename);
+            
+            // Make a JSON request to the Facebook API
+            $response = Http::withoutVerifying()
+                ->post('https://localhost:8443/facebook/post', [
+                    'page_id' => $platformPage->page_id,
+                    'page_token' => $userPlatform->access_token,
+                    'filename' => $filename,
+                    'message' => $content
+                ]);
+            
+            // Log the request details
+            Log::info('Facebook API request', [
+                'endpoint' => 'https://localhost:8443/facebook/post',
+                'page_id' => $platformPage->page_id,
+                'filename' => $filename
+            ]);
+            
+            if ($response->successful()) {
+                $responseData = $response->json();
+                
+                // Create a new post record in the database
+                $metadata = [
+                    'published_at' => now()->toDateTimeString(),
+                    'platform_page_id' => $platformPage->page_id,
+                    'platform_page_name' => $platformPage->name,
+                    'media_type' => $mediaFileType,
+                    'media_name' => $mediaFileName,
+                    'media_filename' => $filename
+                ];
+                
+                $post = $this->createPostRecord(
+                    $userId, 
+                    1, // Facebook platform_id
+                    $initialPostDescription, 
+                    $content, 
+                    'published', 
+                    $responseData['post_id'] ?? null, 
+                    $metadata
+                );
+                
+                return [
+                    'success' => true,
+                    'message' => 'Post published successfully to Facebook',
+                    'platform_id' => 1,
+                    'platform_name' => 'Facebook',
+                    'post_id' => $responseData['post_id'] ?? null,
+                    'database_id' => $post->id
+                ];
+            } else {
+                Log::error('Facebook post failed', [
+                    'status' => $response->status(),
+                    'response' => $response->body(),
+                    'user_id' => $userId
+                ]);
+                                
+                return [
+                    'success' => false,
+                    'message' => 'Failed to publish to Facebook: ' . ($response->json()['message'] ?? 'Unknown error'),
+                    'platform_id' => 1,
+                    'platform_name' => 'Facebook'
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Facebook post exception', [
+                'error' => $e->getMessage(),
+                'user_id' => $userId
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Error publishing to Facebook: ' . $e->getMessage(),
+                'platform_id' => 1,
+                'platform_name' => 'Facebook'
+            ];
+        }
+    }
+
+    /**
+     * Publish to Instagram
+     *
+     * @param UserPlatform $userPlatform
+     * @param PlatformPage $platformPage
+     * @param string $content
+     * @param mixed $mediaFile
+     * @param int $userId
+     * @param string $initialPostDescription
+     * @return array
+     */
+    private function publishToInstagram($userPlatform, $platformPage, $content, $mediaFile, $userId, $initialPostDescription)
+    {
+        try {
+            // Save the file to a location accessible by the Flask app
+            $filename = time() . '_' . $mediaFile->getClientOriginalName();
+            $flaskAppPath = base_path('Post_Generation');
+
+            // Save mediafile Original Name and type for Metadata
+            $mediaFileName = $mediaFile->getClientOriginalName();
+            $mediaFileType = $mediaFile->getMimeType();
+            
+            // Make sure the directory exists
+            if (!file_exists($flaskAppPath)) {
+                mkdir($flaskAppPath, 0755, true);
+            }
+            
+            // Check if the file was successfully moved
+            if (!$mediaFile->move($flaskAppPath, $filename)) {
+                Log::error('Failed to move Instagram media file', [
+                    'user_id' => $userId,
+                    'file_name' => $mediaFile->getClientOriginalName(),
+                    'destination' => $flaskAppPath . '/' . $filename
+                ]);
+                
+                return [
+                    'success' => false,
+                    'message' => 'Error saving media file for Instagram post',
+                    'platform_id' => 2,
+                    'platform_name' => 'Instagram'
+                ];
+            }
+            
+            // Verify the file exists after moving
+            if (!file_exists($flaskAppPath . '/' . $filename)) {
+                Log::error('Instagram media file not found after move', [
+                    'user_id' => $userId,
+                    'file_path' => $flaskAppPath . '/' . $filename
+                ]);
+                
+                return [
+                    'success' => false,
+                    'message' => 'Media file not found after upload for Instagram post',
+                    'platform_id' => 2,
+                    'platform_name' => 'Instagram'
+                ];
+            }
+            
+            // Make the API request
+            $response = Http::withoutVerifying()
+                ->timeout(60) // Increase timeout to 60 seconds
+                ->withHeaders([
+                    'Authorization' => $userPlatform->access_token,
+                    'Content-Type' => 'application/json'
+                ])
+                ->post('https://localhost:8443/instagram/post', [
+                    'ig_user_id' => $platformPage->page_id,
+                    'filename' => $filename,
+                    'caption' => $content
+                ]);
+            
+            // Log the request details
+            Log::info('Instagram API request', [
+                'endpoint' => 'https://localhost:8443/instagram/post',
+                'payload' => [
+                    'ig_user_id' => $platformPage->page_id,
+                    'filename' => $filename,
+                    'caption_length' => strlen($content)
+                ]
+            ]);
+            
+            if ($response->successful()) {
+                $responseData = $response->json();
+
+                Log::info('Instagram post Successfully published', [
+                    'response' => $responseData
+                ]);
+
+                // Create a new post record in the database
+                $metadata = [
+                    'published_at' => now()->toDateTimeString(),
+                    'platform_page_id' => $platformPage->page_id,
+                    'platform_page_name' => $platformPage->name,
+                    'media_type' => $mediaFileType,
+                    'media_name' => $mediaFileName,
+                    'media_filename' => $filename
+                ];
+
+                Log::info('MetaData Stored for Insta is ', [
+                    'metadata' => $metadata
+                ]);
+                
+                $post = $this->createPostRecord(
+                    $userId,
+                    2, // Instagram platform_id
+                    $initialPostDescription,
+                    $content,
+                    'published',
+                    $responseData['post_id'] ?? null,
+                    $metadata
+                );
+                
+                return [
+                    'success' => true,
+                    'message' => 'Post published successfully to Instagram',
+                    'platform_id' => 2,
+                    'platform_name' => 'Instagram',
+                    'post_id' => $responseData['post_id'] ?? null,
+                    'database_id' => $post->id
+                ];
+                
+                // File will be cleaned up by the Flask app
+            } else {
+                Log::error('Instagram post failed', [
+                    'status' => $response->status(),
+                    'response' => $response->body(),
+                    'user_id' => $userId
+                ]);
+                                
+                return [
+                    'success' => false,
+                    'message' => 'Failed to publish to Instagram: ' . ($response->json()['message'] ?? 'Unknown error'),
+                    'platform_id' => 2,
+                    'platform_name' => 'Instagram'
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Instagram post exception', [
+                'error' => $e->getMessage(),
+                'user_id' => $userId
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Error publishing to Instagram: ' . $e->getMessage(),
+                'platform_id' => 2,
+                'platform_name' => 'Instagram'
+            ];
         }
     }
 }
