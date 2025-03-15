@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\PostManagerController;
 use App\Http\Controllers\HashtagController;
 use App\Http\Controllers\BusinessPlanController;
+use App\Http\Controllers\AIAssistantController;
 
 /*
 |--------------------------------------------------------------------------
@@ -84,6 +85,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/post/sentiment-analysis', [PostManagerController::class, 'analyzePostSentiment'])->name('post.sentiment-analysis');
     Route::post('/generate-strategy', [PostManagerController::class, 'generateStrategy'])->name('generate-strategy');
     Route::post('/business-plan/generate', [BusinessPlanController::class, 'generateStrategy'])->name('business-plan.generate');
+
+    // AI Assistant Routes
+    Route::prefix('ai-assistant')->group(function () {
+        Route::post('/process-query', [AIAssistantController::class, 'processQuery']);
+        Route::post('/generate-content', [AIAssistantController::class, 'generateContent']);
+        Route::get('/suggest-times/{platform}', [AIAssistantController::class, 'suggestPostingTimes']);
+        Route::post('/analyze-performance', [AIAssistantController::class, 'analyzePerformance']);
+        Route::post('/post-content', [AIAssistantController::class, 'postContent']);
+    });
 });
 
 // Catch-all route for Vue frontend
@@ -100,3 +110,9 @@ Route::get('/sentiment-analysis', function () {
 Route::get('/business-plan-generator', function () {
     return view('home');
 })->middleware(['auth'])->name('business-plan-generator');
+
+// Add route for AI Assistant frontend page
+Route::get('/ai-assistant', function () {
+    return view('home');
+})->middleware(['auth'])->name('ai-assistant');
+
