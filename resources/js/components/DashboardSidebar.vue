@@ -98,6 +98,16 @@
                   </svg><span>Business Plan Generator</span>
                 </router-link>
               </li>
+              <li class="sidebar-list"><i class="fa fa-thumb-tack"></i>
+                <router-link class="sidebar-link sidebar-title link-nav" to="/ai-assistant">
+                  <svg class="stroke-icon">
+                    <use href="../../../public/assets/svg/icon-sprite.svg#stroke-learning"></use>
+                  </svg>
+                  <svg class="fill-icon">
+                    <use href="../../../public/assets/svg/icon-sprite.svg#fill-learning"></use>
+                  </svg><span>AI Assistant</span>
+                </router-link>
+              </li>
             </ul>
 
             <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>

@@ -242,7 +242,7 @@ class PostManagerController extends Controller
             ], 500);
         }
     }
-
+    
     /**
      * Generate optimized content using AI analysis and top-performing posts
      *
