@@ -10,10 +10,11 @@ from utils.SentimentAnalyzer import SentimentAnalyzer
 from utils.social_media_strategy import SocialMediaStrategyGenerator
 from dotenv import load_dotenv
 import os
-
+# Running ngrok libraries
+import requests, http.server, socketserver, threading, subprocess, time, json
 import ssl
 from flask_cors import CORS
-# CORS(app, resources={r"/*": {"origins": "https://localhost:8080"}})
+from PIL import Image
 
 load_dotenv()
 
@@ -29,7 +30,7 @@ CORS(app, resources={
             "Accept",
             "Origin",
             "X-CSRF-TOKEN",
-            "X-Requested-With"  # Added this header
+            "X-Requested-With"
         ],
         "supports_credentials": True,
         "expose_headers": ["Content-Type", "Authorization"]
@@ -58,12 +59,14 @@ mixtral_client = MixtralClient()
 # Create an instance of SentimentAnalyzer
 sentiment_analyzer = SentimentAnalyzer()
 
-
 # Load API key from environment variables
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
 # Initialize the strategy generator
 strategy_generator = SocialMediaStrategyGenerator(api_key=DEEPSEEK_API_KEY)
+
+# Disable Flask's reloader to prevent double execution
+app.config['USE_RELOADER'] = False
 
 @app.route('/', methods=['GET'])
 def hello():
@@ -151,25 +154,51 @@ def get_facebook_pages():
 @app.route('/facebook/post', methods=['POST'])
 def post_to_facebook():
     """Post content to Facebook"""
+
     data = request.json
-    required_fields = ['page_id', 'page_token', 'image_url', 'message']
+    required_fields = ['page_id', 'page_token', 'filename', 'message']
     if not all(field in data for field in required_fields):
         return jsonify({'error': 'Missing required fields'}), 400
     
-    fb_manager = FacebookManager(data['page_token'])
-    print (data['page_id'],data['image_url'],data['message'])
-    result = fb_manager.post_content(
-        data['page_id'],
-        data['page_token'],
-        data['image_url'],
-        data['message']
-    )
-    print(f"Result is: {result}")
-    
-    if result:
-        post_history.add_post('Facebook', result)
-        return jsonify({'success': True, 'post_id': result.get('id')})
-    return jsonify({'error': 'Failed to post content'}), 400
+    try:
+        # Set up ngrok tunnel
+        success, result = setup_ngrok_tunnel(data['filename'])
+        
+        if not success:
+            return jsonify({
+                'status': 'error',
+                'message': result['error']
+            }), 400
+            
+        public_url = result['public_url']
+        
+        # Post to Facebook
+        fb_manager = FacebookManager(data['page_token'])
+        print(f"[DEBUG] Posting to Facebook with page ID: {data['page_id']}")
+        result = fb_manager.post_content(
+            data['page_id'],
+            data['page_token'],
+            public_url,
+            data['message']
+        )
+        print(f"[DEBUG] Facebook API result: {result}")
+        # In both cases after posting or error, remove the data[filename] from the current directory
+        os.remove(data['filename'])
+                
+        if result:
+            post_history.add_post('Facebook', result)
+            print("[DEBUG] Successfully posted to Facebook")
+            return jsonify({'success': True, 'post_id': result.get('id')})
+        
+        print("[DEBUG] Failed to post content to Facebook")
+        return jsonify({'error': 'Failed to post content'}), 400
+        
+    except Exception as e:
+        print(f"[DEBUG] Error in Facebook post process: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Error: {str(e)}'
+        }), 500
 
 @app.route('/content/analyze', methods=['POST'])
 def analyze_content():
@@ -370,38 +399,69 @@ def get_instagram_accounts():
 def post_to_instagram():
     """Post content to Instagram"""
     access_token = request.headers.get('Authorization')
-   
+       
     if not access_token:
         return jsonify({'error': 'No access token provided'}), 401
     
     data = request.json
-    required_fields = ['ig_user_id', 'image_url', 'caption']
+    required_fields = ['ig_user_id', 'filename', 'caption']
     if not all(field in data for field in required_fields):
         return jsonify({
             'status': 'error',
             'message': f'Missing required fields. Required: {required_fields}'
         }), 400
     
+    try:
+        # Set up ngrok tunnel
+        success, result = setup_ngrok_tunnel(data['filename'])
+        
+        if not success:
+            return jsonify({
+                'status': 'error',
+                'message': result['error']
+            }), 400
+            
+        public_url = result['public_url']
+        
+        # Post to Instagram
+        print(f"[DEBUG] Posting to Instagram with user ID: {data['ig_user_id']}")
+        ig_manager = InstagramManager(access_token)
+        result = ig_manager.post_content(
+            data['ig_user_id'],
+            public_url,
+            data['caption']
+        )
+        
+        print(f"[DEBUG] Instagram API result: {result}")
+        # In both cases after posting or error, remove the data[filename] from the current directory
+        os.remove(data['filename'])
 
-    ig_manager = InstagramManager(access_token)
-    result = ig_manager.post_content(
-        data['ig_user_id'],
-        data['image_url'],
-        data['caption']
-    )
-    
-    print(f"Result is: {result}")
-    if result:
-        post_history.add_post('Instagram', result)  # If you're using post history
+        if result:
+            post_history.add_post('Instagram', result)
+            print("[DEBUG] Successfully posted to Instagram")
+            
+            # We'll leave the HTTP server and ngrok running for Instagram to fetch the image
+            # They'll be cleaned up when the Flask app restarts
+            
+            return jsonify({
+                'status': 'success',
+                'post_id': result.get('id'),
+                'result': result
+            })
+        
+        print("[DEBUG] Failed to post content to Instagram")
+
         return jsonify({
-            'status': 'success',
-            'post_id': result.get('id'),
-            'result': result
-        })
-    return jsonify({
-        'status': 'error',
-        'message': 'Failed to post content'
-    }), 400
+            'status': 'error',
+            'message': 'Failed to post content'
+        }), 400
+        
+    except Exception as e:
+        print(f"[DEBUG] Error in Instagram post process: {str(e)}")            
+        return jsonify({
+            'status': 'error',
+            'message': f'Error: {str(e)}'
+        }), 500
 
 @app.route('/instagram/hashtags', methods=['POST'])
 def get_trending_hashtags():
@@ -783,11 +843,176 @@ def generate_strategy():
             "status": "error",
             "message": f"An error occurred: {str(e)}"
         }), 500
-if __name__ == '__main__':
+
+def setup_ngrok_tunnel(file_path):
+    """
+    Sets up an ngrok tunnel for serving a file.
     
+    Args:
+        file_path: Path to the file to be served
+        original_dir: Original directory to return to after setup
+        
+    Returns:
+        tuple: (success, result_dict) where result_dict contains either:
+            - On success: {'public_url': url}
+            - On failure: {'error': error_message}
+    """
+    try:
+        # Create a directory to serve files if it doesn't exist
+        os.makedirs('temp_media', exist_ok=True)
+        print(f"[DEBUG] Created temp_media directory")
+        
+        # Check if file exists
+        print(f"[DEBUG] Looking for file: {file_path}")
+        if not os.path.exists(file_path):
+            print(f"[DEBUG] File not found at: {file_path}")
+            return False, {'error': f"File {file_path} not found"}
+            
+        # Resize the image to 1280x970 pixels before saving to temp_media
+        try:
+            print(f"[DEBUG] Resizing image to 1280x970 pixels")
+            img = Image.open(file_path)
+            img = img.resize((1280, 970), Image.LANCZOS)
+            
+            # Save the resized image to temp_media directory
+            dest_path = os.path.join('temp_media', os.path.basename(file_path))
+            print(f"[DEBUG] Saving resized image to: {dest_path}")
+            img.save(dest_path)
+            
+            # Also replace the original file with the resized version
+            print(f"[DEBUG] Replacing original file with resized version")
+            img.save(file_path)
+            print(f"[DEBUG] Image resized and saved successfully (both locations)")
+        except Exception as resize_error:
+            print(f"[DEBUG] Error resizing image: {str(resize_error)}")
+            # Fall back to copying the original file if resizing fails
+            import shutil
+            dest_path = os.path.join('temp_media', os.path.basename(file_path))
+            print(f"[DEBUG] Falling back to copying original file to: {dest_path}")
+            shutil.copy(file_path, dest_path)
+        
+        # Start HTTP server in a separate process, not thread
+        import subprocess
+        PORT = 8080
+        
+        # Kill any existing process on port 8080 - Fix for Windows
+        try:
+            if os.name == 'nt':  # Windows
+                print(f"[DEBUG] Attempting to kill any process on port {PORT} (Windows)")
+                # Use a safer approach for Windows
+                try:
+                    # Find PID using netstat
+                    netstat_output = subprocess.check_output(f'netstat -ano | findstr :{PORT}', shell=True).decode()
+                    print(f"[DEBUG] Netstat output: {netstat_output}")
+                    
+                    # Extract PID from netstat output if it exists
+                    if netstat_output.strip():
+                        lines = netstat_output.strip().split('\n')
+                        for line in lines:
+                            if f":{PORT}" in line:
+                                parts = line.strip().split()
+                                if len(parts) >= 5:
+                                    pid = parts[-1]
+                                    print(f"[DEBUG] Found process with PID {pid} on port {PORT}")
+                                    subprocess.run(f'taskkill /F /PID {pid}', shell=True, 
+                                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                except Exception as kill_error:
+                    print(f"[DEBUG] Error killing process: {str(kill_error)}")
+                    # Continue anyway, as the port might not be in use
+        except Exception as e:
+            print(f"[DEBUG] Exception when trying to kill existing process: {str(e)}")
+            # Continue anyway
+            
+        print(f"[DEBUG] Current directory: {os.getcwd()}")
+        print(f"[DEBUG] Directory contents: {os.listdir('.')}")
+        
+        # Start HTTP server
+        print(f"[DEBUG] Starting HTTP server on port {PORT}")
+        http_server = subprocess.Popen(['python', '-m', 'http.server', str(PORT)], 
+                                      stdout=subprocess.DEVNULL, 
+                                      stderr=subprocess.DEVNULL)
+        print(f"[DEBUG] HTTP server started with PID: {http_server.pid}")
+        
+        # Start ngrok with authtoken (you need to set this up)
+        # First, check if ngrok is already running
+        try:
+            print("[DEBUG] Checking if ngrok is already running")
+            requests.get("http://localhost:4040/api/tunnels")
+            # If the above doesn't throw an exception, ngrok is already running
+            print("[DEBUG] ngrok is already running")
+        except:
+            # Start ngrok
+            print("[DEBUG] Starting ngrok")
+            ngrok_cmd = ["ngrok", "http", str(PORT)]
+                        
+            ngrok = subprocess.Popen(ngrok_cmd, 
+                                    stdout=subprocess.DEVNULL, 
+                                    stderr=subprocess.DEVNULL)
+            print(f"[DEBUG] ngrok started with PID: {ngrok.pid}")
+            
+            # Give ngrok time to start up
+            print("[DEBUG] Waiting for ngrok to start up")
+            time.sleep(10)
+        
+        # Get the public URL from ngrok
+        print("[DEBUG] Attempting to get ngrok URL")
+        max_retries = 3
+        ngrok_url = None
+        for i in range(max_retries):
+            try:
+                print(f"[DEBUG] Getting ngrok URL (attempt {i+1}/{max_retries})")
+                resp = requests.get("http://localhost:4040/api/tunnels")
+                tunnels = resp.json()['tunnels']
+                print(f"[DEBUG] Found {len(tunnels)} tunnels")
+                if tunnels:
+                    ngrok_url = tunnels[0]['public_url']
+                    print(f"[DEBUG] Got ngrok URL: {ngrok_url}")
+                    break
+            except Exception as e:
+                print(f"[DEBUG] Error getting ngrok URL (attempt {i+1}/{max_retries}): {str(e)}")
+                time.sleep(2)
+        
+        if not ngrok_url:
+            print("[DEBUG] Failed to get ngrok URL after all retries")
+            return False, {'error': 'Failed to get ngrok URL'}
+        
+        # Make sure we use HTTPS URL
+        if ngrok_url.startswith('http:'):
+            ngrok_url = ngrok_url.replace('http:', 'https:')
+            print(f"[DEBUG] Converted to HTTPS URL: {ngrok_url}")
+            
+        file_basename = os.path.basename(file_path)
+        public_url = f"{ngrok_url}/{file_basename}"
+        print(f"[DEBUG] Public URL: {public_url}")
+
+        # Test if the URL is accessible
+        success, result = test_ngrok_url(public_url)
+        if not success:
+            return False, result
+        return True, {'public_url': public_url}
+        
+    except Exception as e:
+        print(f"[DEBUG] Error in ngrok tunnel setup: {str(e)}")            
+        return False, {'error': f'Error: {str(e)}'}
+
+def test_ngrok_url(public_url):
+    """Test if the Public Url is Accessible"""
+    try:
+        headers = {
+            'ngrok-skip-browser-warning': 'true'
+        }
+        response = requests.head(public_url, headers=headers, timeout=5)
+        if response.status_code != 200:
+            return False, {'error': f'URL test failed with status {response.status_code}'}
+        return True, {}
+    except Exception as e:
+        return False, {'error': f'URL test failed: {str(e)}'}
+
+if __name__ == '__main__':
     app.run(
-        host='localhost',    # Changed from 0.0.0.0 to localhost
-        port=8443,          # Changed from 443 to 8443 (no need for admin privileges)
+        host='localhost',
+        port=8443,
         ssl_context=(CERT_FILE, KEY_FILE),
-        debug=True
+        debug=True,
+        use_reloader=False  # Explicitly disable reloader
     )

@@ -1,11 +1,11 @@
 import requests
-import streamlit as st
-from typing import List,Dict,Optional
+from typing import List, Dict, Optional
 
-#Class To Handle FaceBook Operations.
+# Class To Handle FaceBook Operations.
 class FacebookManager:
     def __init__(self, access_token: str):
         self.access_token = access_token
+        self.graph_url = "https://graph.facebook.com/v20.0"
 
     def get_pages(self) -> List[Dict]:
         """Get list of Facebook pages managed by the user"""
@@ -19,7 +19,7 @@ class FacebookManager:
             response.raise_for_status()
             return response.json().get('data', [])
         except Exception as e:
-            st.error(f"Error getting user pages: {str(e)}")
+            print(f"Error getting user pages: {str(e)}")
             return []
 
     def post_content(self, page_id: str, page_token: str, image_url: str, message: str) -> Optional[Dict]:
@@ -31,12 +31,12 @@ class FacebookManager:
             'access_token': page_token
         }
         try:
-            print(f"Posting to Facebook: {data}")
+            print(f"Posting to Facebook: {data} and  {page_id}")
             response = requests.post(post_url, data=data)
             response.raise_for_status()
             return response.json()
         except Exception as e:
-            st.error(f"Error posting to Facebook: {str(e)}")
+            print(f"Error posting to Facebook: {str(e)}")
             return None
 
     def get_post_comments(self, post_id: str, limit: int = 50) -> List[Dict]:
@@ -55,7 +55,7 @@ class FacebookManager:
             data = response.json()
             
             if "error" in data:
-                Log.error(f"Error fetching Facebook comments: {data['error']['message']}")
+                print(f"Error fetching Facebook comments: {data['error']['message']}")
                 return []
             
             comments = []
@@ -72,6 +72,6 @@ class FacebookManager:
             return comments
         
         except Exception as e:
-            Log.error(f"Exception fetching Facebook comments: {str(e)}")
+            print(f"Exception fetching Facebook comments: {str(e)}")
             return []
 

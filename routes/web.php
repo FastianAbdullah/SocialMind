@@ -6,6 +6,7 @@ use App\Http\Controllers\FacebookController;
 use App\Http\Controllers\LinkedinController;
 use App\Http\Controllers\InstagramController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\PostManagerController;
 use App\Http\Controllers\HashtagController;
 use App\Http\Controllers\BusinessPlanController;
@@ -60,8 +61,13 @@ Route::middleware(['auth'])->get('/user', function (Request $request) {
 });
 
 
-Route::middleware(['auth'])->get('/check-auth', function () {
-    return response()->json(['authenticated' => true]);
+Route::get('/check-auth', function (Request $request) {
+    if (auth()->check()) {
+        Log::info('User is authenticated');
+        Log::info($request->user());
+        return response()->json(['authenticated' => true]);
+    }
+    return response()->json(['authenticated' => false], 401);
 });
 
 // Post management routes

@@ -683,11 +683,8 @@ class PostManagerController extends Controller
                 
                 // Check for media file
                 $mediaFile = $request->file("media_{$platformId}");
-                $mediaPath = null;
                 
                 if ($mediaFile) {
-                    // Store the file temporarily
-                    $mediaPath = $mediaFile->getPathname();
                     Log::info('Media file received', [
                         'platform_id' => $platformId,
                         'file_name' => $mediaFile->getClientOriginalName(),
@@ -777,16 +774,23 @@ class PostManagerController extends Controller
                     }
                 } else if ($platformId == 1 && $platformPage && $mediaFile) { // Facebook with media
                     try {
-                        // First, we need to upload the image to a publicly accessible URL
-                        $imagePath = $mediaFile->store('temp_uploads', 'public');
-                        $imageUrl = asset('storage/' . $imagePath);
+                        // Save the file to a location accessible by the Flask app
+                        // This should be the same directory where your Flask app is running
+                        $filename = time() . '_' . $mediaFile->getClientOriginalName();
+                        
+                        // Assuming your Flask app is in the project root
+                        // Adjust this path as needed to match your setup
+                        $flaskAppPath = base_path('Post_Generation');
+                        
+                        // Move the file to the Flask app directory
+                        $mediaFile->move($flaskAppPath, $filename);
                         
                         // Make a JSON request to the Facebook API
                         $response = Http::withoutVerifying()
                             ->post('https://localhost:8443/facebook/post', [
                                 'page_id' => $platformPage->page_id,
                                 'page_token' => $userPlatform->access_token,
-                                'image_url' => $imageUrl,
+                                'filename' => $filename,
                                 'message' => $content
                             ]);
                         
@@ -794,11 +798,12 @@ class PostManagerController extends Controller
                         Log::info('Facebook API request', [
                             'endpoint' => 'https://localhost:8443/facebook/post',
                             'page_id' => $platformPage->page_id,
-                            'image_url' => $imageUrl
+                            'filename' => $filename
                         ]);
                         
                         if ($response->successful()) {
                             $responseData = $response->json();
+                            // Log the result of That Platform.
                             $results[$platformId] = [
                                 'success' => true,
                                 'message' => 'Post published successfully to Facebook',
@@ -806,9 +811,6 @@ class PostManagerController extends Controller
                                 'platform_name' => 'Facebook',
                                 'post_id' => $responseData['post_id'] ?? null
                             ];
-                            
-                            // Clean up the temporary file
-                            Storage::disk('public')->delete($imagePath);
                         } else {
                             Log::error('Facebook post failed', [
                                 'status' => $response->status(),
@@ -824,7 +826,7 @@ class PostManagerController extends Controller
                             ];
                             
                             // Clean up the temporary file
-                            Storage::disk('public')->delete($imagePath);
+                            @unlink($flaskAppPath . '/' . $filename);
                         }
                     } catch (\Exception $e) {
                         Log::error('Facebook post exception', [
@@ -841,12 +843,18 @@ class PostManagerController extends Controller
                     }
                 } else if ($platformId == 2 && $platformPage && $mediaFile) { // Instagram with media
                     try {
-                        // First, we need to upload the image to a publicly accessible URL
-                        // For this example, we'll store it temporarily in the public storage
-                        $imagePath = $mediaFile->store('temp_uploads', 'public');
-                        $imageUrl = asset('storage/' . $imagePath);
+                        // Save the file to a location accessible by the Flask app
+                        // This should be the same directory where your Flask app is running
+                        $filename = time() . '_' . $mediaFile->getClientOriginalName();
                         
-                        // Now make a JSON request to the Instagram API
+                        // Assuming your Flask app is in the project root
+                        // Adjust this path as needed to match your setup
+                        $flaskAppPath = base_path('Post_Generation');
+                        
+                        // Move the file to the Flask app directory
+                        $mediaFile->move($flaskAppPath, $filename);
+                        
+                        // Make the API request
                         $response = Http::withoutVerifying()
                             ->withHeaders([
                                 'Authorization' => $userPlatform->access_token,
@@ -854,16 +862,16 @@ class PostManagerController extends Controller
                             ])
                             ->post('https://localhost:8443/instagram/post', [
                                 'ig_user_id' => $platformPage->page_id,
-                                'image_url' => $imageUrl,
+                                'filename' => $filename,
                                 'caption' => $content
                             ]);
                         
-                        // Log the request details for debugging
+                        // Log the request details
                         Log::info('Instagram API request', [
                             'endpoint' => 'https://localhost:8443/instagram/post',
                             'payload' => [
                                 'ig_user_id' => $platformPage->page_id,
-                                'image_url' => $imageUrl,
+                                'filename' => $filename,
                                 'caption_length' => strlen($content)
                             ]
                         ]);
@@ -878,8 +886,7 @@ class PostManagerController extends Controller
                                 'post_id' => $responseData['post_id'] ?? null
                             ];
                             
-                            // Clean up the temporary file
-                            Storage::disk('public')->delete($imagePath);
+                            // File will be cleaned up by the Flask app
                         } else {
                             Log::error('Instagram post failed', [
                                 'status' => $response->status(),
@@ -894,8 +901,8 @@ class PostManagerController extends Controller
                                 'platform_name' => 'Instagram'
                             ];
                             
-                            // Clean up the temporary file
-                            Storage::disk('public')->delete($imagePath);
+                            // Clean up the file
+                            @unlink($flaskAppPath . '/' . $filename);
                         }
                     } catch (\Exception $e) {
                         Log::error('Instagram post exception', [

@@ -381,8 +381,8 @@
                                 <option value="" disabled>Select a page</option>
                                 <option 
                                   v-for="page in socialMediaStore.facebook.pages" 
-                                  :key="page.page_id" 
-                                  :value="page.page_id"
+                                  :key="page.id" 
+                                  :value="page.id"
                                 >
                                   {{ page.name }}
                                 </option>
@@ -618,7 +618,7 @@ const availableHashtags = ref([
   'positivity', 'recovery', 'mentalhealthsupport', 'life', 'love'
 ]);
 
-
+// Template Topics.
 const surpriseMe = () => {
   const surpriseTopics = [
     "The benefits of sustainable living and eco-friendly practices",
@@ -892,7 +892,10 @@ const openPublishModal = () => {
   console.log("Has Media is: ", hasMedia.value);
   // Pre-select first page for each platform if available
   if (socialMediaStore.facebook.pages.length > 0) {
-    selectedPages.value.facebook = socialMediaStore.facebook.pages[0].page_id;
+    console.log("Facebook Pages are: ", socialMediaStore.facebook.pages);
+    console.log("Facebook Page id is: ", socialMediaStore.facebook.pages[0].id);
+    selectedPages.value.facebook = socialMediaStore.facebook.pages[0].id;
+    console.log("Selected Pages after facebook is: ", selectedPages.value);
   }
   
   if (socialMediaStore.instagram.accounts.length > 0) {

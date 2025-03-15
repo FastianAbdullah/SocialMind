@@ -1,7 +1,6 @@
 import requests
 from collections import Counter
 import re
-import streamlit as st
 from typing import List, Dict
 
 #Class to filter Top Posts From Instagram SocialMedia Handles.

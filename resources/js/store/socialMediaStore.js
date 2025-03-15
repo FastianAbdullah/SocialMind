@@ -157,7 +157,7 @@ export const useSocialMediaStore = defineStore('socialMedia', {
         },
 
         validateSession() {
-            // Check if user is authenticated via web route instead of API
+            // Check if user is authenticated via web route
             return fetch('/check-auth', {
                 headers: {
                     'Accept': 'application/json',
@@ -171,9 +171,17 @@ export const useSocialMediaStore = defineStore('socialMedia', {
                     this.sessionValid = false;
                     return false;
                 }
-                this.sessionValid = true;
-                this.updateTimestamp();
-                return true;
+                return response.json().then(data => {
+                    if (data.authenticated) {
+                        this.sessionValid = true;
+                        this.updateTimestamp();
+                        return true;
+                    } else {
+                        this.clearSocialMediaStore();
+                        this.sessionValid = false;
+                        return false;
+                    }
+                });
             })
             .catch(() => {
                 this.clearSocialMediaStore();

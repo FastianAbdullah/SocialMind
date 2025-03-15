@@ -83,17 +83,15 @@ onMounted(async () => {
   try {
     // Try to validate the session
     isAuthenticated.value = await socialMediaStore.validateSession();
-    
     // If not authenticated but Vuex still thinks we are, fix that
     if (!isAuthenticated.value && store.state.isLoggedIn) {
+      
       await handleLogout();
     }
   } catch (error) {
     console.error('Authentication check failed:', error);
     isAuthenticated.value = false;
     await handleLogout();
-  } finally {
-
   }
 });
 
@@ -102,6 +100,7 @@ const handleLogout = async () => {
   try {
     // Clear social media store
     socialMediaStore.clearSocialMediaStore();
+    isAuthenticated.value = false;
     
     // Logout via Vuex
     await store.dispatch('logout');

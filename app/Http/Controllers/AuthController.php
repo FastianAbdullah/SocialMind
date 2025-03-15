@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-
+use Illuminate\Support\Facades\Log;
 class AuthController extends Controller
 {
     public function register(Request $request)
@@ -68,7 +68,10 @@ class AuthController extends Controller
         if ($user) {
             // Revoke all tokens for the user
             $user->tokens()->delete();
-
+            
+            // Log out from the web session as well
+            Auth::guard('web')->logout();
+            
             return response()->json(['message' => 'Logged out successfully'], 200);
         }
         

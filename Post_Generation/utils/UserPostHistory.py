@@ -1,11 +1,9 @@
-from typing import Dict,List
+from typing import Dict, List
 from datetime import datetime
-import streamlit as st
 
 class UserPostHistory:
     def __init__(self):
-        if 'post_history' not in st.session_state:
-            st.session_state.post_history = []
+        self.post_history = []
 
     def add_post(self, platform: str, post_data: Dict):
         """Add a new post to history"""
@@ -14,8 +12,8 @@ class UserPostHistory:
             'platform': platform,
             'data': post_data
         }
-        st.session_state.post_history.append(post_entry)
+        self.post_history.append(post_entry)
 
     def get_history(self) -> List[Dict]:
         """Get all posts from history"""
-        return st.session_state.post_history
+        return self.post_history
