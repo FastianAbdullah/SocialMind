@@ -164,49 +164,45 @@ def post_to_facebook():
     """Post content to Facebook"""
 
     data = request.json
-    required_fields = ['page_id', 'page_token', 'filename', 'message']
+    required_fields = ['page_id', 'page_token', 'message']
     if not all(field in data for field in required_fields):
         return jsonify({'error': 'Missing required fields'}), 400
-    
+
     try:
-        # Set up ngrok tunnel
-        success, result = setup_ngrok_tunnel(data['filename'])
-        
-        if not success:
-            return jsonify({
-                'status': 'error',
-                'message': result['error']
-            }), 400
-            
-        public_url = result['public_url']
-        
-        # Post to Facebook
+        # Use image_url from request or fallback to default
+        image_url = data.get('image_url', 'https://cdn.pixabay.com/photo/2014/06/03/19/38/board-361516_1280.jpg')
+
+        # Post to Facebook directly with the image_url
         fb_manager = FacebookManager(data['page_token'])
         print(f"[DEBUG] Posting to Facebook with page ID: {data['page_id']}")
+        print(f"[DEBUG] Using image URL: {image_url}")
+
         result = fb_manager.post_content(
             data['page_id'],
             data['page_token'],
-            public_url,
+            image_url,
             data['message']
         )
+
         print(f"[DEBUG] Facebook API result: {result}")
-        # In both cases after posting or error, remove the data[filename] from the current directory
-        os.remove(data['filename'])
-                
+
         if result:
             post_history.add_post('Facebook', result)
             print("[DEBUG] Successfully posted to Facebook")
             return jsonify({'success': True, 'post_id': result.get('id')})
-        
+
         print("[DEBUG] Failed to post content to Facebook")
         return jsonify({'error': 'Failed to post content'}), 400
-        
+
     except Exception as e:
         print(f"[DEBUG] Error in Facebook post process: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'status': 'error',
             'message': f'Error: {str(e)}'
         }), 500
+
 
 @app.route('/content/analyze', methods=['POST'])
 def analyze_content():
@@ -407,69 +403,59 @@ def get_instagram_accounts():
 def post_to_instagram():
     """Post content to Instagram"""
     access_token = request.headers.get('Authorization')
-       
+
     if not access_token:
         return jsonify({'error': 'No access token provided'}), 401
-    
+
     data = request.json
-    required_fields = ['ig_user_id', 'filename', 'caption']
+    required_fields = ['ig_user_id', 'caption']
     if not all(field in data for field in required_fields):
         return jsonify({
             'status': 'error',
             'message': f'Missing required fields. Required: {required_fields}'
         }), 400
-    
+
     try:
-        # Set up ngrok tunnel
-        success, result = setup_ngrok_tunnel(data['filename'])
-        
-        if not success:
-            return jsonify({
-                'status': 'error',
-                'message': result['error']
-            }), 400
-            
-        public_url = result['public_url']
-        
-        # Post to Instagram
+        # Use image_url from request or fallback to default
+        image_url = data.get('image_url', 'https://cdn.pixabay.com/photo/2014/06/03/19/38/board-361516_1280.jpg')
+
+        # Post to Instagram directly using the image_url
         print(f"[DEBUG] Posting to Instagram with user ID: {data['ig_user_id']}")
+        print(f"[DEBUG] Using image URL: {image_url}")
+
         ig_manager = InstagramManager(access_token)
         result = ig_manager.post_content(
             data['ig_user_id'],
-            public_url,
+            image_url,
             data['caption']
         )
-        
+
         print(f"[DEBUG] Instagram API result: {result}")
-        # In both cases after posting or error, remove the data[filename] from the current directory
-        os.remove(data['filename'])
 
         if result:
             post_history.add_post('Instagram', result)
             print("[DEBUG] Successfully posted to Instagram")
-            
-            # We'll leave the HTTP server and ngrok running for Instagram to fetch the image
-            # They'll be cleaned up when the Flask app restarts
-            
             return jsonify({
                 'status': 'success',
                 'post_id': result.get('id'),
                 'result': result
             })
-        
-        print("[DEBUG] Failed to post content to Instagram")
 
+        print("[DEBUG] Failed to post content to Instagram")
         return jsonify({
             'status': 'error',
             'message': 'Failed to post content'
         }), 400
-        
+
     except Exception as e:
-        print(f"[DEBUG] Error in Instagram post process: {str(e)}")            
+        print(f"[DEBUG] Error in Instagram post process: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'status': 'error',
             'message': f'Error: {str(e)}'
         }), 500
+
 
 @app.route('/instagram/hashtags', methods=['POST'])
 def get_trending_hashtags():
@@ -997,11 +983,15 @@ def post_content_through_agent():
                 agent_connector.access_tokens[platform_key] = access_token
                 print(f"DEBUG APP: Set access token for {platform_key}")
         
+        # Always use a reliable image URL for testing
+        test_image_url = "https://cdn.pixabay.com/photo/2014/06/03/19/38/board-361516_1280.jpg"
+        print(f"DEBUG APP: Using image URL: {test_image_url}")
+        
         # Try to post
         result = agent_connector.post_content(
             platforms[0] if len(platforms) == 1 else platforms,
             content,
-            image_url=None,  # You could extract from context if needed
+            image_url=test_image_url,  # Always provide an image URL
             schedule_time=schedule_time
         )
         

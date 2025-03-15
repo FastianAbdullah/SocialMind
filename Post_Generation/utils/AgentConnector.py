@@ -306,17 +306,21 @@ class AgentConnector:
             account = response_data["accounts"][0]
             ig_user_id = account.get("instagram_account_id")
             
+            # Clean up content for posting
+            cleaned_content = self._clean_content_for_posting(content)
+            
             # For Instagram, an image is required
             if not image_url:
                 # Fallback to a default test image for debugging
-                image_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png"
-                print(f"DEBUG AGENT_CONNECTOR: Using fallback image URL: {image_url}")
+                image_url = "https://cdn.pixabay.com/photo/2014/06/03/19/38/board-361516_1280.jpg"
+            
+            print(f"DEBUG AGENT_CONNECTOR: Using image URL: {image_url}")
             
             # Call the Instagram post endpoint
             post_data = {
                 "ig_user_id": ig_user_id,
                 "image_url": image_url,
-                "caption": content
+                "caption": cleaned_content
             }
             print(f"DEBUG AGENT_CONNECTOR: Posting to Instagram with data: {post_data}")
             
@@ -344,6 +348,8 @@ class AgentConnector:
         
         except Exception as e:
             print(f"DEBUG AGENT_CONNECTOR: Exception in _post_to_instagram: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return {
                 'status': 'error',
                 'message': f"Error posting to Instagram: {str(e)}"
@@ -402,22 +408,27 @@ class AgentConnector:
             page_id = page.get("id")
             page_token = page.get("access_token")
             
-            # If no image_url is provided, use a default image for testing
+            # Clean up content for posting
+            cleaned_content = self._clean_content_for_posting(content)
+            
+            # If no image_url is provided, use a default image
             if not image_url:
-                image_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Facebook_f_logo_%282019%29.svg/1200px-Facebook_f_logo_%282019%29.svg.png"
-                print(f"DEBUG AGENT_CONNECTOR: Using fallback image URL: {image_url}")
+                image_url = "https://cdn.pixabay.com/photo/2014/06/03/19/38/board-361516_1280.jpg"
+            
+            print(f"DEBUG AGENT_CONNECTOR: Using image URL: {image_url}")
             
             # Call the Facebook post endpoint
             post_data = {
                 "page_id": page_id,
                 "page_token": page_token,
                 "image_url": image_url,
-                "message": content
+                "message": cleaned_content
             }
             print(f"DEBUG AGENT_CONNECTOR: Posting to Facebook with data: {post_data}")
             
             post_response = requests.post(
                 f"{self.base_url}/facebook/post",
+                headers=headers,
                 json=post_data,
                 verify=self.verify_ssl
             )
@@ -439,6 +450,8 @@ class AgentConnector:
         
         except Exception as e:
             print(f"DEBUG AGENT_CONNECTOR: Exception in _post_to_facebook: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return {
                 'status': 'error',
                 'message': f"Error posting to Facebook: {str(e)}"
@@ -508,3 +521,44 @@ class AgentConnector:
                 'status': 'error',
                 'message': f"Error posting to LinkedIn: {str(e)}"
             }
+    
+    def _clean_content_for_posting(self, content):
+        """
+        Clean up content by removing section headers and formatting tags
+        
+        Args:
+            content: The raw content with potential section headers
+            
+        Returns:
+            Cleaned content suitable for posting
+        """
+        import re
+        
+        # Remove section headers like "### Catchy Headline:" or "## Main Content:"
+        content = re.sub(r'#{1,6}\s+[^#\n]+:', '', content)
+        
+        # Remove any remaining markdown formatting
+        content = re.sub(r'#{1,6}\s+', '', content)
+        
+        # Remove any "---" horizontal rules
+        content = re.sub(r'\n---+\n', '\n', content)
+        
+        # Remove quoted sections with quotes
+        content = re.sub(r'\"(.+?)\"', r'\1', content)
+        
+        # Remove any instructions or prompts at the end
+        content = re.sub(r'\n\nWould you like to.*$', '', content, flags=re.DOTALL)
+        
+        # Clean up any extra newlines
+        content = re.sub(r'\n{3,}', '\n\n', content)
+        
+        # Remove section labels like "Relevant Hashtags:" but keep the hashtags
+        content = re.sub(r'(?:Relevant |)Hashtags:\s*', '', content)
+        content = re.sub(r'Call to Action:\s*', '', content)
+        content = re.sub(r'Main Content Body:\s*', '', content)
+        content = re.sub(r'Catchy Headline:\s*', '', content)
+        
+        # Trim whitespace
+        content = content.strip()
+        
+        return content
