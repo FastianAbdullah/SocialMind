@@ -56,7 +56,7 @@
             <div class="page-title">
               <div class="row">
                 <div class="col-12 text-center">
-                  <h4>Sentiment Analysis</h4>
+                  <h4>Post Sentiment Analysis</h4>
                 </div>
               </div>
             </div>
@@ -64,7 +64,7 @@
             <!-- Main Content -->
             <div class="row">
               <!-- Platform Tabs -->
-              <div class="col-12 mb-4">
+              <div class="col-12">
                 <div class="card">
                   <div class="card-header">
                     <h5>My Posts</h5>
@@ -112,11 +112,9 @@
                             <div 
                               class="post-card" 
                               :class="{ 
-                                'selected': selectedPost && selectedPost.id === post.id,
                                 'animate-in': true
                               }"
                               :style="{ animationDelay: `${index * 0.1}s` }"
-                              @click="selectPost(post)"
                             >
                               <div class="post-status">
                                 <span class="badge" :class="getStatusBadgeClass(post.status)">
@@ -134,17 +132,23 @@
                               <div class="post-footer">
                                 <button 
                                   class="btn btn-sm btn-primary analyze-btn"
-                                  @click.stop="analyzeSentiment(post)"
+                                  @click="analyzeSentiment(post)"
+                                  :disabled="isAnalyzing"
                                 >
-                                  <i class="fas fa-chart-bar me-1"></i> Analyze Sentiment
+                                  <span v-if="!isAnalyzing || selectedPostId !== post.id">
+                                    <i class="fas fa-chart-bar me-1"></i> Analyze Sentiment
+                                  </span>
+                                  <span v-else class="d-flex align-items-center">
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Analyzing...
+                                  </span>
                                 </button>
                                 
                                 <a 
                                   v-if="post.post_url" 
                                   :href="post.post_url" 
                                   target="_blank"
-                                  class="btn btn-sm btn-outline-light view-btn"
-                                  @click.stop
+                                  class="btn btn-sm btn-outline-secondary view-btn"
                                 >
                                   <i class="fas fa-external-link-alt me-1"></i> View
                                 </a>
@@ -155,191 +159,6 @@
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              <!-- Analysis Results -->
-              <div v-if="sentimentData" class="col-12 sentiment-results animate-fade-in">
-                <div class="row">
-                  <!-- Selected Post Info -->
-                  <div class="col-12 mb-4">
-                    <div class="card selected-post-card">
-                      <div class="card-body">
-                        <div class="d-flex align-items-center">
-                          <div class="platform-icon">
-                            <i :class="getPlatformIcon(selectedPost.platform)"></i>
-                          </div>
-                          <div class="post-info">
-                            <h5>{{ truncateText(selectedPost.initial_description, 100) }}</h5>
-                            <div class="post-meta">
-                              <span class="badge" :class="getStatusBadgeClass(selectedPost.status)">
-                                {{ selectedPost.status }}
-                              </span>
-                              <span class="post-date">
-                                <i class="far fa-calendar-alt me-1"></i> 
-                                {{ formatDate(selectedPost.created_at) }}
-                              </span>
-                              <span class="platform-name">
-                                <i :class="getPlatformIcon(selectedPost.platform)" class="me-1"></i>
-                                {{ selectedPost.platform }}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Overview -->
-                  <div class="col-lg-4 col-md-6 mb-4 animate-in">
-                    <div class="card h-100 sentiment-overview-card">
-                      <div class="card-header">
-                        <h5>Sentiment Overview</h5>
-                      </div>
-                      <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-center mb-4">
-                          <div class="sentiment-badge" :class="sentimentClass">
-                            {{ sentimentData.analysis.overall_sentiment }}
-                          </div>
-                        </div>
-                        
-                        <div class="row text-center">
-                          <div class="col-4 sentiment-stat animate-in" style="animation-delay: 0.1s">
-                            <h3 class="text-success">{{ sentimentData.analysis.sentiment_distribution.positive || 0 }}</h3>
-                            <p>Positive</p>
-                          </div>
-                          <div class="col-4 sentiment-stat animate-in" style="animation-delay: 0.2s">
-                            <h3 class="text-warning">{{ sentimentData.analysis.sentiment_distribution.neutral || 0 }}</h3>
-                            <p>Neutral</p>
-                          </div>
-                          <div class="col-4 sentiment-stat animate-in" style="animation-delay: 0.3s">
-                            <h3 class="text-danger">{{ sentimentData.analysis.sentiment_distribution.negative || 0 }}</h3>
-                            <p>Negative</p>
-                          </div>
-                        </div>
-                        
-                        <div class="text-center mt-3 animate-in" style="animation-delay: 0.4s">
-                          <h6>Average Score: 
-                            <span :class="{
-                              'text-success': sentimentData.analysis.average_score > 0.1,
-                              'text-danger': sentimentData.analysis.average_score < -0.1,
-                              'text-warning': sentimentData.analysis.average_score >= -0.1 && sentimentData.analysis.average_score <= 0.1
-                            }">
-                              {{ sentimentData.analysis.average_score }}
-                            </span>
-                          </h6>
-                          <p class="mb-0">Based on {{ sentimentData.comment_count }} comments</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Charts -->
-                  <div class="col-lg-8 col-md-6 mb-4 animate-in" style="animation-delay: 0.2s">
-                    <div class="card h-100 charts-card">
-                      <div class="card-header">
-                        <h5>Sentiment Charts</h5>
-                      </div>
-                      <div class="card-body">
-                        <div class="row">
-                          <div class="col-md-6 mb-3 chart-container-wrapper animate-in" style="animation-delay: 0.3s">
-                            <div class="chart-container">
-                              <img v-if="sentimentData.charts.sentiment_distribution" 
-                                   :src="`data:image/png;base64,${sentimentData.charts.sentiment_distribution}`" 
-                                   class="img-fluid" 
-                                   alt="Sentiment Distribution" />
-                            </div>
-                          </div>
-                          <div class="col-md-6 mb-3 chart-container-wrapper animate-in" style="animation-delay: 0.4s">
-                            <div class="chart-container">
-                              <img v-if="sentimentData.charts.score_distribution" 
-                                   :src="`data:image/png;base64,${sentimentData.charts.score_distribution}`" 
-                                   class="img-fluid" 
-                                   alt="Score Distribution" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Common Words -->
-                  <div class="col-lg-6 mb-4 animate-in" style="animation-delay: 0.3s">
-                    <div class="card h-100 words-card">
-                      <div class="card-header">
-                        <h5>Common Words</h5>
-                      </div>
-                      <div class="card-body">
-                        <div class="row">
-                          <div class="col-md-6">
-                            <h6 class="text-success mb-3">Positive Words</h6>
-                            <ul class="list-unstyled">
-                              <li v-for="(word, index) in sentimentData.analysis.common_positive_words" 
-                                  :key="`positive-${index}`"
-                                  class="mb-2 word-item"
-                                  :style="{ animationDelay: `${0.1 * index}s` }"
-                              >
-                                <i class="fas fa-check-circle text-success me-2"></i>
-                                {{ word }}
-                              </li>
-                            </ul>
-                          </div>
-                          <div class="col-md-6">
-                            <h6 class="text-danger mb-3">Negative Words</h6>
-                            <ul class="list-unstyled">
-                              <li v-for="(word, index) in sentimentData.analysis.common_negative_words" 
-                                  :key="`negative-${index}`"
-                                  class="mb-2 word-item"
-                                  :style="{ animationDelay: `${0.1 * index}s` }"
-                              >
-                                <i class="fas fa-times-circle text-danger me-2"></i>
-                                {{ word }}
-                              </li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Comments Sample -->
-                  <div class="col-lg-6 mb-4 animate-in" style="animation-delay: 0.4s">
-                    <div class="card h-100 comments-card">
-                      <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5>Comment Samples</h5>
-                        <div class="badge bg-primary">{{ sentimentData.comment_count }} Comments</div>
-                      </div>
-                      <div class="card-body comment-samples">
-                        <div v-for="(comment, index) in sentimentData.analysis.comment_sentiments.slice(0, 5)" 
-                             :key="`comment-${index}`"
-                             class="comment-item"
-                             :class="{
-                               'comment-positive': comment.sentiment === 'positive',
-                               'comment-neutral': comment.sentiment === 'neutral',
-                               'comment-negative': comment.sentiment === 'negative',
-                             }"
-                             :style="{ animationDelay: `${0.1 * index}s` }"
-                        >
-                          <div class="comment-text">{{ comment.text }}</div>
-                          <div class="comment-meta">
-                            <span class="badge" :class="getSentimentBadgeClass(comment.sentiment)">
-                              {{ comment.sentiment }}
-                            </span>
-                            <span class="score">Score: {{ comment.score }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Loading State -->
-              <div v-if="isAnalyzing" class="col-12 text-center py-5 loading-container">
-                <div class="loading-animation">
-                  <div class="loading-spinner"></div>
-                  <h5 class="mt-3">Analyzing Sentiment</h5>
-                  <p>Please wait while we analyze the comments on your post...</p>
                 </div>
               </div>
 
@@ -370,6 +189,45 @@
         </footer>
       </div>
     </div>
+
+    <!-- Sentiment Modal -->
+    <div class="modal fade" id="sentimentModal" tabindex="-1" aria-labelledby="sentimentModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sentiment-modal">
+          <div class="modal-header border-0">
+            <h5 class="modal-title" id="sentimentModalLabel">Post Sentiment Analysis</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <div v-if="sentimentData">
+              <div class="sentiment-result mb-4">
+                <div class="sentiment-icon" :class="sentimentClass">
+                  <i class="fas" :class="getSentimentIcon(sentimentData.analysis.overall_sentiment)"></i>
+                </div>
+                <div class="sentiment-label">
+                  {{ sentimentData.analysis.overall_sentiment.toUpperCase() }}
+                </div>
+              </div>
+              <div class="sentiment-stats">
+                <p>Based on analysis of {{ sentimentData.comment_count || 0 }} comments</p>
+              </div>
+              <div class="sentiment-message">
+                {{ getSentimentMessage(sentimentData.analysis.overall_sentiment) }}
+              </div>
+            </div>
+            <div v-else class="sentiment-loading">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-3">Analyzing sentiment...</p>
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -382,10 +240,10 @@ import { useDynamicResources } from '../composables/useDynamicResources';
 // State
 const userPosts = ref({});
 const activePlatform = ref('');
-const selectedPost = ref(null);
 const isAnalyzing = ref(false);
 const sentimentData = ref(null);
 const isLoading = ref(true);
+const selectedPostId = ref(null);
 
 // CSS and JS resources
 const cssFiles = [
@@ -484,14 +342,16 @@ const getStatusBadgeClass = (status) => {
   return statusMap[status.toLowerCase()] || 'bg-secondary';
 };
 
-const getSentimentBadgeClass = (sentiment) => {
-  if (sentiment === 'positive') return 'bg-success';
-  if (sentiment === 'negative') return 'bg-danger';
-  return 'bg-warning';
+const getSentimentIcon = (sentiment) => {
+  if (sentiment === 'positive') return 'fa-smile';
+  if (sentiment === 'negative') return 'fa-frown';
+  return 'fa-meh';
 };
 
-const selectPost = (post) => {
-  selectedPost.value = post;
+const getSentimentMessage = (sentiment) => {
+  if (sentiment === 'positive') return 'Your audience is responding positively to this post!';
+  if (sentiment === 'negative') return 'Your audience seems to have concerns about this post.';
+  return 'Your audience has a neutral reaction to this post.';
 };
 
 const truncateText = (text, maxLength) => {
@@ -513,9 +373,13 @@ const formatDate = (dateString) => {
 const analyzeSentiment = async (post) => {
   if (isAnalyzing.value) return;
   
-  selectedPost.value = post;
+  selectedPostId.value = post.id;
   sentimentData.value = null;
   isAnalyzing.value = true;
+  
+  // Show modal
+  const sentimentModal = new window.bootstrap.Modal(document.getElementById('sentimentModal'));
+  sentimentModal.show();
   
   try {
     // Check if post has a valid response_post_id
@@ -531,20 +395,9 @@ const analyzeSentiment = async (post) => {
       isAnalyzing.value = false;
       return;
     }
-
-    // Scroll to loading area
-    setTimeout(() => {
-      const loadingEl = document.querySelector('.loading-container');
-      if (loadingEl) {
-        loadingEl.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 100);
     
     console.log('Analyzing post:', post.response_post_id, post.platform);
     const result = await analyzePostSentiment(post.response_post_id, post.platform);
-    
-    // Ensure result has expected structure
-    console.log('Sentiment analysis result:', result);
     
     // Create a default structure if some properties are missing
     const defaultSentimentData = {
@@ -575,20 +428,8 @@ const analyzeSentiment = async (post) => {
       analysis: {
         ...defaultSentimentData.analysis,
         ...(result.analysis || {})
-      },
-      charts: {
-        ...defaultSentimentData.charts,
-        ...(result.charts || {})
       }
     };
-    
-    // Scroll to results after they load
-    setTimeout(() => {
-      const resultsEl = document.querySelector('.sentiment-results');
-      if (resultsEl) {
-        resultsEl.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 300);
     
     // Show success notification
     if (window.$) {
@@ -611,7 +452,7 @@ const analyzeSentiment = async (post) => {
     }
     sentimentData.value = null;
   } finally {
-    // Ensure loading state is reset even if there's an error
+    // Ensure loading state is reset
     isAnalyzing.value = false;
   }
 };
@@ -646,11 +487,6 @@ onMounted(async () => {
   transform: translateY(20px);
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.8s ease forwards;
-  opacity: 0;
-}
-
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -662,22 +498,12 @@ onMounted(async () => {
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 /* Post Card Styling */
 .post-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(240, 240, 240, 0.8));
   border-radius: 12px;
   padding: 1.5rem;
   transition: all 0.3s ease;
-  cursor: pointer;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -691,11 +517,6 @@ onMounted(async () => {
   transform: translateY(-5px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   background: linear-gradient(135deg, rgba(240, 240, 240, 0.8), rgba(230, 230, 230, 0.9));
-}
-
-.post-card.selected {
-  border-color: #00a3a3;
-  box-shadow: 0 0 0 2px rgba(0, 163, 163, 0.3);
 }
 
 .post-status {
@@ -734,22 +555,23 @@ onMounted(async () => {
   background: linear-gradient(135deg, #00a3a3, #00c4c4);
   border: none;
   transition: all 0.3s ease;
+  min-width: 140px;
 }
 
-.analyze-btn:hover {
+.analyze-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #00c4c4, #00e5e5);
   transform: translateY(-2px);
 }
 
 .view-btn {
   border-color: #666;
-  color: #ccc;
+  color: #555;
   transition: all 0.3s ease;
 }
 
 .view-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
 }
 
 /* Empty State */
@@ -762,281 +584,8 @@ onMounted(async () => {
 
 .empty-icon {
   font-size: 4rem;
-  color: #3c3c4a;
+  color: #aaa;
   margin-bottom: 1rem;
-}
-
-/* Loading Animation */
-.loading-animation {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 3rem 0;
-  color: #333;
-}
-
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 5px solid rgba(0, 163, 163, 0.2);
-  border-top-color: #00a3a3;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1.5rem;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Selected Post Card */
-.selected-post-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(240, 240, 240, 0.9));
-  border-left: 4px solid #00a3a3;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  color: #333;
-}
-
-.platform-icon {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, rgba(240, 240, 240, 0.9), rgba(230, 230, 230, 1));
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 1.5rem;
-  flex-shrink: 0;
-}
-
-.platform-icon i {
-  font-size: 1.8rem;
-  color: #00a3a3;
-}
-
-.post-info {
-  flex-grow: 1;
-}
-
-.post-meta {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 0.5rem;
-}
-
-.platform-name {
-  color: #666;
-  font-size: 0.9rem;
-}
-
-/* Sentiment Badge & Cards */
-.sentiment-badge {
-  display: inline-block;
-  padding: 1rem 2rem;
-  border-radius: 50px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.sentiment-positive {
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.9), rgba(139, 195, 74, 0.9));
-  color: white;
-}
-
-.sentiment-negative {
-  background: linear-gradient(135deg, rgba(244, 67, 54, 0.9), rgba(255, 87, 34, 0.9));
-  color: white;
-}
-
-.sentiment-neutral {
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.9), rgba(255, 235, 59, 0.9));
-  color: #333;
-}
-
-.sentiment-overview-card, .charts-card, .words-card, .comments-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(240, 240, 240, 0.9));
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  color: #333;
-}
-
-.sentiment-overview-card:hover, .charts-card:hover, .words-card:hover, .comments-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
-.sentiment-stat {
-  transition: all 0.3s ease;
-}
-
-.sentiment-stat:hover {
-  transform: translateY(-5px);
-}
-
-.chart-container-wrapper {
-  transition: all 0.3s ease;
-}
-
-.chart-container-wrapper:hover {
-  transform: translateY(-5px);
-}
-
-.chart-container {
-  background: rgba(250, 250, 250, 0.7);
-  border-radius: 8px;
-  padding: 1rem;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-/* Word Items */
-.word-item {
-  animation: slideInLeft 0.5s ease forwards;
-  opacity: 0;
-  transform: translateX(-20px);
-  padding: 0.5rem 0.8rem;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  background: rgba(240, 240, 240, 0.7);
-  margin-bottom: 0.6rem !important;
-  color: #333;
-}
-
-.word-item:hover {
-  background: rgba(230, 230, 230, 0.8);
-  transform: translateX(5px);
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* Comments Styling */
-.comment-samples {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.comment-item {
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  background: rgba(250, 250, 250, 0.7);
-  border-left: 4px solid #9E9E9E;
-  animation: slideInRight 0.5s ease forwards;
-  opacity: 0;
-  transform: translateX(20px);
-  transition: all 0.3s ease;
-  color: #333;
-}
-
-.comment-item:hover {
-  transform: translateX(-5px);
-  background: rgba(240, 240, 240, 0.8);
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.comment-positive {
-  border-left-color: #4CAF50;
-}
-
-.comment-negative {
-  border-left-color: #F44336;
-}
-
-.comment-neutral {
-  border-left-color: #FFC107;
-}
-
-.comment-text {
-  margin-bottom: 0.5rem;
-  color: #333;
-}
-
-.comment-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.8rem;
-}
-
-.score {
-  color: #666;
-}
-
-/* Tab Styling */
-.nav-tabs {
-  border-color: #e0e0e0;
-  margin-bottom: 0;
-}
-
-.nav-tabs .nav-link {
-  color: #444;
-  border: none;
-  padding: 0.8rem 1.2rem;
-  border-radius: 8px 8px 0 0;
-  transition: all 0.3s ease;
-  margin-right: 5px;
-}
-
-.nav-tabs .nav-link:hover {
-  background-color: rgba(0, 163, 163, 0.1);
-  border-color: transparent;
-}
-
-.nav-tabs .nav-link.active {
-  color: white;
-  background: linear-gradient(to bottom, #00a3a3, #008080);
-  border-color: transparent;
-}
-
-/* Scrollbar styling */
-.comment-samples::-webkit-scrollbar {
-  width: 6px;
-}
-
-.comment-samples::-webkit-scrollbar-track {
-  background: rgba(240, 240, 240, 0.5);
-  border-radius: 3px;
-}
-
-.comment-samples::-webkit-scrollbar-thumb {
-  background: #00a3a3;
-  border-radius: 3px;
-}
-
-.comment-samples::-webkit-scrollbar-thumb:hover {
-  background: #008f8f;
 }
 
 /* Card Headers */
@@ -1050,5 +599,71 @@ onMounted(async () => {
   margin-bottom: 0;
   color: #222;
   font-weight: 600;
+}
+
+/* Sentiment Modal */
+.sentiment-modal {
+  border-radius: 16px;
+  overflow: hidden;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header, .modal-footer {
+  background-color: #f8f9fa;
+}
+
+.sentiment-result {
+  padding: 2rem 0;
+}
+
+.sentiment-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin-bottom: 1.5rem;
+  font-size: 4rem;
+}
+
+.sentiment-positive {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(139, 195, 74, 0.2));
+  color: #4CAF50;
+}
+
+.sentiment-negative {
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(255, 87, 34, 0.2));
+  color: #F44336;
+}
+
+.sentiment-neutral {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 235, 59, 0.2));
+  color: #FFC107;
+}
+
+.sentiment-label {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.sentiment-stats {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.sentiment-message {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.sentiment-loading {
+  padding: 3rem 0;
 }
 </style> 
