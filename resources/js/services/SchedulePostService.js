@@ -8,7 +8,7 @@ import axios from 'axios';
  * @param {boolean} useAiSuggestion - Whether to use AI suggested time
  * @returns {Promise<Object>} - Object containing schedule results
  */
-export async function schedulePost(platformsData, content, scheduledTime, useAiSuggestion = false) {
+export async function schedulePostService(platformsData, initialPostDescription, scheduledTime, useAiSuggestion = false) {
   try {
     // Create FormData to handle file uploads
     const formData = new FormData();
@@ -17,7 +17,7 @@ export async function schedulePost(platformsData, content, scheduledTime, useAiS
     formData.append('platforms', JSON.stringify(platformsData));
     
     // Add content
-    formData.append('content', content);
+    formData.append('initial_post_description', initialPostDescription);
     
     // Add scheduled time
     formData.append('scheduled_time', scheduledTime);

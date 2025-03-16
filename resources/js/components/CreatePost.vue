@@ -646,15 +646,13 @@
 
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, nextTick, reactive, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
 import Loader from '../components/Loader.vue';
 import DashboardSidebar from '../components/DashboardSidebar.vue';
 import { useDynamicResources } from '../composables/useDynamicResources';
-import { createPost, savePost, publishPosts } from '../services/CreatePostService';
-import { schedulePost } from '../services/SchedulePostService';
-import { useSocialMediaStore } from '../stores/socialMediaStore';
-import { useToast } from '../composables/useToast';
+import { createPost, publishPosts } from '../services/CreatePostService';
+import { schedulePostService } from '../services/SchedulePostService';
+import { useSocialMediaStore } from '../store/socialMediaStore.js';
 import { getAuthUrl } from '../services/SocialMediaAuthService.js';
 import { getAuthUrl as getInstagramAuthUrl } from '../services/instagramService';
 
@@ -1368,24 +1366,28 @@ const incrementHour = () => {
   let hour = parseInt(selectedHour.value);
   hour = (hour % 12) + 1;
   selectedHour.value = hour.toString().padStart(2, '0');
+  console.log("Selected Hour Value After Increment is: ", selectedHour.value);
 };
 
 const decrementHour = () => {
   let hour = parseInt(selectedHour.value);
   hour = hour === 1 ? 12 : hour - 1;
   selectedHour.value = hour.toString().padStart(2, '0');
+  console.log("Selected Hour Value After Decrement is: ", selectedHour.value);
 };
 
 const incrementMinute = () => {
   let minute = parseInt(selectedMinute.value);
   minute = (minute + 5) % 60;
   selectedMinute.value = minute.toString().padStart(2, '0');
+  console.log("Selected Minute Value After Increment is: ", selectedMinute.value);
 };
 
 const decrementMinute = () => {
   let minute = parseInt(selectedMinute.value);
   minute = (minute - 5 + 60) % 60;
   selectedMinute.value = minute.toString().padStart(2, '0');
+  console.log("Selected Minute Value After Decrement is: ", selectedMinute.value);
 };
 
 const toggleAmPm = () => {
@@ -1394,8 +1396,14 @@ const toggleAmPm = () => {
 
 // Methods for scheduling
 const openScheduleModal = () => {
+
+  // hide Both Modals.
   if (publishModal.value) {
     publishModal.value.hide();
+  }
+
+  if (postEditorModal.value) {
+    postEditorModal.value.hide();
   }
   
   if (scheduleModal.value) {
@@ -1407,7 +1415,7 @@ const publishImmediately = () => {
   if (scheduleModal.value) {
     scheduleModal.value.hide();
   }
-  
+  // See if Editor Modal should be opened or not.
   if (publishModal.value) {
     publishModal.value.show();
   }
@@ -1416,6 +1424,9 @@ const publishImmediately = () => {
 const schedulePost = async () => {
   try {
     isScheduling.value = true;
+
+    // Get the content from the currently selected post
+    const postContent = editingPost.value.content;
     
     // Convert the selected date and time to a timestamp
     const scheduledDate = new Date(selectedDate.value);
@@ -1439,7 +1450,7 @@ const schedulePost = async () => {
       platformsData.push({
         platform_id: 1, // Facebook
         page_id: selectedPages.value.facebook,
-        content: editedPostContent.value,
+        content: postContent,
         media: mediaFile.value
       });
     }
@@ -1448,7 +1459,7 @@ const schedulePost = async () => {
       platformsData.push({
         platform_id: 2, // Instagram
         page_id: selectedPages.value.instagram,
-        content: editedPostContent.value,
+        content: postContent,
         media: mediaFile.value
       });
     }
@@ -1456,34 +1467,65 @@ const schedulePost = async () => {
     if (selectedPlatforms.value.linkedin) {
       platformsData.push({
         platform_id: 3, // LinkedIn
-        content: editedPostContent.value,
+        content: postContent,
         media: mediaFile.value
       });
     }
+
+    // Format the date in a way that preserves the local time
+    // This creates a string in the format: "2025-03-16 13:20:00"
+    const localDateString = scheduledDate.getFullYear() + '-' + 
+                           String(scheduledDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(scheduledDate.getDate()).padStart(2, '0') + ' ' + 
+                           String(scheduledDate.getHours()).padStart(2, '0') + ':' + 
+                           String(scheduledDate.getMinutes()).padStart(2, '0') + ':' + 
+                           String(scheduledDate.getSeconds()).padStart(2, '0');
     
-    // Call the API to schedule the post
-    const result = await schedulePost(
+    console.log('Initial Post Description is: ', initialPostDescription.value);
+    console.log('Scheduling post for local time:', localDateString);
+    
+    // Call the API to schedule the post with the local time string
+    const result = await schedulePostService(
       platformsData, 
-      editedPostContent.value, 
-      scheduledDate.toISOString(),
+      initialPostDescription.value,
+      localDateString,
       useAiSuggestion.value
     );
     
-    // Show success message
-    toast.success('Post scheduled successfully for ' + formattedSelectedDate.value + ' at ' + 
-                 selectedHour.value + ':' + selectedMinute.value + ' ' + selectedAmPm.value);
+    // Show success notification
+    $.notify({
+      title: 'Success',
+      message: 'Your post has been scheduled successfully for ' + 
+               scheduledDate.toLocaleString(undefined, {
+                 year: 'numeric',
+                 month: 'long',
+                 day: 'numeric',
+                 hour: 'numeric',
+                 minute: 'numeric',
+                 hour12: true
+               })
+    }, {
+      type: 'success',
+      allow_dismiss: true
+    });
     
     // Close the modal
     if (scheduleModal.value) {
       scheduleModal.value.hide();
     }
-    
-    // Reset form
-    resetForm();
-    
+        
   } catch (error) {
     console.error('Error scheduling post:', error);
-    toast.error('Failed to schedule post: ' + (error.message || 'Unknown error'));
+
+    // Show error notification
+    $.notify({
+      title: 'Error',
+      message: 'Failed to schedule post: ' + (error.message || 'Please try again.')
+    }, {
+      type: 'danger',
+      allow_dismiss: true
+    });
+
   } finally {
     isScheduling.value = false;
   }

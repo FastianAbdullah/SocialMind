@@ -12,6 +12,8 @@ use App\Models\PlatformPage;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Schedular;
+use App\Models\MediaAttachment;
 
 class PostManagerController extends Controller
 {
@@ -201,48 +203,7 @@ class PostManagerController extends Controller
             ], 500);
         }
     }
-    
-    /**
-     * Save a selected post
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function save(Request $request)
-    {
-        try {
-            $request->validate([
-                'content' => 'required|string',
-                'purpose' => 'required|string',
-                'hashtags' => 'required|array',
-            ]);
-            
-            $post = new Post();
-            $post->user_id = Auth::id();
-            $post->content = $request->input('content');
-            $post->purpose = $request->input('purpose');
-            $post->hashtags = json_encode($request->input('hashtags'));
-            $post->status = 'draft';
-            $post->save();
-            
-            return response()->json([
-                'success' => true,
-                'post' => $post
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Post saving failed', [
-                'error' => $e->getMessage(),
-                'user_id' => Auth::id()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to save post: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-    
+
     /**
      * Generate optimized content using AI analysis and top-performing posts
      *
@@ -603,8 +564,9 @@ class PostManagerController extends Controller
         }
     }
 
+
     /**
-     * Publish posts to selected social media platforms
+     * Schedule posts for later publishing
      *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -717,7 +679,7 @@ class PostManagerController extends Controller
      * @param int $platformId
      * @return UserPlatform|null
      */
-    private function getUserPlatform($userId, $platformId)
+    protected function getUserPlatform($userId, $platformId)
     {
         $userPlatform = UserPlatform::where('user_id', $userId)
             ->where('platform_id', $platformId)
@@ -740,7 +702,7 @@ class PostManagerController extends Controller
      * @param int $userPlatformId
      * @return PlatformPage|null
      */
-    private function getPlatformPage($userPlatformId)
+    protected function getPlatformPage($userPlatformId)
     {
         $platformPage = PlatformPage::where('user_platform_id', $userPlatformId)
             ->first();
@@ -805,7 +767,7 @@ class PostManagerController extends Controller
      * @param int $platformId
      * @return string
      */
-    private function getPlatformName($platformId)
+    protected function getPlatformName($platformId)
     {
         $platforms = [
             1 => 'Facebook',
@@ -828,7 +790,7 @@ class PostManagerController extends Controller
      * @param array $metadata
      * @return Post
      */
-    private function createPostRecord($userId, $platformId, $initialDescription, $content, $status, $responsePostId, $metadata)
+    protected function createPostRecord($userId, $platformId, $initialDescription, $content, $status, $responsePostId, $metadata)
     {
         $post = new Post();
         $post->user_id = $userId;
@@ -913,7 +875,45 @@ class PostManagerController extends Controller
                     $responseData['post_id'] ?? null,
                     $metadata
                 );
-                
+
+                // Store media file if present
+                if ($mediaFile) {
+                    // Create directory for this post
+                    $postDirectory = 'public/posts/' . $post->id;
+                    $storagePath = storage_path('app/' . $postDirectory);
+                    
+                    if (!file_exists($storagePath)) {
+                        mkdir($storagePath, 0755, true);
+                    }
+                    
+                    // Generate a unique filename
+                    $filename = time() . '_' . $mediaFile->getClientOriginalName();
+                    
+                    // Store the file in the post's directory
+                    $mediaFile->storeAs($postDirectory, $filename);
+                    
+                    // Get the absolute path for database storage
+                    $absolutePath = storage_path('app/' . $postDirectory . '/' . $filename);
+                    
+                    // Log the Saved Media File Data
+                    Log::info('Saved Media File Data', [
+                        'post_id' => $post->id,
+                        'media_file' => $mediaFile,
+                        'media_path' => $absolutePath,
+                        'alt_text' => $initialPostDescription,
+                        'metadata' => $metadata
+                    ]);
+
+                    // Save media attachment with absolute path in Database
+                    $mediaAttachment = new MediaAttachment();
+                    $mediaAttachment->post_id = $post->id;
+                    $mediaAttachment->media_type = $mediaFile->getMimeType();
+                    $mediaAttachment->file_path = $absolutePath;
+                    $mediaAttachment->alt_text = $initialPostDescription;
+                    $mediaAttachment->metadata = json_encode($metadata);
+                    $mediaAttachment->setTable('media_attachment');
+                    $mediaAttachment->save();
+                }
 
                 return [
                     'success' => true,
@@ -966,15 +966,29 @@ class PostManagerController extends Controller
     private function publishToFacebook($userPlatform, $platformPage, $content, $mediaFile, $userId, $initialPostDescription)
     {
         try {
-            // Save the file to a location accessible by the Flask app
-            $filename = time() . '_' . $mediaFile->getClientOriginalName();
-
             // Save mediafile Original Name and type for Metadata
             $mediaFileName = $mediaFile->getClientOriginalName();
             $mediaFileType = $mediaFile->getMimeType();
-
+            
+            // First, save a copy of the media file to storage
+            $tempDirectory = 'public/temp';
+            $tempFilename = time() . '_' . $mediaFileName;
+            $mediaFile->storeAs($tempDirectory, $tempFilename);
+            
+            // Get the stored file path to create a duplicate for Flask
+            $storedFilePath = storage_path('app/' . $tempDirectory . '/' . $tempFilename);
+            
+            // Create a duplicate file for Flask API (since Flask will delete it after usage)
+            $filename = time() . '_' . $mediaFileName;
             $flaskAppPath = base_path('Post_Generation');
-            $mediaFile->move($flaskAppPath, $filename);
+            
+            // Make sure the Flask directory exists
+            if (!file_exists($flaskAppPath)) {
+                mkdir($flaskAppPath, 0755, true);
+            }
+            
+            // Copy the file to Flask app directory
+            copy($storedFilePath, $flaskAppPath . '/' . $filename);
             
             // Make a JSON request to the Facebook API
             $response = Http::withoutVerifying()
@@ -1014,6 +1028,42 @@ class PostManagerController extends Controller
                     $responseData['post_id'] ?? null, 
                     $metadata
                 );
+
+                // Create directory for this post
+                $postDirectory = 'public/posts/' . $post->id;
+                $storagePath = storage_path('app/' . $postDirectory);
+                
+                if (!file_exists($storagePath)) {
+                    mkdir($storagePath, 0755, true);
+                }
+                
+                // Generate a unique filename for permanent storage
+                $permanentFilename = time() . '_' . $mediaFileName;
+                
+                // Copy from the temp file to the post's permanent directory
+                copy($storedFilePath, $storagePath . '/' . $permanentFilename);
+                
+                // Get the absolute path for database storage
+                $absolutePath = storage_path('app/' . $postDirectory . '/' . $permanentFilename);
+
+                // Log the Saved Media File Data
+                Log::info('Saved Media File Data', [
+                    'post_id' => $post->id,
+                    'media_file' => $mediaFileName,
+                    'media_path' => $absolutePath,
+                    'alt_text' => $initialPostDescription,
+                    'metadata' => $metadata
+                ]);
+
+                // Save media attachment with absolute path in Database
+                $mediaAttachment = new MediaAttachment();
+                $mediaAttachment->post_id = $post->id;
+                $mediaAttachment->media_type = $mediaFileType;
+                $mediaAttachment->file_path = $absolutePath;
+                $mediaAttachment->alt_text = $initialPostDescription;
+                $mediaAttachment->metadata = json_encode($metadata);
+                $mediaAttachment->setTable('media_attachment');
+                $mediaAttachment->save();
                 
                 return [
                     'success' => true,
@@ -1066,49 +1116,29 @@ class PostManagerController extends Controller
     private function publishToInstagram($userPlatform, $platformPage, $content, $mediaFile, $userId, $initialPostDescription)
     {
         try {
-            // Save the file to a location accessible by the Flask app
-            $filename = time() . '_' . $mediaFile->getClientOriginalName();
-            $flaskAppPath = base_path('Post_Generation');
-
             // Save mediafile Original Name and type for Metadata
             $mediaFileName = $mediaFile->getClientOriginalName();
             $mediaFileType = $mediaFile->getMimeType();
             
-            // Make sure the directory exists
+            // First, save a copy of the media file to storage
+            $tempDirectory = 'public/temp';
+            $tempFilename = time() . '_' . $mediaFileName;
+            $mediaFile->storeAs($tempDirectory, $tempFilename);
+            
+            // Get the stored file path to create a duplicate for Flask
+            $storedFilePath = storage_path('app/' . $tempDirectory . '/' . $tempFilename);
+            
+            // Create a duplicate file for Flask API (since Flask will delete it after usage)
+            $filename = time() . '_' . $mediaFileName;
+            $flaskAppPath = base_path('Post_Generation');
+            
+            // Make sure the Flask directory exists
             if (!file_exists($flaskAppPath)) {
                 mkdir($flaskAppPath, 0755, true);
             }
             
-            // Check if the file was successfully moved
-            if (!$mediaFile->move($flaskAppPath, $filename)) {
-                Log::error('Failed to move Instagram media file', [
-                    'user_id' => $userId,
-                    'file_name' => $mediaFile->getClientOriginalName(),
-                    'destination' => $flaskAppPath . '/' . $filename
-                ]);
-                
-                return [
-                    'success' => false,
-                    'message' => 'Error saving media file for Instagram post',
-                    'platform_id' => 2,
-                    'platform_name' => 'Instagram'
-                ];
-            }
-            
-            // Verify the file exists after moving
-            if (!file_exists($flaskAppPath . '/' . $filename)) {
-                Log::error('Instagram media file not found after move', [
-                    'user_id' => $userId,
-                    'file_path' => $flaskAppPath . '/' . $filename
-                ]);
-                
-                return [
-                    'success' => false,
-                    'message' => 'Media file not found after upload for Instagram post',
-                    'platform_id' => 2,
-                    'platform_name' => 'Instagram'
-                ];
-            }
+            // Copy the file to Flask app directory
+            copy($storedFilePath, $flaskAppPath . '/' . $filename);
             
             // Make the API request
             $response = Http::withoutVerifying()
@@ -1163,6 +1193,42 @@ class PostManagerController extends Controller
                     $responseData['post_id'] ?? null,
                     $metadata
                 );
+
+                // Create directory for this post
+                $postDirectory = 'public/posts/' . $post->id;
+                $storagePath = storage_path('app/' . $postDirectory);
+                
+                if (!file_exists($storagePath)) {
+                    mkdir($storagePath, 0755, true);
+                }
+                
+                // Generate a unique filename for permanent storage
+                $permanentFilename = time() . '_' . $mediaFileName;
+                
+                // Copy from the temp file to the post's permanent directory
+                copy($storedFilePath, $storagePath . '/' . $permanentFilename);
+                
+                // Get the absolute path for database storage
+                $absolutePath = storage_path('app/' . $postDirectory . '/' . $permanentFilename);
+
+                // Log the Saved Media File Data
+                Log::info('Saved Media File Data', [
+                    'post_id' => $post->id,
+                    'media_file' => $mediaFileName,
+                    'media_path' => $absolutePath,
+                    'alt_text' => $initialPostDescription,
+                    'metadata' => $metadata
+                ]);
+
+                // Save media attachment with absolute path in Database
+                $mediaAttachment = new MediaAttachment();
+                $mediaAttachment->post_id = $post->id;
+                $mediaAttachment->media_type = $mediaFileType;
+                $mediaAttachment->file_path = $absolutePath;
+                $mediaAttachment->alt_text = $initialPostDescription;
+                $mediaAttachment->metadata = json_encode($metadata);
+                $mediaAttachment->setTable('media_attachment');
+                $mediaAttachment->save();
                 
                 return [
                     'success' => true,
@@ -1202,4 +1268,5 @@ class PostManagerController extends Controller
             ];
         }
     }
+
 }
