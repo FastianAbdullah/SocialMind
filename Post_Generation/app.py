@@ -152,7 +152,7 @@ def get_facebook_pages():
         clean_pages = [{
             'id': page['id'],
             'name': page['name'],
-            'access_token': page['access_token'].strip()  # Remove whitespace
+            'access_token': page['access_token'].strip() 
         } for page in pages]
         
         return jsonify({'pages': clean_pages})
@@ -165,33 +165,35 @@ def post_to_facebook():
 
     data = request.json
     required_fields = ['page_id', 'page_token', 'message']
+    
     if not all(field in data for field in required_fields):
         return jsonify({'error': 'Missing required fields'}), 400
-
+    
     try:
         # Use image_url from request or fallback to default
         image_url = data.get('image_url', 'https://cdn.pixabay.com/photo/2014/06/03/19/38/board-361516_1280.jpg')
 
-        # Post to Facebook directly with the image_url
+        # Initialize FacebookManager with the page token
         fb_manager = FacebookManager(data['page_token'])
         print(f"[DEBUG] Posting to Facebook with page ID: {data['page_id']}")
         print(f"[DEBUG] Using image URL: {image_url}")
 
+            # Post to Facebook
         result = fb_manager.post_content(
             data['page_id'],
             data['page_token'],
-            image_url,
+                image_url,
             data['message']
         )
 
         print(f"[DEBUG] Facebook API result: {result}")
-
+        
         if result:
             post_history.add_post('Facebook', result)
             print("[DEBUG] Successfully posted to Facebook")
-            return jsonify({'success': True, 'post_id': result.get('id')})
+            return jsonify({'success': True, 'post_id': result.get('id')}), 200
 
-        print("[DEBUG] Failed to post content to Facebook")
+            print("[DEBUG] Failed to post content to Facebook")
         return jsonify({'error': 'Failed to post content'}), 400
 
     except Exception as e:
@@ -399,6 +401,8 @@ def get_instagram_accounts():
             'debug_info': debug_info if 'debug_info' in locals() else None
         }), 400
 
+
+
 @app.route('/instagram/post', methods=['POST'])
 def post_to_instagram():
     """Post content to Instagram"""
@@ -406,40 +410,44 @@ def post_to_instagram():
 
     if not access_token:
         return jsonify({'error': 'No access token provided'}), 401
-
+    
     data = request.json
     required_fields = ['ig_user_id', 'caption']
+    
     if not all(field in data for field in required_fields):
         return jsonify({
             'status': 'error',
             'message': f'Missing required fields. Required: {required_fields}'
         }), 400
-
+    
     try:
         # Use image_url from request or fallback to default
         image_url = data.get('image_url', 'https://cdn.pixabay.com/photo/2014/06/03/19/38/board-361516_1280.jpg')
 
-        # Post to Instagram directly using the image_url
+        # Log debug information
         print(f"[DEBUG] Posting to Instagram with user ID: {data['ig_user_id']}")
         print(f"[DEBUG] Using image URL: {image_url}")
 
+        # Initialize InstagramManager with access token
         ig_manager = InstagramManager(access_token)
+
+            # Post to Instagram
         result = ig_manager.post_content(
             data['ig_user_id'],
-            image_url,
+                image_url,
             data['caption']
         )
 
         print(f"[DEBUG] Instagram API result: {result}")
-
+        
         if result:
-            post_history.add_post('Instagram', result)
-            print("[DEBUG] Successfully posted to Instagram")
-            return jsonify({
+                post_history.add_post('Instagram', result)
+                print("[DEBUG] Successfully posted to Instagram")
+                return jsonify({
                 'status': 'success',
                 'post_id': result.get('id'),
                 'result': result
-            })
+                }), 200
 
         print("[DEBUG] Failed to post content to Instagram")
         return jsonify({
@@ -455,6 +463,7 @@ def post_to_instagram():
             'status': 'error',
             'message': f'Error: {str(e)}'
         }), 500
+
 
 
 @app.route('/instagram/hashtags', methods=['POST'])
@@ -776,6 +785,7 @@ def analyze_post_comments():
         try:
             analyzer = SentimentAnalyzer()
             analysis = analyzer.analyze_comments(comments)
+            print(f"Analysis: {analysis}")
             
             return jsonify({
                 'status': 'success',
@@ -967,7 +977,35 @@ def post_content_through_agent():
         context = data.get('context', {})
         autonomous_mode = data.get('autonomous_mode', False)
         
-        print(f"DEBUG APP: Posting to platforms: {platforms}")
+        # Save the original request prompt/topic if available
+        original_prompt = None
+        if 'originalPrompt' in context:
+            original_prompt = context['originalPrompt']
+        elif 'query' in context:
+            original_prompt = context['query']
+        elif 'currentTask' in context and 'topic' in context['currentTask']:
+            original_prompt = context['currentTask']['topic']
+            
+        print(f"DEBUG APP: Original prompt: {original_prompt}")
+        
+        # Filter out invalid platforms
+        valid_platforms = []
+        for platform in platforms:
+            if platform.lower() in ['instagram', 'facebook', 'linkedin']:
+                valid_platforms.append(platform.lower())
+            else:
+                print(f"DEBUG APP: Skipping invalid platform: {platform}")
+        
+        if not valid_platforms:
+            print("DEBUG APP: No valid platforms provided")
+            return jsonify({
+                'status': 'error',
+                'message': 'No valid platforms provided',
+                'intent': 'error',
+                'results': {}
+            }), 400
+        
+        print(f"DEBUG APP: Posting to platforms: {valid_platforms}")
         print(f"DEBUG APP: Content (first 50 chars): '{content[:50]}...'")
         print(f"DEBUG APP: Schedule time: {schedule_time}")
         print(f"DEBUG APP: Autonomous mode: {autonomous_mode}")
@@ -978,7 +1016,7 @@ def post_content_through_agent():
         # If access token in request, make sure agent_connector has it
         if access_token:
             # Update tokens for all platforms using the same token for testing
-            for platform in platforms:
+            for platform in valid_platforms:
                 platform_key = platform.lower()
                 agent_connector.access_tokens[platform_key] = access_token
                 print(f"DEBUG APP: Set access token for {platform_key}")
@@ -989,7 +1027,7 @@ def post_content_through_agent():
         
         # Try to post
         result = agent_connector.post_content(
-            platforms[0] if len(platforms) == 1 else platforms,
+            valid_platforms,
             content,
             image_url=test_image_url,  # Always provide an image URL
             schedule_time=schedule_time
@@ -997,6 +1035,23 @@ def post_content_through_agent():
         
         # Add intent for frontend handling
         result['intent'] = 'confirmation'
+        
+        # Include the original prompt in the result
+        if original_prompt:
+            result['original_prompt'] = original_prompt
+        
+        # Ensure we have a results object for each requested platform
+        if 'results' not in result:
+            result['results'] = {}
+            
+        # Make sure all platforms have a result, even if they weren't processed
+        for platform in platforms:
+            platform_key = platform.lower()
+            if platform_key not in result['results']:
+                result['results'][platform_key] = {
+                    'status': 'error',
+                    'message': f'Platform {platform} was not processed'
+                }
         
         print(f"DEBUG APP: Posting result: {result}")
         return jsonify(result)
@@ -1007,7 +1062,8 @@ def post_content_through_agent():
         return jsonify({
             'status': 'error',
             'message': str(e),
-            'intent': 'error'
+            'intent': 'error',
+            'results': {}
         }), 500
 
 def setup_ngrok_tunnel(file_path):

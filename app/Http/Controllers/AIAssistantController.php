@@ -363,23 +363,228 @@ class AIAssistantController extends Controller
                 ], 400);
             }
 
+            // Get list of connected platforms for this user
+            $userId = Auth::id();
+            $connectedPlatforms = UserPlatform::where('user_id', $userId)
+                ->where('access_token', '!=', null)
+                ->pluck('platform_id')
+                ->toArray();
+            
+            Log::info('Connected platforms for user', [
+                'user_id' => $userId,
+                'connected_platforms' => $connectedPlatforms
+            ]);
+            
+            // Filter out platforms that aren't connected
+            $platforms = $request->input('platforms');
+            $validPlatforms = [];
+            
+            foreach ($platforms as $platform) {
+                // Ensure platform data is an array with required fields
+                if (!is_array($platform) || !isset($platform['platform_id'])) {
+                    Log::error('Invalid platform data structure', [
+                        'platform' => $platform,
+                        'user_id' => Auth::id()
+                    ]);
+                    continue;
+                }
+                
+                $platformId = (int)$platform['platform_id'];
+                
+                // Only include platforms that are connected
+                if (in_array($platformId, $connectedPlatforms)) {
+                    $validPlatforms[] = $platform;
+                } else {
+                    Log::warning('Skipping disconnected platform', [
+                        'platform_id' => $platformId,
+                        'user_id' => $userId
+                    ]);
+                }
+            }
+            
+            if (empty($validPlatforms)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'None of the selected platforms are connected. Please connect at least one platform.',
+                    'intent' => 'error'
+                ], 400);
+            }
+
+            // Map platform IDs to platform names for the API
+            $platformMapping = [
+                1 => 'facebook',
+                2 => 'instagram',
+                3 => 'linkedin'
+                // Twitter would be here if implemented
+            ];
+            
+            // Reverse mapping for looking up platform IDs from names
+            $platformNameToId = array_flip($platformMapping);
+            
+            // Convert our platform IDs to platform names for the Flask API
+            $platformNames = [];
+            $platformIdMap = []; // Map to track which platform ID corresponds to which name
+            
+            foreach ($validPlatforms as $platform) {
+                $platformId = (int)$platform['platform_id'];
+                if (isset($platformMapping[$platformId])) {
+                    $platformName = $platformMapping[$platformId];
+                    $platformNames[] = $platformName;
+                    $platformIdMap[$platformName] = $platformId;
+                }
+            }
+            
+            Log::info('Sending platforms to Flask API', [
+                'platform_names' => $platformNames,
+                'platform_id_map' => $platformIdMap
+            ]);
+
+            // Create initial post records for each platform
+            $postRecords = [];
+            
+            foreach ($validPlatforms as $platform) {
+                $platformId = (int)$platform['platform_id'];
+                
+                // Create initial post record
+                $post = new \App\Models\Post();
+                $post->user_id = Auth::id();
+                $post->platform_id = $platformId;
+                
+                // Get the original description from context if available
+                $context = $request->input('context', []);
+                $originalDescription = $this->extractOriginalPromptFromContext($context);
+                
+                // If we couldn't find an original description, use a placeholder
+                if (empty($originalDescription)) {
+                    $originalDescription = 'User requested content generation';
+                }
+                
+                // Store the original description and AI-generated content in appropriate columns
+                $post->initial_description = substr($originalDescription, 0, 250) . (strlen($originalDescription) > 250 ? '...' : '');
+                $post->AI_generated_description = $request->input('content'); // Full AI-generated content
+                
+                $post->status = $request->input('schedule_time') ? 'scheduled' : 'pending';
+                $post->metadata = json_encode([
+                    'context' => $request->input('context', []),
+                    'schedule_time' => $request->input('schedule_time'),
+                    'platform_data' => $platform
+                ]);
+                $post->setTable('post');
+                $post->save();
+                
+                // Store by platform name for easier lookup when processing response
+                $platformName = $platformMapping[$platformId] ?? null;
+                if ($platformName) {
+                    $postRecords[$platformName] = $post;
+                }
+
+                // If post is scheduled, create scheduler record
+                if ($request->input('schedule_time')) {
+                    $scheduler = new \App\Models\Schedular();
+                    $scheduler->post_id = $post->id;
+                    $scheduler->scheduled_time = $request->input('schedule_time');
+                    $scheduler->status = 'pending';
+                    $scheduler->save();
+                }
+                
+                Log::info('Created post record', [
+                    'post_id' => $post->id,
+                    'platform_id' => $platformId,
+                    'platform_name' => $platformName,
+                    'user_id' => Auth::id()
+                ]);
+            }
+
             $response = Http::withoutVerifying()
                 ->withHeaders([
                     'Authorization' => $tokenData['access_token'],
                     'Content-Type' => 'application/json'
                 ])
-                ->timeout(60) // Add longer timeout
+                ->timeout(60)
                 ->post($this->flaskBaseUrl . '/agent/post-content', [
                     'content' => $request->input('content'),
-                    'platforms' => $request->input('platforms'),
+                    'platforms' => $platformNames, // Send platform names instead of the original array
                     'schedule_time' => $request->input('schedule_time'),
                     'context' => $request->input('context', []),
                     'autonomous_mode' => true
                 ]);
 
             if ($response->successful()) {
-                return response()->json($response->json());
+                $responseData = $response->json();
+                
+                Log::info('Response from Flask API', [
+                    'response' => $responseData
+                ]);
+                
+                // Update post records with response data
+                if (isset($responseData['results']) && is_array($responseData['results'])) {
+                    foreach ($responseData['results'] as $platformName => $details) {
+                        // Check if we have a post record for this platform
+                        if (isset($postRecords[$platformName])) {
+                            $post = $postRecords[$platformName];
+                            
+                            if ($details['status'] === 'success') {
+                                $post->response_post_id = $details['post_id'] ?? null;
+                                // Don't overwrite the AI_generated_description as we've already set it
+                                // $post->AI_generated_description = $request->input('content');
+                                $post->status = 'published';
+                                
+                                // Update metadata with response details
+                                $metadata = json_decode($post->metadata, true) ?? [];
+                                $metadata['published_at'] = now()->toDateTimeString();
+                                $metadata['response_details'] = $details;
+                                $post->metadata = json_encode($metadata);
+                                
+                                $post->save();
+                                
+                                Log::info('Post published successfully', [
+                                    'post_id' => $post->id,
+                                    'platform_name' => $platformName,
+                                    'response_post_id' => $post->response_post_id
+                                ]);
+                            } else {
+                                // Mark as failed if the API call succeeded but posting failed
+                                $post->status = 'failed';
+                                
+                                // Update metadata with error details
+                                $metadata = json_decode($post->metadata, true) ?? [];
+                                $metadata['error_details'] = $details['message'] ?? 'Unknown error';
+                                $post->metadata = json_encode($metadata);
+                                
+                                $post->save();
+                                
+                                Log::error('Post failed', [
+                                    'post_id' => $post->id,
+                                    'platform_name' => $platformName,
+                                    'error' => $details['message'] ?? 'Unknown error'
+                                ]);
+                            }
+                        } else {
+                            Log::warning('Received response for platform with no post record', [
+                                'platform_name' => $platformName
+                            ]);
+                        }
+                    }
+                } else {
+                    Log::warning('No results in response', [
+                        'response_data' => $responseData
+                    ]);
+                    
+                    // Mark all posts as failed if no results were returned
+                    foreach ($postRecords as $post) {
+                        $post->status = 'failed';
+                        $post->save();
+                    }
+                }
+                
+                return response()->json($responseData);
             } else {
+                // Mark posts as failed
+                foreach ($postRecords as $post) {
+                    $post->status = 'failed';
+                    $post->save();
+                }
+
                 Log::error('Error from posting API', [
                     'status' => $response->status(),
                     'response' => $response->body(),
@@ -393,6 +598,14 @@ class AIAssistantController extends Controller
                 ], $response->status());
             }
         } catch (\Exception $e) {
+            // Mark posts as failed if they exist
+            if (isset($postRecords)) {
+                foreach ($postRecords as $post) {
+                    $post->status = 'failed';
+                    $post->save();
+                }
+            }
+
             Log::error('Error posting content', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -488,17 +701,17 @@ class AIAssistantController extends Controller
                 ], 400);
             }
 
+            // Call the sentiment analysis endpoint in Flask with admin token
             $response = Http::withoutVerifying()
+                ->timeout(60)
                 ->withHeaders([
-                    'Authorization' => $tokenData['access_token'],
-                    'Content-Type' => 'application/json'
+                    'Authorization' => $tokenData['access_token']
                 ])
-                ->timeout(60) // Add longer timeout
                 ->post($this->flaskBaseUrl . '/post/sentiment-analysis', [
                     'post_id' => $request->input('post_id'),
                     'platform' => $request->input('platform')
                 ]);
-
+            
             if ($response->successful()) {
                 return response()->json($response->json());
             } else {
@@ -531,5 +744,54 @@ class AIAssistantController extends Controller
                 'intent' => 'error'
             ], 500);
         }
+    }
+
+    /**
+     * Extract the original prompt/topic from the context
+     * 
+     * @param array $context The context array from the request
+     * @return string The original prompt or an empty string if not found
+     */
+    private function extractOriginalPromptFromContext($context)
+    {
+        // Look in different possible locations for the original prompt
+        
+        // Check for originalPrompt directly in context
+        if (isset($context['originalPrompt']) && !empty($context['originalPrompt'])) {
+            return $context['originalPrompt'];
+        }
+        
+        // Check in currentTask
+        if (isset($context['currentTask'])) {
+            // Check for originalPrompt in currentTask
+            if (isset($context['currentTask']['originalPrompt']) && !empty($context['currentTask']['originalPrompt'])) {
+                return $context['currentTask']['originalPrompt'];
+            }
+            
+            // Check for topic in currentTask
+            if (isset($context['currentTask']['topic']) && !empty($context['currentTask']['topic'])) {
+                return $context['currentTask']['topic'];
+            }
+            
+            // Check for initialPrompt in currentTask
+            if (isset($context['currentTask']['initialPrompt']) && !empty($context['currentTask']['initialPrompt'])) {
+                return $context['currentTask']['initialPrompt'];
+            }
+        }
+        
+        // Check for query in context
+        if (isset($context['query']) && !empty($context['query'])) {
+            return $context['query'];
+        }
+        
+        // Check if the context has any non-empty string keys at root level
+        foreach ($context as $key => $value) {
+            if (is_string($value) && !empty($value) && strlen($value) < 500) {
+                return $value;
+            }
+        }
+        
+        // If nothing found, return empty string
+        return '';
     }
 } 
