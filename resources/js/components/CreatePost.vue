@@ -503,12 +503,135 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button 
                       type="button" 
+                      class="btn btn-outline-primary me-2" 
+                      @click="openScheduleModal"
+                      :disabled="!anyPlatformSelected || isPublishing"
+                    >
+                      <i class="fas fa-calendar-alt me-1"></i> Schedule for later
+                    </button>
+                    <button 
+                      type="button" 
                       class="btn btn-success" 
                       @click="publishToSelectedPlatforms"
                       :disabled="!anyPlatformSelected || isPublishing"
                     >
                       <i class="fas fa-paper-plane me-1"></i> Publish Now
                     </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Schedule Post Modal -->
+            <div class="modal fade" id="scheduleModal" tabindex="-1" ref="scheduleModalEl">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Schedule post</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <p class="text-muted mb-4">Choose the optimal time for your post to go live.</p>
+                    
+                    <!-- Date Picker -->
+                    <div class="schedule-calendar mb-4">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="month-selector">
+                          <select v-model="selectedMonth" class="form-select">
+                            <option v-for="(month, index) in months" :key="index" :value="index">{{ month }} {{ selectedYear }}</option>
+                          </select>
+                        </div>
+                        <div class="month-navigation">
+                          <button class="btn btn-sm btn-outline-secondary me-2" @click="previousMonth">
+                            <i class="fas fa-chevron-left"></i>
+                          </button>
+                          <button class="btn btn-sm btn-outline-secondary" @click="nextMonth">
+                            <i class="fas fa-chevron-right"></i>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <!-- Calendar -->
+                      <div class="calendar-grid">
+                        <div class="calendar-header d-flex">
+                          <div v-for="day in ['S', 'M', 'T', 'W', 'T', 'F', 'S']" :key="day" class="calendar-cell">{{ day }}</div>
+                        </div>
+                        <div class="calendar-body">
+                          <div v-for="week in calendarDays" :key="week[0].date" class="d-flex">
+                            <div 
+                              v-for="day in week" 
+                              :key="day.date" 
+                              class="calendar-cell" 
+                              :class="{
+                                'current-month': day.currentMonth,
+                                'selected': isSelectedDate(day.date),
+                                'today': isToday(day.date),
+                                'disabled': isPastDate(day.date)
+                              }"
+                              @click="selectDate(day.date)"
+                            >
+                              {{ day.day }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Time Picker -->
+                    <div class="schedule-time mb-4">
+                      <div class="row">
+                        <div class="col-12 text-end mb-2">
+                          <p class="mb-0">{{ formattedSelectedDate }}</p>
+                          <p class="text-muted small mb-0">Brand Timezone: {{ userTimezone }}</p>
+                        </div>
+                        <div class="col-4">
+                          <div class="time-picker-container">
+                            <button class="time-nav-btn" @click="incrementHour"><i class="fas fa-chevron-up"></i></button>
+                            <input type="text" class="form-control text-center" v-model="selectedHour" readonly>
+                            <button class="time-nav-btn" @click="decrementHour"><i class="fas fa-chevron-down"></i></button>
+                          </div>
+                        </div>
+                        <div class="col-4">
+                          <div class="time-picker-container">
+                            <button class="time-nav-btn" @click="incrementMinute"><i class="fas fa-chevron-up"></i></button>
+                            <input type="text" class="form-control text-center" v-model="selectedMinute" readonly>
+                            <button class="time-nav-btn" @click="decrementMinute"><i class="fas fa-chevron-down"></i></button>
+                          </div>
+                        </div>
+                        <div class="col-4">
+                          <div class="time-picker-container">
+                            <button class="time-nav-btn" @click="toggleAmPm"><i class="fas fa-chevron-up"></i></button>
+                            <input type="text" class="form-control text-center" v-model="selectedAmPm" readonly>
+                            <button class="time-nav-btn" @click="toggleAmPm"><i class="fas fa-chevron-down"></i></button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- AI Suggestion -->
+                    <div class="ai-suggestion mb-4">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" v-model="useAiSuggestion" id="aiSuggestion">
+                        <label class="form-check-label" for="aiSuggestion">
+                          Apply AI suggested time for publishing
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                      <button type="button" class="btn btn-link text-decoration-none" @click="publishImmediately">
+                        Publish Immediately Instead?
+                      </button>
+                      <button 
+                        type="button" 
+                        class="btn btn-primary" 
+                        @click="schedulePost"
+                        :disabled="isScheduling"
+                      >
+                        <span v-if="!isScheduling">Schedule Post</span>
+                        <span v-else>Scheduling...</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -527,15 +650,16 @@ import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
 import Loader from '../components/Loader.vue';
 import DashboardSidebar from '../components/DashboardSidebar.vue';
 import { useDynamicResources } from '../composables/useDynamicResources';
-import { createPost } from '../services/CreatePostService';
+import { createPost, publishPosts } from '../services/CreatePostService';
+import { schedulePostService } from '../services/SchedulePostService';
 import { useSocialMediaStore } from '../store/socialMediaStore.js';
 import { getAuthUrl } from '../services/SocialMediaAuthService.js';
 import { getAuthUrl as getInstagramAuthUrl } from '../services/instagramService';
-import { publishPosts } from '../services/CreatePostService.js';
 
 const isLoading = ref(true);
 const isGenerating = ref(false);
 const postDescription = ref('');
+const initialPostDescription = ref('');
 const selectedMedia = ref(null);
 const generatedPosts = ref([]);
 const selectedPostIndex = ref(null);
@@ -677,6 +801,8 @@ const generatePosts = async () => {
     selectedPostIndex.value = null;
     trendingHashtags.value = [];
     
+    // Save user intial post description
+    initialPostDescription.value = postDescription.value;
     const result = await createPost(postDescription.value);
     generatedPosts.value = result.posts;
     trendingHashtags.value = result.trendingHashtags || [];
@@ -1048,9 +1174,11 @@ const publishToSelectedPlatforms = async () => {
     }
     
     console.log('Publishing to platforms:', platformsData);
+    console.log('Initial Post Description is: ', initialPostDescription.value);
     
     // Call the service to publish posts
-    const results = await publishPosts(platformsData);
+    // Send initial post description to the service
+    const results = await publishPosts(platformsData, initialPostDescription.value);
     console.log('Published results:', results);
     
     // Close the modal
@@ -1084,6 +1212,326 @@ const publishToSelectedPlatforms = async () => {
   }
 };
 
+// Add these refs for scheduling
+const scheduleModalEl = ref(null);
+const scheduleModal = ref(null);
+const isScheduling = ref(false);
+const useAiSuggestion = ref(false);
+
+// Date and time selection
+const today = new Date();
+const selectedDate = ref(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1));
+const selectedYear = ref(today.getFullYear());
+const selectedMonth = ref(today.getMonth());
+const selectedHour = ref('04');
+const selectedMinute = ref('30');
+const selectedAmPm = ref('PM');
+const userTimezone = ref('Asia/Aqtau'); // You might want to fetch this from user settings
+
+// Calendar data
+const months = [
+  'January', 'February', 'March', 'April', 'May', 'June', 
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+// Computed properties for calendar
+const calendarDays = computed(() => {
+  const year = selectedYear.value;
+  const month = selectedMonth.value;
+  
+  // First day of the month
+  const firstDay = new Date(year, month, 1);
+  // Last day of the month
+  const lastDay = new Date(year, month + 1, 0);
+  
+  // Day of the week for the first day (0 = Sunday, 6 = Saturday)
+  const firstDayOfWeek = firstDay.getDay();
+  
+  // Total days in the month
+  const daysInMonth = lastDay.getDate();
+  
+  // Previous month's last days
+  const prevMonthLastDay = new Date(year, month, 0).getDate();
+  
+  // Calendar array (6 weeks maximum)
+  const calendar = [];
+  
+  // Current date for "today" highlighting
+  const now = new Date();
+  const currentDate = now.getDate();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  
+  let dayCounter = 1;
+  let nextMonthCounter = 1;
+  
+  // Create 6 weeks (42 days) to ensure we have enough rows
+  for (let week = 0; week < 6; week++) {
+    const weekDays = [];
+    
+    for (let day = 0; day < 7; day++) {
+      if (week === 0 && day < firstDayOfWeek) {
+        // Previous month days
+        const prevMonthDay = prevMonthLastDay - (firstDayOfWeek - day - 1);
+        weekDays.push({
+          day: prevMonthDay,
+          date: new Date(year, month - 1, prevMonthDay),
+          currentMonth: false
+        });
+      } else if (dayCounter <= daysInMonth) {
+        // Current month days
+        weekDays.push({
+          day: dayCounter,
+          date: new Date(year, month, dayCounter),
+          currentMonth: true
+        });
+        dayCounter++;
+      } else {
+        // Next month days
+        weekDays.push({
+          day: nextMonthCounter,
+          date: new Date(year, month + 1, nextMonthCounter),
+          currentMonth: false
+        });
+        nextMonthCounter++;
+      }
+    }
+    
+    calendar.push(weekDays);
+    
+    // If we've already included all days of the current month and the next month's days
+    // for the first week of the next month, we can stop
+    if (dayCounter > daysInMonth && week >= 4) {
+      // Check if the last week has only next month's days
+      const allNextMonth = weekDays.every(day => !day.currentMonth);
+      if (allNextMonth) {
+        break;
+      }
+    }
+  }
+  
+  return calendar;
+});
+
+const formattedSelectedDate = computed(() => {
+  const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+  return selectedDate.value.toLocaleDateString('en-US', options);
+});
+
+// Methods for date and time manipulation
+const isSelectedDate = (date) => {
+  return date.getDate() === selectedDate.value.getDate() && 
+         date.getMonth() === selectedDate.value.getMonth() && 
+         date.getFullYear() === selectedDate.value.getFullYear();
+};
+
+const isToday = (date) => {
+  const today = new Date();
+  return date.getDate() === today.getDate() && 
+         date.getMonth() === today.getMonth() && 
+         date.getFullYear() === today.getFullYear();
+};
+
+const isPastDate = (date) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date < today;
+};
+
+const selectDate = (date) => {
+  if (!isPastDate(date)) {
+    selectedDate.value = new Date(date);
+  }
+};
+
+const previousMonth = () => {
+  if (selectedMonth.value === 0) {
+    selectedMonth.value = 11;
+    selectedYear.value--;
+  } else {
+    selectedMonth.value--;
+  }
+};
+
+const nextMonth = () => {
+  if (selectedMonth.value === 11) {
+    selectedMonth.value = 0;
+    selectedYear.value++;
+  } else {
+    selectedMonth.value++;
+  }
+};
+
+const incrementHour = () => {
+  let hour = parseInt(selectedHour.value);
+  hour = (hour % 12) + 1;
+  selectedHour.value = hour.toString().padStart(2, '0');
+  console.log("Selected Hour Value After Increment is: ", selectedHour.value);
+};
+
+const decrementHour = () => {
+  let hour = parseInt(selectedHour.value);
+  hour = hour === 1 ? 12 : hour - 1;
+  selectedHour.value = hour.toString().padStart(2, '0');
+  console.log("Selected Hour Value After Decrement is: ", selectedHour.value);
+};
+
+const incrementMinute = () => {
+  let minute = parseInt(selectedMinute.value);
+  minute = (minute + 5) % 60;
+  selectedMinute.value = minute.toString().padStart(2, '0');
+  console.log("Selected Minute Value After Increment is: ", selectedMinute.value);
+};
+
+const decrementMinute = () => {
+  let minute = parseInt(selectedMinute.value);
+  minute = (minute - 5 + 60) % 60;
+  selectedMinute.value = minute.toString().padStart(2, '0');
+  console.log("Selected Minute Value After Decrement is: ", selectedMinute.value);
+};
+
+const toggleAmPm = () => {
+  selectedAmPm.value = selectedAmPm.value === 'AM' ? 'PM' : 'AM';
+};
+
+// Methods for scheduling
+const openScheduleModal = () => {
+
+  // hide Both Modals.
+  if (publishModal.value) {
+    publishModal.value.hide();
+  }
+
+  if (postEditorModal.value) {
+    postEditorModal.value.hide();
+  }
+  
+  if (scheduleModal.value) {
+    scheduleModal.value.show();
+  }
+};
+
+const publishImmediately = () => {
+  if (scheduleModal.value) {
+    scheduleModal.value.hide();
+  }
+  // See if Editor Modal should be opened or not.
+  if (publishModal.value) {
+    publishModal.value.show();
+  }
+};
+
+const schedulePost = async () => {
+  try {
+    isScheduling.value = true;
+
+    // Get the content from the currently selected post
+    const postContent = editingPost.value.content;
+    
+    // Convert the selected date and time to a timestamp
+    const scheduledDate = new Date(selectedDate.value);
+    let hours = parseInt(selectedHour.value);
+    
+    // Convert to 24-hour format
+    if (selectedAmPm.value === 'PM' && hours < 12) {
+      hours += 12;
+    } else if (selectedAmPm.value === 'AM' && hours === 12) {
+      hours = 0;
+    }
+    
+    scheduledDate.setHours(hours);
+    scheduledDate.setMinutes(parseInt(selectedMinute.value));
+    scheduledDate.setSeconds(0);
+    
+    // Prepare platforms data similar to publishToSelectedPlatforms
+    const platformsData = [];
+    
+    if (selectedPlatforms.value.facebook) {
+      platformsData.push({
+        platform_id: 1, // Facebook
+        page_id: selectedPages.value.facebook,
+        content: postContent,
+        media: mediaFile.value
+      });
+    }
+    
+    if (selectedPlatforms.value.instagram) {
+      platformsData.push({
+        platform_id: 2, // Instagram
+        page_id: selectedPages.value.instagram,
+        content: postContent,
+        media: mediaFile.value
+      });
+    }
+    
+    if (selectedPlatforms.value.linkedin) {
+      platformsData.push({
+        platform_id: 3, // LinkedIn
+        content: postContent,
+        media: mediaFile.value
+      });
+    }
+
+    // Format the date in a way that preserves the local time
+    // This creates a string in the format: "2025-03-16 13:20:00"
+    const localDateString = scheduledDate.getFullYear() + '-' + 
+                           String(scheduledDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(scheduledDate.getDate()).padStart(2, '0') + ' ' + 
+                           String(scheduledDate.getHours()).padStart(2, '0') + ':' + 
+                           String(scheduledDate.getMinutes()).padStart(2, '0') + ':' + 
+                           String(scheduledDate.getSeconds()).padStart(2, '0');
+    
+    console.log('Initial Post Description is: ', initialPostDescription.value);
+    console.log('Scheduling post for local time:', localDateString);
+    
+    // Call the API to schedule the post with the local time string
+    const result = await schedulePostService(
+      platformsData, 
+      initialPostDescription.value,
+      localDateString,
+      useAiSuggestion.value
+    );
+    
+    // Show success notification
+    $.notify({
+      title: 'Success',
+      message: 'Your post has been scheduled successfully for ' + 
+               scheduledDate.toLocaleString(undefined, {
+                 year: 'numeric',
+                 month: 'long',
+                 day: 'numeric',
+                 hour: 'numeric',
+                 minute: 'numeric',
+                 hour12: true
+               })
+    }, {
+      type: 'success',
+      allow_dismiss: true
+    });
+    
+    // Close the modal
+    if (scheduleModal.value) {
+      scheduleModal.value.hide();
+    }
+        
+  } catch (error) {
+    console.error('Error scheduling post:', error);
+
+    // Show error notification
+    $.notify({
+      title: 'Error',
+      message: 'Failed to schedule post: ' + (error.message || 'Please try again.')
+    }, {
+      type: 'danger',
+      allow_dismiss: true
+    });
+
+  } finally {
+    isScheduling.value = false;
+  }
+};
+
+// Update onMounted to initialize the schedule modal
 onMounted(async () => {
   // Remove existing resources before initializing new ones
   await removeDynamicCss();
@@ -1115,6 +1563,11 @@ onMounted(async () => {
   }
 
   socialMediaStore.initializeFromStorage();
+  
+  // Initialize the schedule modal
+  if (scheduleModalEl.value) {
+    scheduleModal.value = new window.bootstrap.Modal(scheduleModalEl.value);
+  }
 });
 
 // Cleanup when component is destroyed
@@ -2177,5 +2630,104 @@ textarea.form-control {
 .form-check-input:disabled + .form-check-label {
   cursor: not-allowed;
   opacity: 0.7;
+}
+
+/* Schedule Modal Styles */
+.schedule-calendar {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.calendar-grid {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.calendar-header {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.calendar-cell {
+  width: 14.28%;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendar-header .calendar-cell {
+  cursor: default;
+}
+
+.calendar-cell:hover:not(.disabled):not(.calendar-header .calendar-cell) {
+  background-color: #f0f7ff;
+}
+
+.calendar-cell.current-month {
+  color: #333;
+}
+
+.calendar-cell:not(.current-month) {
+  color: #aaa;
+}
+
+.calendar-cell.selected {
+  background-color: #0d6efd;
+  color: white;
+  font-weight: 600;
+}
+
+.calendar-cell.today:not(.selected) {
+  border: 2px solid #0d6efd;
+  font-weight: 600;
+}
+
+.calendar-cell.disabled {
+  color: #ddd;
+  cursor: not-allowed;
+}
+
+.time-picker-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.time-nav-btn {
+  border: none;
+  background: transparent;
+  color: #0d6efd;
+  padding: 5px;
+  font-size: 14px;
+}
+
+.time-nav-btn:hover {
+  color: #0a58ca;
+}
+
+.month-selector .form-select {
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.month-navigation .btn {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-suggestion {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #0d6efd;
 }
 </style>

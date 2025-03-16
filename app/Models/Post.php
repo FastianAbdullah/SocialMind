@@ -15,7 +15,8 @@ class Post extends Model
         'initial_description',
         'AI_generated_description',
         'status',
-        'metadata'
+        'metadata',
+        'response_post_id'
     ];
 
     protected $casts = [

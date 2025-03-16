@@ -11,6 +11,7 @@ use App\Http\Controllers\PostManagerController;
 use App\Http\Controllers\HashtagController;
 use App\Http\Controllers\BusinessPlanController;
 use App\Http\Controllers\AIAssistantController;
+use App\Http\Controllers\PostSchedulerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -74,7 +75,6 @@ Route::get('/check-auth', function (Request $request) {
 // Post management routes
 Route::middleware(['auth'])->group(function () {
     Route::post('/posts/create', [PostManagerController::class, 'create']);
-    Route::post('/posts/save', [PostManagerController::class, 'save']);
     Route::post('/posts/publish', [PostManagerController::class, 'publish']);
     Route::post('/hashtags/search', [HashtagController::class, 'search']);
     Route::post('/hashtags/analyze', [HashtagController::class, 'analyze']);
@@ -94,6 +94,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/analyze-performance', [AIAssistantController::class, 'analyzePerformance']);
         Route::post('/post-content', [AIAssistantController::class, 'postContent']);
     });
+
+    Route::post('/posts/schedule', [PostSchedulerController::class, 'schedule']);
 });
 
 // Catch-all route for Vue frontend
