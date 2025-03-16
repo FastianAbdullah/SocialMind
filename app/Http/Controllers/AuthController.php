@@ -17,6 +17,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'timezone' => 'required|string',
         ]);
 
         // Return errors if validation fails
@@ -24,12 +25,13 @@ class AuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Create new user with a default plan
+        // Create new user with a default plan and timezone
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'plan_id' => 1,
+            'timezone' => $request->timezone,
         ]);
 
         return response()->json(['success' => true, 'message' => 'User registered successfully.'], 201);

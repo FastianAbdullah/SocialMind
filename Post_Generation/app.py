@@ -8,13 +8,16 @@ from utils.SocialMediaAuth import SocialMediaAuth
 from utils.UserPostHistory import UserPostHistory
 from utils.SentimentAnalyzer import SentimentAnalyzer
 from utils.social_media_strategy import SocialMediaStrategyGenerator
+from utils.NgrokSetupFunctions import setup_ngrok_tunnel
 from dotenv import load_dotenv
 import os
-# Running ngrok libraries
-import requests, http.server, socketserver, threading, subprocess, time, json
 import ssl
 from flask_cors import CORS
-from PIL import Image
+from utils.SchedulerManager import SchedulerManager
+import logging
+import sys
+import time
+
 
 load_dotenv()
 
@@ -22,7 +25,7 @@ app = Flask(__name__)
 
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://127.0.0.1:8000", "http://localhost:8000", "https://localhost:8080"],
+        "origins": ["http://127.0.0.1:8000", "http://localhost:8000", "https://localhost:8080","http://localhost:3306"],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": [
             "Content-Type",
@@ -75,6 +78,33 @@ agent_connector = AgentConnector()
 
 # Disable Flask's reloader to prevent double execution
 app.config['USE_RELOADER'] = False
+
+# Configure logging with proper encoding handling
+# Create scheduled directory if it doesn't exist
+scheduled_dir = os.path.join(os.path.dirname(__file__), 'logs')
+os.makedirs(scheduled_dir, exist_ok=True)
+
+# Set log path in scheduled directory
+log_file_path = os.path.join(scheduled_dir, 'scheduler.log')
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        # Use StreamHandler with explicit encoding for console output
+        logging.StreamHandler(stream=sys.stdout),
+        # File handler will use utf-8 by default
+        logging.FileHandler(log_file_path, encoding='utf-8')
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Create a specific logger for the SchedulerManager module
+scheduler_logger = logging.getLogger('SchedulerManager')
+# The logger inherits the root configuration but we can add specific handlers if needed
+
+# Initialize the scheduler manager
+scheduler_manager = SchedulerManager()
 
 @app.route('/', methods=['GET'])
 def hello():
@@ -1020,175 +1050,149 @@ def post_content_through_agent():
             'intent': 'error'
         }), 500
 
-def setup_ngrok_tunnel(file_path):
-    """
-    Sets up an ngrok tunnel for serving a file.
-    
-    Args:
-        file_path: Path to the file to be served
-        original_dir: Original directory to return to after setup
-        
-    Returns:
-        tuple: (success, result_dict) where result_dict contains either:
-            - On success: {'public_url': url}
-            - On failure: {'error': error_message}
-    """
-    try:
-        # Create a directory to serve files if it doesn't exist
-        os.makedirs('temp_media', exist_ok=True)
-        print(f"[DEBUG] Created temp_media directory")
-        
-        # Check if file exists
-        print(f"[DEBUG] Looking for file: {file_path}")
-        if not os.path.exists(file_path):
-            print(f"[DEBUG] File not found at: {file_path}")
-            return False, {'error': f"File {file_path} not found"}
-            
-        # Resize the image to 1280x970 pixels before saving to temp_media
-        try:
-            print(f"[DEBUG] Resizing image to 1280x970 pixels")
-            img = Image.open(file_path)
-            img = img.resize((1280, 970), Image.LANCZOS)
-            
-            # Save the resized image to temp_media directory
-            dest_path = os.path.join('temp_media', os.path.basename(file_path))
-            print(f"[DEBUG] Saving resized image to: {dest_path}")
-            img.save(dest_path)
-            
-            # Also replace the original file with the resized version
-            print(f"[DEBUG] Replacing original file with resized version")
-            img.save(file_path)
-            print(f"[DEBUG] Image resized and saved successfully (both locations)")
-        except Exception as resize_error:
-            print(f"[DEBUG] Error resizing image: {str(resize_error)}")
-            # Fall back to copying the original file if resizing fails
-            import shutil
-            dest_path = os.path.join('temp_media', os.path.basename(file_path))
-            print(f"[DEBUG] Falling back to copying original file to: {dest_path}")
-            shutil.copy(file_path, dest_path)
-        
-        # Start HTTP server in a separate process, not thread
-        import subprocess
-        PORT = 8080
-        
-        # Kill any existing process on port 8080 - Fix for Windows
-        try:
-            if os.name == 'nt':  # Windows
-                print(f"[DEBUG] Attempting to kill any process on port {PORT} (Windows)")
-                # Use a safer approach for Windows
-                try:
-                    # Find PID using netstat
-                    netstat_output = subprocess.check_output(f'netstat -ano | findstr :{PORT}', shell=True).decode()
-                    print(f"[DEBUG] Netstat output: {netstat_output}")
-                    
-                    # Extract PID from netstat output if it exists
-                    if netstat_output.strip():
-                        lines = netstat_output.strip().split('\n')
-                        for line in lines:
-                            if f":{PORT}" in line:
-                                parts = line.strip().split()
-                                if len(parts) >= 5:
-                                    pid = parts[-1]
-                                    print(f"[DEBUG] Found process with PID {pid} on port {PORT}")
-                                    subprocess.run(f'taskkill /F /PID {pid}', shell=True, 
-                                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                except Exception as kill_error:
-                    print(f"[DEBUG] Error killing process: {str(kill_error)}")
-                    # Continue anyway, as the port might not be in use
-        except Exception as e:
-            print(f"[DEBUG] Exception when trying to kill existing process: {str(e)}")
-            # Continue anyway
-            
-        print(f"[DEBUG] Current directory: {os.getcwd()}")
-        print(f"[DEBUG] Directory contents: {os.listdir('.')}")
-        
-        # Start HTTP server
-        print(f"[DEBUG] Starting HTTP server on port {PORT}")
-        http_server = subprocess.Popen(['python', '-m', 'http.server', str(PORT)], 
-                                      stdout=subprocess.DEVNULL, 
-                                      stderr=subprocess.DEVNULL)
-        print(f"[DEBUG] HTTP server started with PID: {http_server.pid}")
-        
-        # Start ngrok with authtoken (you need to set this up)
-        # First, check if ngrok is already running
-        try:
-            print("[DEBUG] Checking if ngrok is already running")
-            requests.get("http://localhost:4040/api/tunnels")
-            # If the above doesn't throw an exception, ngrok is already running
-            print("[DEBUG] ngrok is already running")
-        except:
-            # Start ngrok
-            print("[DEBUG] Starting ngrok")
-            ngrok_cmd = ["ngrok", "http", str(PORT)]
-                        
-            ngrok = subprocess.Popen(ngrok_cmd, 
-                                    stdout=subprocess.DEVNULL, 
-                                    stderr=subprocess.DEVNULL)
-            print(f"[DEBUG] ngrok started with PID: {ngrok.pid}")
-            
-            # Give ngrok time to start up
-            print("[DEBUG] Waiting for ngrok to start up")
-            time.sleep(10)
-        
-        # Get the public URL from ngrok
-        print("[DEBUG] Attempting to get ngrok URL")
-        max_retries = 3
-        ngrok_url = None
-        for i in range(max_retries):
-            try:
-                print(f"[DEBUG] Getting ngrok URL (attempt {i+1}/{max_retries})")
-                resp = requests.get("http://localhost:4040/api/tunnels")
-                tunnels = resp.json()['tunnels']
-                print(f"[DEBUG] Found {len(tunnels)} tunnels")
-                if tunnels:
-                    ngrok_url = tunnels[0]['public_url']
-                    print(f"[DEBUG] Got ngrok URL: {ngrok_url}")
-                    break
-            except Exception as e:
-                print(f"[DEBUG] Error getting ngrok URL (attempt {i+1}/{max_retries}): {str(e)}")
-                time.sleep(2)
-        
-        if not ngrok_url:
-            print("[DEBUG] Failed to get ngrok URL after all retries")
-            return False, {'error': 'Failed to get ngrok URL'}
-        
-        # Make sure we use HTTPS URL
-        if ngrok_url.startswith('http:'):
-            ngrok_url = ngrok_url.replace('http:', 'https:')
-            print(f"[DEBUG] Converted to HTTPS URL: {ngrok_url}")
-            
-        file_basename = os.path.basename(file_path)
-        public_url = f"{ngrok_url}/{file_basename}"
-        print(f"[DEBUG] Public URL: {public_url}")
+# ------------------------------------------------------------------------------------------------
+# Schduling Routes
+# ------------------------------------------------------------------------------------------------
 
-        # Test if the URL is accessible
-        success, result = test_ngrok_url(public_url)
-        if not success:
-            return False, result
-        return True, {'public_url': public_url}
-        
-    except Exception as e:
-        print(f"[DEBUG] Error in ngrok tunnel setup: {str(e)}")            
-        return False, {'error': f'Error: {str(e)}'}
-
-def test_ngrok_url(public_url):
-    """Test if the Public Url is Accessible"""
+@app.route('/scheduler/schedule', methods=['POST'])
+def schedule_post():
+    """Schedule a post for later publishing"""
     try:
-        headers = {
-            'ngrok-skip-browser-warning': 'true'
-        }
-        response = requests.head(public_url, headers=headers, timeout=5)
-        if response.status_code != 200:
-            return False, {'error': f'URL test failed with status {response.status_code}'}
-        return True, {}
+        logger.info("Received scheduling request")
+        data = request.json
+        logger.info(f"Request data: {data}")
+        
+        required_fields = ['post_id', 'platform_id', 'scheduled_time', 'user_id', 'post_data']
+        if not all(field in data for field in required_fields):
+            logger.warning(f"Missing required fields. Received: {list(data.keys())}")
+            return jsonify({
+                'status': 'error',
+                'message': 'Missing required fields'
+            }), 400
+
+        success, result = scheduler_manager.schedule_post_with_data(
+            data['post_id'],
+            data['platform_id'],
+            data['scheduled_time'],
+            data['user_id'],
+            data['post_data'],
+            data.get('timezone', 'UTC')
+        )
+
+        if success:
+            logger.info(f"Successfully scheduled post {data['post_id']}")
+            return jsonify({
+                'status': 'success',
+                'data': result
+            })
+        else:
+            logger.error(f"Failed to schedule post: {result.get('error', 'Unknown error')}")
+            return jsonify({
+                'status': 'error',
+                'message': result.get('error', 'Unknown error')
+            }), 400
+
     except Exception as e:
-        return False, {'error': f'URL test failed: {str(e)}'}
+        logger.exception(f"Error in schedule_post: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/scheduler/posts', methods=['GET'])
+def get_scheduled_posts():
+    """Get all scheduled posts"""
+    try:
+        status = request.args.get('status')
+        posts = scheduler_manager.get_scheduled_posts(status)
+        return jsonify({
+            'status': 'success',
+            'posts': posts
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/scheduler/cancel/<int:post_id>', methods=['DELETE'])
+def cancel_scheduled_post(post_id):
+    """Cancel a scheduled post"""
+    try:
+        success, message = scheduler_manager.cancel_scheduled_post(post_id)
+        
+        if success:
+            return jsonify({
+                'status': 'success',
+                'message': message
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': message
+            }), 400
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/scheduler/status/<int:post_id>', methods=['GET'])
+def get_post_status(post_id):
+    """Get the status of a scheduled post"""
+    try:
+        status = scheduler_manager.get_post_status(post_id)
+        if status:
+            return jsonify({
+                'status': 'success',
+                'post_status': status
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Post not found'
+            }), 404
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/scheduler/health', methods=['GET'])
+def scheduler_health():
+    """Get scheduler health status"""
+    try:
+        status = scheduler_manager.get_scheduler_status()
+        return jsonify({
+            'status': 'success',
+            'scheduler_status': status
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint to verify server is running"""
+    return jsonify({'status': 'ok', 'timestamp': time.time()})
+
+# ------------------------------------------------------------------------------------------------
+# End of Scheduling Routes
+# ------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    app.run(
-        host='localhost',
-        port=8443,
-        ssl_context=(CERT_FILE, KEY_FILE),
-        debug=True,
-        use_reloader=False  # Explicitly disable reloader
-    )
+    try:
+        # Run with HTTPS for local development
+        app.run(
+            host='localhost',
+            port=8443,
+            ssl_context=(CERT_FILE, KEY_FILE),
+            debug=True,
+            use_reloader=False  # Explicitly disable reloader
+        )
+    except Exception as e:
+        logger.critical(f"Failed to start Flask server: {e}")

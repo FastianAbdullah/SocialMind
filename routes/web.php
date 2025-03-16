@@ -95,7 +95,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/post-content', [AIAssistantController::class, 'postContent']);
     });
 
+    // Post Scheduler Routes
     Route::post('/posts/schedule', [PostSchedulerController::class, 'schedule']);
+    Route::get('/posts/scheduler-status/{postId}', [PostSchedulerController::class, 'getSchedulerStatus']);
 });
 
 // Catch-all route for Vue frontend

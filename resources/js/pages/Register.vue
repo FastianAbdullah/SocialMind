@@ -150,12 +150,16 @@ onMounted(async () => {
 
 const router = useRouter();
 
-// Form data using reactive for nested object
+// Add this before the form data
+const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+// Modify the form reactive object
 const form = reactive({
   email: '',
   name: '',
   password: '',
-  password_confirmation: ''
+  password_confirmation: '',
+  timezone: timezone
 });
 
 // Show/hide password state using reactive
