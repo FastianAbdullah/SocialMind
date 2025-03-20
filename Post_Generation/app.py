@@ -200,15 +200,19 @@ def post_to_facebook():
     
     try:
         # Set up ngrok tunnel
-        success, result = setup_ngrok_tunnel(data['filename'])
+        print(f"[DEBUG] Setting up ngrok tunnel for file: {data['filename']}")
+        print(f'page_token: {data["page_token"]}')
+        print(f'page_id: {data["page_id"]}')
+        print(f'message: {data["message"]}')
+        # success, result = setup_ngrok_tunnel(data['filename'])
         
-        if not success:
-            return jsonify({
-                'status': 'error',
-                'message': result['error']
-            }), 400
+        # if not success:
+        #     return jsonify({
+        #         'status': 'error',
+        #         'message': result['error']
+        #     }), 400
             
-        public_url = result['public_url']
+        # public_url = result['public_url']
         
         # Post to Facebook
         fb_manager = FacebookManager(data['page_token'])
@@ -216,12 +220,12 @@ def post_to_facebook():
         result = fb_manager.post_content(
             data['page_id'],
             data['page_token'],
-            public_url,
+            data['filename'],
             data['message']
         )
         print(f"[DEBUG] Facebook API result: {result}")
         # In both cases after posting or error, remove the data[filename] from the current directory
-        os.remove(data['filename'])
+        # os.remove(data['filename'])
                 
         if result:
             post_history.add_post('Facebook', result)

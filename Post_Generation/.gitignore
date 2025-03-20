@@ -1,3 +1,4 @@
 .streamlit/secrets.toml
 ngrok.exe
 *.pem
+logs/scheduler.log

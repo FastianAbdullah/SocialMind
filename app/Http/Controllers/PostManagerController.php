@@ -25,6 +25,7 @@ class PostManagerController extends Controller
      */
     public function create(Request $request)
     {
+        set_time_limit(120);
         try {
             $request->validate([
                 'content' => 'required|string|min:5',
@@ -257,6 +258,7 @@ class PostManagerController extends Controller
 
             // Make request to Flask API with proper authorization
             $response = Http::withoutVerifying()
+                ->timeout(120)
                 ->withHeaders([
                     'Authorization' => $userPlatform->access_token
                 ])
@@ -331,6 +333,7 @@ class PostManagerController extends Controller
             ]);
 
             $response = Http::withoutVerifying()
+                ->timeout(90)
                 ->post('https://localhost:8443/content/analyze', [
                     'text' => $request->input('text')
                 ]);
@@ -383,6 +386,7 @@ class PostManagerController extends Controller
             ]);
 
             $response = Http::withoutVerifying()
+                ->timeout(90)
                 ->post('https://localhost:8443/content/optimize', [
                     'purpose' => $request->input('purpose'),
                     'descriptions' => $request->input('descriptions', [])
@@ -992,6 +996,7 @@ class PostManagerController extends Controller
             
             // Make a JSON request to the Facebook API
             $response = Http::withoutVerifying()
+                ->timeout(120)
                 ->post('https://localhost:8443/facebook/post', [
                     'page_id' => $platformPage->page_id,
                     'page_token' => $userPlatform->access_token,
@@ -1115,6 +1120,7 @@ class PostManagerController extends Controller
      */
     private function publishToInstagram($userPlatform, $platformPage, $content, $mediaFile, $userId, $initialPostDescription)
     {
+        set_time_limit(120);
         try {
             // Save mediafile Original Name and type for Metadata
             $mediaFileName = $mediaFile->getClientOriginalName();
@@ -1142,7 +1148,7 @@ class PostManagerController extends Controller
             
             // Make the API request
             $response = Http::withoutVerifying()
-                ->timeout(60) // Increase timeout to 60 seconds
+                ->timeout(120)
                 ->withHeaders([
                     'Authorization' => $userPlatform->access_token,
                     'Content-Type' => 'application/json'
