@@ -56,196 +56,121 @@
             <div class="page-title">
               <div class="row">
                 <div class="col-12 text-center">
-                  <h4>Sentiment Analysis</h4>
+                  <h4>Post Sentiment Analysis</h4>
                 </div>
               </div>
             </div>
 
             <!-- Main Content -->
             <div class="row">
-              <!-- Search Section -->
-              <div class="col-12 mb-4">
+              <!-- Platform Tabs -->
+              <div class="col-12">
                 <div class="card">
                   <div class="card-header">
-                    <h5>Analyze Post Comments</h5>
+                    <h5>My Posts</h5>
+                    <p>Select a post to analyze its sentiment</p>
                   </div>
                   <div class="card-body">
-                    <!-- Platform Selection -->
-                    <div class="row mb-4">
-                      <div class="col-md-6">
-                        <label class="form-label">Platform</label>
-                        <select 
-                          class="form-select" 
-                          v-model="selectedPlatform"
+                    <ul class="nav nav-tabs nav-primary" id="platform-tabs" role="tablist">
+                      <li class="nav-item" v-for="(posts, platform) in userPosts" :key="platform">
+                        <button 
+                          class="nav-link" 
+                          :class="{ 'active': activePlatform === platform }"
+                          :id="`${platform}-tab`"
+                          data-bs-toggle="tab"
+                          :data-bs-target="`#${platform}-posts`"
+                          type="button"
+                          role="tab"
+                          @click="activePlatform = platform"
                         >
-                          <option value="instagram">Instagram</option>
-                          <option value="facebook">Facebook</option>
-                        </select>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label">Post ID</label>
-                        <input 
-                          type="text" 
-                          class="form-control" 
-                          v-model="postId"
-                          placeholder="Enter post ID"
-                        />
+                          <i :class="getPlatformIcon(platform)" class="me-2"></i>
+                          {{ platform.charAt(0).toUpperCase() + platform.slice(1) }}
+                          <span class="badge rounded-pill bg-primary ms-2">{{ posts.length }}</span>
+                        </button>
+                      </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="platform-tabs-content">
+                      <div 
+                        v-for="(posts, platform) in userPosts" 
+                        :key="`${platform}-content`"
+                        class="tab-pane fade"
+                        :class="{ 'show active': activePlatform === platform }"
+                        :id="`${platform}-posts`"
+                        role="tabpanel"
+                      >
+                        <div class="row mt-4">
+                          <div v-if="posts.length === 0" class="col-12 text-center py-5">
+                            <div class="empty-state">
+                              <i :class="getPlatformIcon(platform)" class="empty-icon"></i>
+                              <h6 class="mt-3">No posts on {{ platform }}</h6>
+                              <p>You haven't posted anything on {{ platform }} yet.</p>
+                            </div>
+                          </div>
+                          
+                          <div v-for="(post, index) in posts" :key="`post-${post.id}`" class="col-md-6 col-xl-4 mb-4">
+                            <div 
+                              class="post-card" 
+                              :class="{ 
+                                'animate-in': true
+                              }"
+                              :style="{ animationDelay: `${index * 0.1}s` }"
+                            >
+                              <div class="post-status">
+                                <span class="badge" :class="getStatusBadgeClass(post.status)">
+                                  {{ post.status }}
+                                </span>
+                                <span class="post-date">{{ formatDate(post.created_at) }}</span>
+                              </div>
+                              
+                              <h6 class="post-title">{{ truncateText(post.initial_description, 80) }}</h6>
+                              
+                              <div class="post-content">
+                                <p>{{ truncateText(post.AI_generated_description, 150) }}</p>
+                              </div>
+                              
+                              <div class="post-footer">
+                                <button 
+                                  class="btn btn-sm btn-primary analyze-btn"
+                                  @click="analyzeSentiment(post)"
+                                  :disabled="isAnalyzing"
+                                >
+                                  <span v-if="!isAnalyzing || selectedPostId !== post.id">
+                                    <i class="fas fa-chart-bar me-1"></i> Analyze Sentiment
+                                  </span>
+                                  <span v-else class="d-flex align-items-center">
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Analyzing...
+                                  </span>
+                                </button>
+                                
+                                <a 
+                                  v-if="post.post_url" 
+                                  :href="post.post_url" 
+                                  target="_blank"
+                                  class="btn btn-sm btn-outline-secondary view-btn"
+                                >
+                                  <i class="fas fa-external-link-alt me-1"></i> View
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    
-                    <button 
-                      class="btn btn-primary w-100" 
-                      @click="analyzeSentiment"
-                      :disabled="!postId || isAnalyzing"
-                    >
-                      <i class="fas fa-chart-bar me-2"></i>
-                      {{ isAnalyzing ? 'Analyzing...' : 'Analyze Sentiment' }}
-                    </button>
                   </div>
                 </div>
               </div>
 
-              <!-- Analysis Results -->
-              <div v-if="sentimentData" class="col-12">
-                <div class="row">
-                  <!-- Overview -->
-                  <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100">
-                      <div class="card-header">
-                        <h5>Sentiment Overview</h5>
-                      </div>
-                      <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-center mb-4">
-                          <div class="sentiment-badge" :class="sentimentClass">
-                            {{ sentimentData.analysis.overall_sentiment }}
-                          </div>
-                        </div>
-                        
-                        <div class="row text-center">
-                          <div class="col-4">
-                            <h3 class="text-success">{{ sentimentData.analysis.sentiment_distribution.positive || 0 }}</h3>
-                            <p>Positive</p>
-                          </div>
-                          <div class="col-4">
-                            <h3 class="text-warning">{{ sentimentData.analysis.sentiment_distribution.neutral || 0 }}</h3>
-                            <p>Neutral</p>
-                          </div>
-                          <div class="col-4">
-                            <h3 class="text-danger">{{ sentimentData.analysis.sentiment_distribution.negative || 0 }}</h3>
-                            <p>Negative</p>
-                          </div>
-                        </div>
-                        
-                        <div class="text-center mt-3">
-                          <h6>Average Score: 
-                            <span :class="{
-                              'text-success': sentimentData.analysis.average_score > 0.1,
-                              'text-danger': sentimentData.analysis.average_score < -0.1,
-                              'text-warning': sentimentData.analysis.average_score >= -0.1 && sentimentData.analysis.average_score <= 0.1
-                            }">
-                              {{ sentimentData.analysis.average_score }}
-                            </span>
-                          </h6>
-                          <p class="mb-0">Based on {{ sentimentData.comment_count }} comments</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Charts -->
-                  <div class="col-lg-8 col-md-6 mb-4">
-                    <div class="card h-100">
-                      <div class="card-header">
-                        <h5>Sentiment Charts</h5>
-                      </div>
-                      <div class="card-body">
-                        <div class="row">
-                          <div class="col-md-6 mb-3">
-                            <div class="chart-container">
-                              <img v-if="sentimentData.charts.sentiment_distribution" 
-                                   :src="`data:image/png;base64,${sentimentData.charts.sentiment_distribution}`" 
-                                   class="img-fluid" 
-                                   alt="Sentiment Distribution" />
-                            </div>
-                          </div>
-                          <div class="col-md-6 mb-3">
-                            <div class="chart-container">
-                              <img v-if="sentimentData.charts.score_distribution" 
-                                   :src="`data:image/png;base64,${sentimentData.charts.score_distribution}`" 
-                                   class="img-fluid" 
-                                   alt="Score Distribution" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Common Words -->
-                  <div class="col-lg-6 mb-4">
-                    <div class="card h-100">
-                      <div class="card-header">
-                        <h5>Common Words</h5>
-                      </div>
-                      <div class="card-body">
-                        <div class="row">
-                          <div class="col-md-6">
-                            <h6 class="text-success mb-3">Positive Words</h6>
-                            <ul class="list-unstyled">
-                              <li v-for="(word, index) in sentimentData.analysis.common_positive_words" 
-                                  :key="`positive-${index}`"
-                                  class="mb-2"
-                              >
-                                <i class="fas fa-check-circle text-success me-2"></i>
-                                {{ word }}
-                              </li>
-                            </ul>
-                          </div>
-                          <div class="col-md-6">
-                            <h6 class="text-danger mb-3">Negative Words</h6>
-                            <ul class="list-unstyled">
-                              <li v-for="(word, index) in sentimentData.analysis.common_negative_words" 
-                                  :key="`negative-${index}`"
-                                  class="mb-2"
-                              >
-                                <i class="fas fa-times-circle text-danger me-2"></i>
-                                {{ word }}
-                              </li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Comments Sample -->
-                  <div class="col-lg-6 mb-4">
-                    <div class="card h-100">
-                      <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5>Comment Samples</h5>
-                        <div class="badge bg-primary">{{ sentimentData.comment_count }} Comments</div>
-                      </div>
-                      <div class="card-body comment-samples">
-                        <div v-for="(comment, index) in sentimentData.analysis.comment_sentiments.slice(0, 5)" 
-                             :key="`comment-${index}`"
-                             class="comment-item"
-                             :class="{
-                               'comment-positive': comment.sentiment === 'positive',
-                               'comment-neutral': comment.sentiment === 'neutral',
-                               'comment-negative': comment.sentiment === 'negative',
-                             }"
-                        >
-                          <div class="comment-text">{{ comment.text }}</div>
-                          <div class="comment-meta">
-                            <span class="badge" :class="getSentimentBadgeClass(comment.sentiment)">
-                              {{ comment.sentiment }}
-                            </span>
-                            <span class="score">Score: {{ comment.score }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              <!-- No Posts State -->
+              <div v-if="Object.keys(userPosts).length === 0 && !isLoading" class="col-12 text-center py-5">
+                <div class="empty-state">
+                  <i class="fas fa-chart-line empty-icon"></i>
+                  <h5 class="mt-3">No Posts Available</h5>
+                  <p>You haven't published any posts yet. Create a post first to analyze sentiment.</p>
+                  <router-link to="/create-post" class="btn btn-primary mt-3">
+                    <i class="fas fa-plus me-2"></i> Create a Post
+                  </router-link>
                 </div>
               </div>
             </div>
@@ -264,21 +189,61 @@
         </footer>
       </div>
     </div>
+
+    <!-- Sentiment Modal -->
+    <div class="modal fade" id="sentimentModal" tabindex="-1" aria-labelledby="sentimentModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sentiment-modal">
+          <div class="modal-header border-0">
+            <h5 class="modal-title" id="sentimentModalLabel">Post Sentiment Analysis</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <div v-if="sentimentData">
+              <div class="sentiment-result mb-4">
+                <div class="sentiment-icon" :class="sentimentClass">
+                  <i class="fas" :class="getSentimentIcon(sentimentData.analysis.overall_sentiment)"></i>
+                </div>
+                <div class="sentiment-label">
+                  {{ sentimentData.analysis.overall_sentiment.toUpperCase() }}
+                </div>
+              </div>
+              <div class="sentiment-stats">
+                <p>Based on analysis of {{ sentimentData.comment_count || 0 }} comments</p>
+              </div>
+              <div class="sentiment-message">
+                {{ getSentimentMessage(sentimentData.analysis.overall_sentiment) }}
+              </div>
+            </div>
+            <div v-else class="sentiment-loading">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-3">Analyzing sentiment...</p>
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import DashboardSidebar from './DashboardSidebar.vue';
-import { analyzeSentiment as analyzePostSentiment } from '../services/SentimentAnalysisService';
+import { analyzeSentiment as analyzePostSentiment, getUserPosts as fetchUserPosts } from '../services/SentimentAnalysisService';
 import { useDynamicResources } from '../composables/useDynamicResources';
 
 // State
-const selectedPlatform = ref('instagram');
-const postId = ref('');
+const userPosts = ref({});
+const activePlatform = ref('');
 const isAnalyzing = ref(false);
 const sentimentData = ref(null);
 const isLoading = ref(true);
+const selectedPostId = ref(null);
 
 // CSS and JS resources
 const cssFiles = [
@@ -316,19 +281,155 @@ const sentimentClass = computed(() => {
 });
 
 // Methods
-const getSentimentBadgeClass = (sentiment) => {
-  if (sentiment === 'positive') return 'bg-success';
-  if (sentiment === 'negative') return 'bg-danger';
-  return 'bg-warning';
+const fetchPosts = async () => {
+  try {
+    isLoading.value = true;
+    const posts = await fetchUserPosts();
+    userPosts.value = posts;
+    
+    // Set active platform to the first one that has posts
+    const platforms = Object.keys(posts);
+    if (platforms.length > 0) {
+      let firstWithPosts = platforms.find(platform => posts[platform].length > 0);
+      activePlatform.value = firstWithPosts || platforms[0];
+    }
+    
+    // Show success notification
+    if (window.$) {
+      window.$.notify({
+        title: 'Success',
+        message: 'Posts loaded successfully!'
+      }, {
+        type: 'success'
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    if (window.$) {
+      window.$.notify({
+        title: 'Error',
+        message: error.message || 'Failed to load posts'
+      }, {
+        type: 'danger'
+      });
+    }
+  } finally {
+    isLoading.value = false;
+  }
 };
 
-const analyzeSentiment = async () => {
-  if (!postId.value || isAnalyzing.value) return;
+const getPlatformIcon = (platform) => {
+  const iconMap = {
+    'facebook': 'fab fa-facebook',
+    'instagram': 'fab fa-instagram',
+    'linkedin': 'fab fa-linkedin',
+    'twitter': 'fab fa-twitter',
+    'default': 'fas fa-share-alt'
+  };
   
+  return iconMap[platform.toLowerCase()] || iconMap.default;
+};
+
+const getStatusBadgeClass = (status) => {
+  const statusMap = {
+    'published': 'bg-success',
+    'pending': 'bg-warning',
+    'scheduled': 'bg-info',
+    'failed': 'bg-danger',
+    'draft': 'bg-secondary'
+  };
+  
+  return statusMap[status.toLowerCase()] || 'bg-secondary';
+};
+
+const getSentimentIcon = (sentiment) => {
+  if (sentiment === 'positive') return 'fa-smile';
+  if (sentiment === 'negative') return 'fa-frown';
+  return 'fa-meh';
+};
+
+const getSentimentMessage = (sentiment) => {
+  if (sentiment === 'positive') return 'Your audience is responding positively to this post!';
+  if (sentiment === 'negative') return 'Your audience seems to have concerns about this post.';
+  return 'Your audience has a neutral reaction to this post.';
+};
+
+const truncateText = (text, maxLength) => {
+  if (!text) return '';
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+const analyzeSentiment = async (post) => {
+  if (isAnalyzing.value) return;
+  
+  selectedPostId.value = post.id;
+  sentimentData.value = null;
   isAnalyzing.value = true;
+  
+  // Show modal
+  const sentimentModal = new window.bootstrap.Modal(document.getElementById('sentimentModal'));
+  sentimentModal.show();
+  
   try {
-    const result = await analyzePostSentiment(postId.value, selectedPlatform.value);
-    sentimentData.value = result;
+    // Check if post has a valid response_post_id
+    if (!post.response_post_id) {
+      if (window.$) {
+        window.$.notify({
+          title: 'Error',
+          message: 'This post does not have a valid post ID for analysis'
+        }, {
+          type: 'danger'
+        });
+      }
+      isAnalyzing.value = false;
+      return;
+    }
+    
+    console.log('Analyzing post:', post.response_post_id, post.platform);
+    const result = await analyzePostSentiment(post.response_post_id, post.platform);
+    
+    // Create a default structure if some properties are missing
+    const defaultSentimentData = {
+      status: 'success',
+      analysis: {
+        overall_sentiment: 'neutral',
+        sentiment_distribution: {
+          positive: 0,
+          neutral: 0,
+          negative: 0
+        },
+        average_score: 0,
+        comment_sentiments: [],
+        common_positive_words: [],
+        common_negative_words: []
+      },
+      comment_count: 0,
+      charts: {
+        sentiment_distribution: null,
+        score_distribution: null
+      }
+    };
+    
+    // Merge the result with the default structure
+    sentimentData.value = {
+      ...defaultSentimentData,
+      ...result,
+      analysis: {
+        ...defaultSentimentData.analysis,
+        ...(result.analysis || {})
+      }
+    };
     
     // Show success notification
     if (window.$) {
@@ -349,7 +450,9 @@ const analyzeSentiment = async () => {
         type: 'danger'
       });
     }
+    sentimentData.value = null;
   } finally {
+    // Ensure loading state is reset
     isAnalyzing.value = false;
   }
 };
@@ -360,13 +463,11 @@ onMounted(async () => {
   await removeDynamicJs();
   await initializeCss();
   await initializeScripts();
-  isLoading.value = false;
+  await fetchPosts();
 });
 </script>
 
 <style scoped>
-/* Keep all existing styles from your component */
-
 /* Fix sidebar layout */
 .page-header, .page-body, .footer {
   margin-left: 230px !important;
@@ -379,98 +480,190 @@ onMounted(async () => {
   z-index: 999;
 }
 
-/* Make sure other styles remain the same */
-.sentiment-badge {
-  display: inline-block;
-  padding: 1rem 2rem;
-  border-radius: 50px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+/* Animations */
+.animate-in {
+  animation: slideIn 0.5s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
 }
 
-.sentiment-positive {
-  background: linear-gradient(135deg, #4CAF50, #8BC34A);
-  color: white;
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.sentiment-negative {
-  background: linear-gradient(135deg, #F44336, #FF5722);
-  color: white;
-}
-
-.sentiment-neutral {
-  background: linear-gradient(135deg, #FFC107, #FFEB3B);
+/* Post Card Styling */
+.post-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(240, 240, 240, 0.8));
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-left: 4px solid #00a3a3;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   color: #333;
 }
 
-.chart-container {
-  background: #1c1c29;
-  border-radius: 8px;
-  padding: 1rem;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.post-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, rgba(240, 240, 240, 0.8), rgba(230, 230, 230, 0.9));
 }
 
-.comment-samples {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.comment-item {
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  background: #1c1c29;
-  border-left: 4px solid #9E9E9E;
-}
-
-.comment-positive {
-  border-left-color: #4CAF50;
-}
-
-.comment-negative {
-  border-left-color: #F44336;
-}
-
-.comment-neutral {
-  border-left-color: #FFC107;
-}
-
-.comment-text {
-  margin-bottom: 0.5rem;
-  color: #f8f9fa;
-}
-
-.comment-meta {
+.post-status {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1rem;
+}
+
+.post-date {
   font-size: 0.8rem;
+  color: #666;
 }
 
-.score {
-  color: #9E9E9E;
+.post-title {
+  font-weight: 600;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+  color: #222;
 }
 
-/* Scrollbar styling */
-.comment-samples::-webkit-scrollbar {
-  width: 6px;
+.post-content {
+  flex-grow: 1;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  color: #444;
+  overflow: hidden;
 }
 
-.comment-samples::-webkit-scrollbar-track {
-  background: #1c1c29;
+.post-footer {
+  display: flex;
+  gap: 10px;
 }
 
-.comment-samples::-webkit-scrollbar-thumb {
-  background: #00a3a3;
-  border-radius: 3px;
+.analyze-btn {
+  background: linear-gradient(135deg, #00a3a3, #00c4c4);
+  border: none;
+  transition: all 0.3s ease;
+  min-width: 140px;
 }
 
-.comment-samples::-webkit-scrollbar-thumb:hover {
-  background: #008f8f;
+.analyze-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #00c4c4, #00e5e5);
+  transform: translateY(-2px);
+}
+
+.view-btn {
+  border-color: #666;
+  color: #555;
+  transition: all 0.3s ease;
+}
+
+.view-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 0;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: #aaa;
+  margin-bottom: 1rem;
+}
+
+/* Card Headers */
+.card-header {
+  background: linear-gradient(135deg, rgba(240, 240, 240, 0.8), rgba(255, 255, 255, 0.8));
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1.2rem 1.5rem;
+}
+
+.card-header h5 {
+  margin-bottom: 0;
+  color: #222;
+  font-weight: 600;
+}
+
+/* Sentiment Modal */
+.sentiment-modal {
+  border-radius: 16px;
+  overflow: hidden;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header, .modal-footer {
+  background-color: #f8f9fa;
+}
+
+.sentiment-result {
+  padding: 2rem 0;
+}
+
+.sentiment-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin-bottom: 1.5rem;
+  font-size: 4rem;
+}
+
+.sentiment-positive {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(139, 195, 74, 0.2));
+  color: #4CAF50;
+}
+
+.sentiment-negative {
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(255, 87, 34, 0.2));
+  color: #F44336;
+}
+
+.sentiment-neutral {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 235, 59, 0.2));
+  color: #FFC107;
+}
+
+.sentiment-label {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.sentiment-stats {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.sentiment-message {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.sentiment-loading {
+  padding: 3rem 0;
 }
 </style> 

@@ -204,7 +204,7 @@ class PostManagerController extends Controller
             ], 500);
         }
     }
-
+    
     /**
      * Generate optimized content using AI analysis and top-performing posts
      *
@@ -432,6 +432,12 @@ class PostManagerController extends Controller
      */
     public function analyzePostSentiment(Request $request)
     {
+        // Log the incoming request data for debugging
+        Log::info('Sentiment analysis request received', [
+            'data' => $request->all(),
+            'user_id' => Auth::id()
+        ]);
+
         // Validate request
         $validator = Validator::make($request->all(), [
             'post_id' => 'required|string',
@@ -439,6 +445,11 @@ class PostManagerController extends Controller
         ]);
 
         if ($validator->fails()) {
+            Log::error('Sentiment analysis validation failed', [
+                'errors' => $validator->errors()->toArray(),
+                'user_id' => Auth::id()
+            ]);
+            
             return response()->json([
                 'status' => 'error',
                 'message' => 'Validation failed',
@@ -446,41 +457,94 @@ class PostManagerController extends Controller
             ], 400);
         }
 
-        // Get user information
-        $user = Auth::user();
-        
         // Get platform data
         $platform = $request->platform;
         $postId = $request->post_id;
+        $userId = Auth::id();
         
-        // Get access token
-        $userPlatform = DB::table('user_platforms')
-            ->where('user_id', $user->id)
-            ->where('platform', $platform)
-            ->first();
-        
-        if (!$userPlatform || !$userPlatform->access_token) {
-            return response()->json([
-                'status' => 'error',
-                'message' => "No $platform account connected"
-            ], 400);
-        }
-
-        $accessToken = $userPlatform->access_token;
-        
-        // Call Flask API endpoint
         try {
-            $response = Http::withHeaders([
-                'Authorization' => $accessToken
-            ])->post('https://localhost:8443/post/sentiment-analysis', [
-                'post_id' => $postId,
-                'platform' => $platform
+            // Get platform ID based on platform name
+            $platformId = $platform === 'instagram' ? 2 : 1; // Map platform name to ID
+        
+            
+            // Get the user's own platform credentials
+            $userPlatform = UserPlatform::where('user_id', $userId)
+                ->where('platform_id', $platformId)
+                ->first();
+            
+                
+            if (!$userPlatform || !$userPlatform->access_token) {
+                Log::error('User platform access token not found', [
+                    'platform' => $platform,
+                    'platform_id' => $platformId,
+                    'user_id' => $userId
+                ]);
+                
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Your platform access token was not found. Please reconnect your account.'
+                ], 401);
+            }
+            
+            // Call the sentiment analysis endpoint in Flask with user's token
+            $response = Http::withoutVerifying()
+                ->timeout(60)
+                ->withHeaders([
+                    'Authorization' => $userPlatform->access_token,
+                    'Content-Type' => 'application/json'
+                ])
+                ->post('https://localhost:8443/post/sentiment-analysis', [
+                    'post_id' => $postId,
+                    'platform' => $platform
+                ]);
+          
+            
+            // Debug response
+            Log::info('Received response from sentiment analysis', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'content_type' => $response->header('Content-Type')
             ]);
             
             if ($response->successful()) {
-                return response()->json($response->json());
+                // Parse the JSON response
+                $responseData = $response->json();
+             
+                // Check if response has expected structure
+                if (!isset($responseData['analysis']) && isset($responseData['overall_sentiment'])) {
+                    // Convert simple response format to expected structure
+                    $responseData = [
+                        'status' => 'success',
+                        'analysis' => [
+                            'overall_sentiment' => $responseData['overall_sentiment'] ?? 'neutral',
+                            'sentiment_distribution' => [
+                                'positive' => 0,
+                                'neutral' => 0,
+                                'negative' => 0
+                            ],
+                            'average_score' => 0,
+                            'comment_sentiments' => [],
+                            'common_positive_words' => [],
+                            'common_negative_words' => []
+                        ],
+                        'comment_count' => $responseData['comment_count'] ?? 0,
+                        'charts' => [
+                            'sentiment_distribution' => null,
+                            'score_distribution' => null
+                        ]
+                    ];
+                }
+                
+                return response()->json($responseData);
             } else {
-                Log::error('Failed to analyze post sentiment: ' . $response->body());
+                Log::error('Failed to analyze post sentiment', [
+                    'status' => $response->status(),
+                    'response' => $response->body(),
+                    'post_id' => $postId,
+                    'platform' => $platform,
+                    'user_id' => $userId
+                ]);
+                
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Failed to analyze post sentiment',
@@ -488,10 +552,17 @@ class PostManagerController extends Controller
                 ], 500);
             }
         } catch (\Exception $e) {
-            Log::error('Exception analyzing post sentiment: ' . $e->getMessage());
+            Log::error('Exception analyzing post sentiment', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'post_id' => $postId,
+                'platform' => $platform,
+                'user_id' => $userId
+            ]);
+            
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while analyzing post sentiment'
+                'message' => 'An error occurred while analyzing post sentiment: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -675,7 +746,7 @@ class PostManagerController extends Controller
             ], 500);
         }
     }
-
+    
     /**
      * Get user platform data
      *
@@ -1272,6 +1343,89 @@ class PostManagerController extends Controller
                 'platform_id' => 2,
                 'platform_name' => 'Instagram'
             ];
+        }
+    }
+
+    /**
+     * Get all posts for the current user grouped by platform
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getUserPosts()
+    {
+        try {
+            $userId = Auth::id();
+            
+            // Get all posts for the current user
+            $posts = DB::table('post')
+                ->where('user_id', $userId)
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            // Group posts by platform
+            $groupedPosts = [];
+            $platformMap = [
+                1 => 'facebook',
+                2 => 'instagram',
+                3 => 'linkedin'
+            ];
+            
+            foreach ($posts as $post) {
+                $platformId = $post->platform_id;
+                $platformName = $platformMap[$platformId] ?? 'unknown';
+                
+                if (!isset($groupedPosts[$platformName])) {
+                    $groupedPosts[$platformName] = [];
+                }
+                
+                // Parse metadata if it exists
+                $metadata = json_decode($post->metadata, true) ?? [];
+                
+                // Extract post URL or other relevant information
+                $postUrl = '';
+                if (isset($metadata['post_url'])) {
+                    $postUrl = $metadata['post_url'];
+                } elseif (isset($metadata['response_details']['post_url'])) {
+                    $postUrl = $metadata['response_details']['post_url'];
+                }
+                
+                // Extract published date
+                $publishedAt = null;
+                if (isset($metadata['published_at'])) {
+                    $publishedAt = $metadata['published_at'];
+                }
+                
+                // Add the post to the grouped posts
+                $groupedPosts[$platformName][] = [
+                    'id' => $post->id,
+                    'platform_id' => $platformId,
+                    'platform' => $platformName,
+                    'response_post_id' => $post->response_post_id,
+                    'initial_description' => $post->initial_description,
+                    'AI_generated_description' => $post->AI_generated_description,
+                    'status' => $post->status,
+                    'published_at' => $publishedAt,
+                    'created_at' => $post->created_at,
+                    'post_url' => $postUrl
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'posts' => $groupedPosts
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error fetching user posts', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch posts: ' . $e->getMessage()
+            ], 500);
         }
     }
 

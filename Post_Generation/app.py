@@ -182,7 +182,7 @@ def get_facebook_pages():
         clean_pages = [{
             'id': page['id'],
             'name': page['name'],
-            'access_token': page['access_token'].strip()  # Remove whitespace
+            'access_token': page['access_token'].strip() 
         } for page in pages]
         
         return jsonify({'pages': clean_pages})
@@ -194,7 +194,8 @@ def post_to_facebook():
     """Post content to Facebook"""
 
     data = request.json
-    required_fields = ['page_id', 'page_token', 'filename', 'message']
+    required_fields = ['page_id', 'page_token', 'message']
+    
     if not all(field in data for field in required_fields):
         return jsonify({'error': 'Missing required fields'}), 400
     
@@ -224,6 +225,7 @@ def post_to_facebook():
             public_url,
             data['message']
         )
+
         print(f"[DEBUG] Facebook API result: {result}")
         # In both cases after posting or error, remove the data[filename] from the current directory
         # os.remove(data['filename'])
@@ -231,17 +233,20 @@ def post_to_facebook():
         if result:
             post_history.add_post('Facebook', result)
             print("[DEBUG] Successfully posted to Facebook")
-            return jsonify({'success': True, 'post_id': result.get('id')})
-        
+            return jsonify({'success': True, 'post_id': result.get('id')}), 200
+
         print("[DEBUG] Failed to post content to Facebook")
         return jsonify({'error': 'Failed to post content'}), 400
-        
+
     except Exception as e:
         print(f"[DEBUG] Error in Facebook post process: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'status': 'error',
             'message': f'Error: {str(e)}'
         }), 500
+
 
 @app.route('/content/analyze', methods=['POST'])
 def analyze_content():
@@ -505,6 +510,8 @@ def post_to_instagram():
             'status': 'error',
             'message': f'Error: {str(e)}'
         }), 500
+
+
 
 @app.route('/instagram/hashtags', methods=['POST'])
 def get_trending_hashtags():
@@ -825,6 +832,7 @@ def analyze_post_comments():
         try:
             analyzer = SentimentAnalyzer()
             analysis = analyzer.analyze_comments(comments)
+            print(f"Analysis: {analysis}")
             
             return jsonify({
                 'status': 'success',
@@ -1016,7 +1024,35 @@ def post_content_through_agent():
         context = data.get('context', {})
         autonomous_mode = data.get('autonomous_mode', False)
         
-        print(f"DEBUG APP: Posting to platforms: {platforms}")
+        # Save the original request prompt/topic if available
+        original_prompt = None
+        if 'originalPrompt' in context:
+            original_prompt = context['originalPrompt']
+        elif 'query' in context:
+            original_prompt = context['query']
+        elif 'currentTask' in context and 'topic' in context['currentTask']:
+            original_prompt = context['currentTask']['topic']
+            
+        print(f"DEBUG APP: Original prompt: {original_prompt}")
+        
+        # Filter out invalid platforms
+        valid_platforms = []
+        for platform in platforms:
+            if platform.lower() in ['instagram', 'facebook', 'linkedin']:
+                valid_platforms.append(platform.lower())
+            else:
+                print(f"DEBUG APP: Skipping invalid platform: {platform}")
+        
+        if not valid_platforms:
+            print("DEBUG APP: No valid platforms provided")
+            return jsonify({
+                'status': 'error',
+                'message': 'No valid platforms provided',
+                'intent': 'error',
+                'results': {}
+            }), 400
+        
+        print(f"DEBUG APP: Posting to platforms: {valid_platforms}")
         print(f"DEBUG APP: Content (first 50 chars): '{content[:50]}...'")
         print(f"DEBUG APP: Schedule time: {schedule_time}")
         print(f"DEBUG APP: Autonomous mode: {autonomous_mode}")
@@ -1027,21 +1063,42 @@ def post_content_through_agent():
         # If access token in request, make sure agent_connector has it
         if access_token:
             # Update tokens for all platforms using the same token for testing
-            for platform in platforms:
+            for platform in valid_platforms:
                 platform_key = platform.lower()
                 agent_connector.access_tokens[platform_key] = access_token
                 print(f"DEBUG APP: Set access token for {platform_key}")
         
+        # Always use a reliable image URL for testing
+        test_image_url = "https://cdn.pixabay.com/photo/2014/06/03/19/38/board-361516_1280.jpg"
+        print(f"DEBUG APP: Using image URL: {test_image_url}")
+        
         # Try to post
         result = agent_connector.post_content(
-            platforms[0] if len(platforms) == 1 else platforms,
+            valid_platforms,
             content,
-            image_url=None,  # You could extract from context if needed
+            image_url=test_image_url,  # Always provide an image URL
             schedule_time=schedule_time
         )
         
         # Add intent for frontend handling
         result['intent'] = 'confirmation'
+        
+        # Include the original prompt in the result
+        if original_prompt:
+            result['original_prompt'] = original_prompt
+        
+        # Ensure we have a results object for each requested platform
+        if 'results' not in result:
+            result['results'] = {}
+            
+        # Make sure all platforms have a result, even if they weren't processed
+        for platform in platforms:
+            platform_key = platform.lower()
+            if platform_key not in result['results']:
+                result['results'][platform_key] = {
+                    'status': 'error',
+                    'message': f'Platform {platform} was not processed'
+                }
         
         print(f"DEBUG APP: Posting result: {result}")
         return jsonify(result)
@@ -1052,7 +1109,8 @@ def post_content_through_agent():
         return jsonify({
             'status': 'error',
             'message': str(e),
-            'intent': 'error'
+            'intent': 'error',
+            'results': {}
         }), 500
 
 # ------------------------------------------------------------------------------------------------

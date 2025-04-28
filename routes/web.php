@@ -76,6 +76,7 @@ Route::get('/check-auth', function (Request $request) {
 Route::middleware(['auth'])->group(function () {
     Route::post('/posts/create', [PostManagerController::class, 'create']);
     Route::post('/posts/publish', [PostManagerController::class, 'publish']);
+    Route::get('/posts/user', [PostManagerController::class, 'getUserPosts']);
     Route::post('/hashtags/search', [HashtagController::class, 'search']);
     Route::post('/hashtags/analyze', [HashtagController::class, 'analyze']);
     Route::post('/content/generate-optimized', [PostManagerController::class, 'generateOptimizedContent']);

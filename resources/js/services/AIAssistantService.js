@@ -163,11 +163,55 @@ class AIAssistantService {
     // Method to post content automatically when ready
     async postContent(content, platforms, scheduleTime = null) {
         try {
+            // Ensure platforms are properly formatted
+            const formattedPlatforms = platforms.map(platform => {
+                // If platform is already an object with platform_id, return it as is
+                if (typeof platform === 'object' && platform.platform_id) {
+                    return platform;
+                }
+                
+                // If it's just a platform ID number, convert to object format
+                if (typeof platform === 'number') {
+                    return { platform_id: platform };
+                }
+                
+                // If it's a string platform ID, convert to number then to object
+                if (typeof platform === 'string' && !isNaN(Number(platform))) {
+                    return { platform_id: Number(platform) };
+                }
+                
+                // If it's a string platform name, try to map to correct ID
+                const platformIdMap = {
+                    'facebook': 1,
+                    'instagram': 2, 
+                    'linkedin': 3
+                };
+                
+                if (typeof platform === 'string' && platformIdMap[platform.toLowerCase()]) {
+                    return { platform_id: platformIdMap[platform.toLowerCase()] };
+                }
+                
+                // If all else fails, return the original platform (server will validate)
+                return platform;
+            });
+
+            console.log('Formatted platforms for posting:', formattedPlatforms);
+            
+            // Ensure we have the context with original prompt
+            const updatedContext = { 
+                ...this.conversationContext,
+                originalPrompt: this.conversationContext.currentTask?.topic || 
+                                this.conversationContext.query || 
+                                'Content generation request'
+            };
+            
+            console.log('Context for posting with original prompt:', updatedContext);
+            
             const response = await axios.post(`${this.baseURL}/post-content`, {
                 content,
-                platforms,
+                platforms: formattedPlatforms,
                 schedule_time: scheduleTime,
-                context: this.conversationContext
+                context: updatedContext
             }, {
                 headers: {
                     'Content-Type': 'application/json',

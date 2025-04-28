@@ -22,7 +22,7 @@ class Post extends Model
     protected $casts = [
         'metadata' => 'array'
     ];
-
+    
     public function user()
     {
         return $this->belongsTo(User::class);
