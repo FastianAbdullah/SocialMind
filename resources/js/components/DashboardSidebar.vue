@@ -1,125 +1,259 @@
 <template>
-    <!--Dashboard Sidebar -->
-    <div class="sidebar-wrapper" data-layout="stroke-svg">
-        <div class="logo-wrapper"><router-link to="/dashboard"><img class="img-fluid" src="../../../public/assets/images/logo/logo.png" alt=""></router-link>
-          <div class="back-btn"><i class="fa fa-angle-left"> </i></div>
-          <div class="toggle-sidebar"><i class="status_toggle middle sidebar-toggle"> </i></div>
-        </div>
-        <div class="logo-icon-wrapper"><router-link to="/dashboard"><img class="img-fluid" src="../../../public/assets/images/logo/logo-icon.png" alt=""></router-link></div>
-        <nav class="sidebar-main">
-          <div class="left-arrow" id="left-arrow"><i data-feather="arrow-left"></i></div>
-          <div id="sidebar-menu">
-            <ul class="sidebar-links" id="simple-bar">
-              <li class="back-btn"><router-link to="/dashboard"><img class="img-fluid" src="../../../public/assets/images/logo/logo-icon.png" alt=""></router-link>
-                <div class="mobile-back text-end"> <span>Back </span><i class="fa fa-angle-right ps-2" aria-hidden="true"></i></div>
-              </li>
-              <li class="sidebar-main-title">
-                <div>
-                  <h6 class="lan-1">Features</h6>
-                </div>
-              </li>
-              <li class="sidebar-list"><i class="fa fa-thumb-tack"></i>
-                <router-link class="sidebar-link sidebar-title link-nav" to="/dashboard">
-                  <svg class="stroke-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#stroke-file"></use>
-                  </svg>
-                  <svg class="fill-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#fill-file"></use>
-                  </svg><span>Dashboard</span>
-                </router-link>
-              </li>
-              <li class="sidebar-list"><i class="fa fa-thumb-tack"></i>
-                <router-link class="sidebar-link sidebar-title link-nav" to="/create-post">
-                  <svg class="stroke-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#stroke-board"></use>
-                  </svg>
-                  <svg class="fill-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#fill-board"></use>
-                  </svg><span>Create Post</span>
-                </router-link>
-              </li>
-              <li class="sidebar-list"><i class="fa fa-thumb-tack"></i>
-                <router-link class="sidebar-link sidebar-title link-nav" to="/schedule-post">
-                  <svg class="stroke-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#stroke-calendar"></use>
-                  </svg>
-                  <svg class="fill-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#fill-calender"></use>
-                  </svg><span>Schedule Post</span>
-                </router-link>
-              </li>
-              <li class="sidebar-list"><i class="fa fa-thumb-tack"></i>
-                <router-link class="sidebar-link sidebar-title link-nav" to="/bulk-post">
-                  <svg class="stroke-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#stroke-calendar"></use>
-                  </svg>
-                  <svg class="fill-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#fill-calender"></use>
-                  </svg><span>Post in Bulk</span>
-                </router-link>
-              </li>
-              <li class="sidebar-list"><i class="fa fa-thumb-tack"></i>
-                <router-link class="sidebar-link sidebar-title link-nav" to="/description-generator">
-                  <svg class="stroke-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#stroke-calendar"></use>
-                  </svg>
-                  <svg class="fill-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#fill-calender"></use>
-                  </svg><span>Description Maker</span>
-                </router-link>
-              </li>
-              <li class="sidebar-list"><i class="fa fa-thumb-tack"></i>
-                <router-link class="sidebar-link sidebar-title link-nav" to="/hashtags-finder">
-                  <svg class="stroke-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#stroke-calendar"></use>
-                  </svg>
-                  <svg class="fill-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#fill-calender"></use>
-                  </svg><span>Hashtags Finder</span>
-                </router-link>
-              </li>
-              <li class="sidebar-list"><i class="fa fa-thumb-tack"></i>
-                <router-link class="sidebar-link sidebar-title link-nav" to="/sentiment-analysis">
-                  <svg class="stroke-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#stroke-chart"></use>
-                  </svg>
-                  <svg class="fill-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#fill-chart"></use>
-                  </svg><span>Sentiment Analysis</span>
-                </router-link>
-              </li>
-              <li class="sidebar-list"><i class="fa fa-thumb-tack"></i>
-                <router-link class="sidebar-link sidebar-title link-nav" to="/business-plan-generator">
-                  <svg class="stroke-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#stroke-file-text"></use>
-                  </svg>
-                  <svg class="fill-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#fill-file-text"></use>
-                  </svg><span>Business Plan Generator</span>
-                </router-link>
-              </li>
-              <li class="sidebar-list"><i class="fa fa-thumb-tack"></i>
-                <router-link class="sidebar-link sidebar-title link-nav" to="/ai-assistant">
-                  <svg class="stroke-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#stroke-learning"></use>
-                  </svg>
-                  <svg class="fill-icon">
-                    <use href="../../../public/assets/svg/icon-sprite.svg#fill-learning"></use>
-                  </svg><span>AI Assistant</span>
-                </router-link>
-              </li>
-            </ul>
-
-            <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>
-          </div>
-        </nav>
+  <div class="sidebar-wrapper">
+    <!-- Logo Section -->
+    <div class="sidebar-logo">
+      <router-link to="/dashboard" class="logo-box">
+        <img class="logo-lg" src="../../../public/assets/images/logo/logo.png" alt="logo">
+        <img class="logo-sm" src="../../../public/assets/images/logo/logo-icon.png" alt="small logo">
+      </router-link>
+      <div class="sidebar-toggle" @click="toggleSidebar">
+        <i class="fa fa-bars"></i>
+      </div>
     </div>
+
+    <!-- Main Navigation -->
+    <nav class="sidebar-nav">
+      <div class="nav-wrapper">
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <router-link to="/dashboard" class="nav-link">
+              <i class="fas fa-home"></i>
+              <span>Dashboard</span>
+            </router-link>
+          </li>
+
+          <li class="nav-item">
+            <router-link to="/create-post" class="nav-link">
+              <i class="fas fa-plus-square"></i>
+              <span>Create Post</span>
+            </router-link>
+          </li>
+
+          <li class="nav-item">
+            <router-link to="/schedule-post" class="nav-link">
+              <i class="fas fa-calendar-alt"></i>
+              <span>Schedule Post</span>
+            </router-link>
+          </li>
+
+          <li class="nav-item">
+            <router-link to="/bulk-post" class="nav-link">
+              <i class="fas fa-layer-group"></i>
+              <span>Post in Bulk</span>
+            </router-link>
+          </li>
+
+          <li class="nav-item">
+            <router-link to="/description-generator" class="nav-link">
+              <i class="fas fa-pen-fancy"></i>
+              <span>Description Maker</span>
+            </router-link>
+          </li>
+
+          <li class="nav-item">
+            <router-link to="/hashtags-finder" class="nav-link">
+              <i class="fas fa-hashtag"></i>
+              <span>Hashtags Finder</span>
+            </router-link>
+          </li>
+
+          <li class="nav-item">
+            <router-link to="/sentiment-analysis" class="nav-link">
+              <i class="fas fa-chart-line"></i>
+              <span>Sentiment Analysis</span>
+            </router-link>
+          </li>
+
+          <li class="nav-item">
+            <router-link to="/business-plan-generator" class="nav-link">
+              <i class="fas fa-briefcase"></i>
+              <span>Business Plan Generator</span>
+            </router-link>
+          </li>
+
+          <li class="nav-item">
+            <router-link to="/ai-assistant" class="nav-link">
+              <i class="fas fa-robot"></i>
+              <span>AI Assistant</span>
+            </router-link>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </div>
 </template>
+
+<script setup>
+const toggleSidebar = () => {
+  document.body.classList.toggle('sidebar-collapsed');
+};
+</script>
 
 <style scoped>
 .sidebar-wrapper {
-  width: 230px; /* Adjust this value */
-  min-width: 230px;
-  max-width: 230px;
+  width: 250px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: #2f3544;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.sidebar-logo {
+  height: 70px;
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo-box {
+  display: flex;
+  align-items: center;
+}
+
+.logo-lg {
+  height: 35px;
+  display: block;
+}
+
+.logo-sm {
+  height: 30px;
+  display: none;
+}
+
+.sidebar-toggle {
+  cursor: pointer;
+  color: #ffffff;
+  padding: 5px;
+}
+
+.sidebar-toggle i {
+  font-size: 20px;
+}
+
+.sidebar-nav {
+  padding: 20px 0;
+  height: calc(100vh - 70px);
+  overflow-y: auto;
+}
+
+.nav-wrapper {
+  padding: 0 15px;
+}
+
+.nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  margin-bottom: 5px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  color: #b7b9bd;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover, .nav-link.router-link-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.nav-link i {
+  width: 20px;
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+.nav-link span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Custom Scrollbar */
+.sidebar-nav::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+}
+
+/* Collapsed State */
+body.sidebar-collapsed .sidebar-wrapper {
+  width: 70px;
+}
+
+body.sidebar-collapsed .logo-lg {
+  display: none;
+}
+
+body.sidebar-collapsed .logo-sm {
+  display: block;
+}
+
+body.sidebar-collapsed .nav-link span {
+  display: none;
+}
+
+body.sidebar-collapsed .nav-link {
+  justify-content: center;
+  padding: 12px;
+}
+
+body.sidebar-collapsed .nav-link i {
+  margin: 0;
+  font-size: 20px;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+  .sidebar-wrapper {
+    transform: translateX(-100%);
+  }
+
+  body.sidebar-collapsed .sidebar-wrapper {
+    transform: translateX(0);
+    width: 250px;
+  }
+
+  body.sidebar-collapsed .logo-lg {
+    display: block;
+  }
+
+  body.sidebar-collapsed .logo-sm {
+    display: none;
+  }
+
+  body.sidebar-collapsed .nav-link span {
+    display: block;
+  }
+
+  body.sidebar-collapsed .nav-link {
+    justify-content: flex-start;
+    padding: 12px 15px;
+  }
+
+  body.sidebar-collapsed .nav-link i {
+    margin-right: 10px;
+    font-size: 18px;
+  }
 }
 </style>

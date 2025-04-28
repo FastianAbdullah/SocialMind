@@ -44138,18 +44138,18 @@ table.table-bordered thead tr th p {
 }
 .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper {
   position: fixed;
-  top: 0;
-  z-index: 9;
-  height: 100%;
+  top: 0px;
+  z-index: 61;
+  height: 110%;
   line-height: inherit;
   background: var(--theme-deafult);
-  width: 265px;
+  width: 224px;
   text-align: left;
   -webkit-transition: 0.3s;
   transition: 0.3s;
   -webkit-box-shadow: 0 0 21px 0 rgba(89, 102, 122, 0.1);
-          box-shadow: 0 0 21px 0 rgba(89, 102, 122, 0.1);
-  border-top-right-radius: 20px;
+  box-shadow: 0 0 21px 0 rgba(89, 102, 122, 0.1);
+  border-top-right-radius: 0px;
   border-bottom-right-radius: 20px;
 }
 .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links .simplebar-wrapper .simplebar-mask .simplebar-content-wrapper .simplebar-content > li a svg {
