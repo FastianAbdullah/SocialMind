@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 import os
 import pytz
@@ -10,8 +9,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from .NgrokSetupFunctions import setup_ngrok_tunnel, cleanup_temp_file
 import base64
 from dotenv import load_dotenv
-import time
-import sys
 
 # Load environment variables from Laravel's .env
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env'))

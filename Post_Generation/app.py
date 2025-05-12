@@ -511,8 +511,6 @@ def post_to_instagram():
             'message': f'Error: {str(e)}'
         }), 500
 
-
-
 @app.route('/instagram/hashtags', methods=['POST'])
 def get_trending_hashtags():
     """Get trending hashtags for a seed hashtag"""
@@ -639,26 +637,6 @@ def generate_optimized_content():
             'status': 'error',
             'message': str(e)
         }), 500
-
-# @app.route('/linkedin/companies', methods=['GET'])
-# def get_linkedin_companies():
-#     """Get list of LinkedIn companies user has access to"""
-#     access_token = request.headers.get('Authorization')
-#     if not access_token:
-#         return jsonify({'error': 'No access token provided'}), 401
-    
-#     try:
-#         linkedin_manager = LinkedInManager(access_token)
-#         companies = linkedin_manager.get_companies() # Companies function remoeved for now as we dont have permission for organization_social scope.
-#         return jsonify({
-#             'status': 'success',
-#             'companies': companies
-#         })
-#     except Exception as e:
-#         return jsonify({
-#             'status': 'error',
-#             'message': str(e)
-#         }), 500
 
 @app.route('/linkedin/post', methods=['POST'])
 def post_to_linkedin():
@@ -970,7 +948,7 @@ def process_agent_query():
     
     access_token = request.headers.get('Authorization')
     
-    
+
     try:
         response = ai_agent.process_query(data['query'], access_token)
         return jsonify(response)
@@ -1162,45 +1140,6 @@ def schedule_post():
             'message': str(e)
         }), 500
 
-@app.route('/scheduler/posts', methods=['GET'])
-def get_scheduled_posts():
-    """Get all scheduled posts"""
-    try:
-        status = request.args.get('status')
-        posts = scheduler_manager.get_scheduled_posts(status)
-        return jsonify({
-            'status': 'success',
-            'posts': posts
-        })
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
-
-@app.route('/scheduler/cancel/<int:post_id>', methods=['DELETE'])
-def cancel_scheduled_post(post_id):
-    """Cancel a scheduled post"""
-    try:
-        success, message = scheduler_manager.cancel_scheduled_post(post_id)
-        
-        if success:
-            return jsonify({
-                'status': 'success',
-                'message': message
-            })
-        else:
-            return jsonify({
-                'status': 'error',
-                'message': message
-            }), 400
-
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
-
 @app.route('/scheduler/status/<int:post_id>', methods=['GET'])
 def get_post_status(post_id):
     """Get the status of a scheduled post"""
@@ -1223,14 +1162,15 @@ def get_post_status(post_id):
             'message': str(e)
         }), 500
 
-@app.route('/scheduler/health', methods=['GET'])
-def scheduler_health():
-    """Get scheduler health status"""
+@app.route('/scheduler/posts', methods=['GET'])
+def get_scheduled_posts():
+    """Get all scheduled posts"""
     try:
-        status = scheduler_manager.get_scheduler_status()
+        status = request.args.get('status')
+        posts = scheduler_manager.get_scheduled_posts(status)
         return jsonify({
             'status': 'success',
-            'scheduler_status': status
+            'posts': posts
         })
     except Exception as e:
         return jsonify({
@@ -1238,10 +1178,49 @@ def scheduler_health():
             'message': str(e)
         }), 500
 
-@app.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint to verify server is running"""
-    return jsonify({'status': 'ok', 'timestamp': time.time()})
+# Might Use These Later, if Needed.
+# @app.route('/scheduler/cancel/<int:post_id>', methods=['DELETE'])
+# def cancel_scheduled_post(post_id):
+#     """Cancel a scheduled post"""
+#     try:
+#         success, message = scheduler_manager.cancel_scheduled_post(post_id)
+        
+#         if success:
+#             return jsonify({
+#                 'status': 'success',
+#                 'message': message
+#             })
+#         else:
+#             return jsonify({
+#                 'status': 'error',
+#                 'message': message
+#             }), 400
+
+#     except Exception as e:
+#         return jsonify({
+#             'status': 'error',
+#             'message': str(e)
+#         }), 500
+
+# @app.route('/scheduler/health', methods=['GET'])
+# def scheduler_health():
+#     """Get scheduler health status"""
+#     try:
+#         status = scheduler_manager.get_scheduler_status()
+#         return jsonify({
+#             'status': 'success',
+#             'scheduler_status': status
+#         })
+#     except Exception as e:
+#         return jsonify({
+#             'status': 'error',
+#             'message': str(e)
+#         }), 500
+
+# @app.route('/health', methods=['GET'])
+# def health_check():
+#     """Health check endpoint to verify server is running"""
+#     return jsonify({'status': 'ok', 'timestamp': time.time()})
 
 # ------------------------------------------------------------------------------------------------
 # End of Scheduling Routes

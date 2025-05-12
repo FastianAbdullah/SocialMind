@@ -123,7 +123,7 @@ class AIAgent:
                 print(f"DEBUG AGENT: Updated task from context")
         
         # Special case handling for platform selection if we already have content
-        if user_query.lower().strip() in ["instagram", "facebook", "linkedin", "twitter"]:
+        if user_query.lower().strip() in ["instagram", "facebook", "linkedin"]:
             platform = user_query.strip()
             if self.current_task and "content" in self.current_task:
                 print(f"DEBUG AGENT: Platform '{platform}' selected with existing content - proceeding to post")
@@ -322,7 +322,7 @@ class AIAgent:
     
     def _generate_conversation_response(self, query: str) -> Dict[str, Any]:
         """
-        Generate a conversational response for general queries.
+        Generate a conversational response for general queries. Uses Query to Generate response.
         
         Args:
             query: The user's query
@@ -330,12 +330,13 @@ class AIAgent:
         Returns:
             A dictionary with the agent's response message and suggested actions
         """
-        messages = self.get_formatted_messages()
+
+        # messages = self.get_formatted_messages()
         
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=messages,
+                messages=query, # Simple Conversation should include user query only.
                 max_tokens=1000,
                 temperature=0.7
             )
