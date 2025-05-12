@@ -1,8 +1,88 @@
 import os
-import shutil  # Add this import for file operations
-# Running ngrok libraries
-import requests,time
+import shutil
+import requests
+import time
 from PIL import Image
+import subprocess
+import signal
+
+def check_ngrok_auth():
+    """Verify ngrok is authenticated"""
+    try:
+        result = subprocess.run(["ngrok", "config", "check"], capture_output=True, text=True)
+        if "valid" not in result.stdout.lower():
+            raise Exception("Ngrok not authenticated. Run 'ngrok authtoken <YOUR_TOKEN>' first")
+        print("[DEBUG] Ngrok authentication verified")
+    except FileNotFoundError:
+        raise Exception("Ngrok not installed or not in PATH")
+
+def kill_processes_on_port(port):
+    """Kill any processes using the specified port"""
+    try:
+        if os.name == 'nt':  # Windows
+            print(f"[DEBUG] Checking port {port} processes...")
+            
+            # Find processes using the port
+            netstat = subprocess.run(
+                f"netstat -ano | findstr :{port}",
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            
+            if netstat.returncode == 0:
+                print(f"[DEBUG] Found processes using port {port}:")
+                print(netstat.stdout)
+                
+                # Extract PIDs from netstat output
+                pids = set()
+                for line in netstat.stdout.split('\n'):
+                    if f":{port}" in line and "LISTENING" in line:
+                        parts = line.strip().split()
+                        if len(parts) >= 5:
+                            pids.add(parts[-1])
+                
+                # Kill specific PIDs
+                for pid in pids:
+                    print(f"[DEBUG] Killing PID {pid}")
+                    subprocess.run(f"taskkill /F /PID {pid}", shell=True)
+            else:
+                print(f"[DEBUG] No processes found on port {port}")
+                
+        else:  # Unix-like systems
+            subprocess.run(f"lsof -ti :{port} | xargs kill -9", shell=True)
+            
+    except Exception as e:
+        print(f"[DEBUG] Error killing processes: {e}")
+
+def is_local_server_ready(port, max_retries=5, delay=1):
+    """Check if local HTTP server is responding"""
+    for i in range(max_retries):
+        try:
+            response = requests.get(f"http://localhost:{port}", timeout=2)
+            if response.status_code < 500:
+                print(f"[DEBUG] Local server on port {port} is ready")
+                return True
+        except Exception as e:
+            print(f"[DEBUG] Waiting for local server... (attempt {i+1}/{max_retries}) - {str(e)}")
+            time.sleep(delay)
+    return False
+
+def wait_for_ngrok_tunnel(max_retries=10, retry_delay=2):
+    """Wait for ngrok tunnel to be ready"""
+    for i in range(max_retries):
+        try:
+            print(f"[DEBUG] Checking ngrok tunnel (attempt {i+1}/{max_retries})")
+            response = requests.get("http://localhost:4040/api/tunnels", timeout=5)
+            tunnels = response.json()['tunnels']
+            if tunnels:
+                tunnel_url = tunnels[0]['public_url']
+                print(f"[DEBUG] Ngrok tunnel is ready: {tunnel_url}")
+                return True, tunnel_url
+        except Exception as e:
+            print(f"[DEBUG] Tunnel not ready yet... ({str(e)})")
+        time.sleep(retry_delay)
+    return False, None
 
 def setup_ngrok_tunnel(file_path):
     """
@@ -13,173 +93,173 @@ def setup_ngrok_tunnel(file_path):
         
     Returns:
         tuple: (success, result_dict) where result_dict contains either:
-            - On success: {'public_url': url}
+            - On success: {'public_url': url, 'temp_file_path': str}
             - On failure: {'error': error_message}
     """
     temp_file_path = None
+    http_server = None
+    ngrok_process = None
+    
     try:
-        # Create a directory to serve files if it doesn't exist
-        temp_media_dir = 'temp_media'
-        os.makedirs(temp_media_dir, exist_ok=True)
-        print(f"[DEBUG] Created {temp_media_dir} directory")
+        # Verify ngrok authentication first
+        check_ngrok_auth()
         
-        # Check if file exists
-        print(f"[DEBUG] Looking for file: {file_path}")
+        # Clean up any existing processes
+        kill_processes_on_port(8080)
+        
+        # Create a directory to serve files
+        temp_media_dir = os.path.abspath('temp_media')
+        os.makedirs(temp_media_dir, exist_ok=True)
+        print(f"[DEBUG] Serving from directory: {temp_media_dir}")
+        
+        # Verify input file exists
         if not os.path.exists(file_path):
-            print(f"[DEBUG] File not found at: {file_path}")
-            return False, {'error': f"File {file_path} not found"}
+            raise Exception(f"File not found: {file_path}")
             
-        # Copy file to Post_Generation directory for easier serving
+        # Prepare the file (resize if image)
         file_basename = os.path.basename(file_path)
         temp_file_path = os.path.join(temp_media_dir, file_basename)
         
-        # Resize the image to 1280x970 pixels before saving to temp_media
         try:
-            print(f"[DEBUG] Resizing image to 1280x970 pixels")
+            # Try to resize if it's an image
             img = Image.open(file_path)
+            print(f"[DEBUG] Resizing image to 1280x970 pixels")
             img = img.resize((1280, 970), Image.LANCZOS)
-            
-            # Save the resized image to temp_media directory
-            print(f"[DEBUG] Saving resized image to: {temp_file_path}")
             img.save(temp_file_path)
-            print(f"[DEBUG] Image resized and saved successfully")
-            
-        except Exception as resize_error:
-            print(f"[DEBUG] Error resizing image: {str(resize_error)}")
-            # Fall back to copying the original file if resizing fails
-            print(f"[DEBUG] Falling back to copying original file to: {temp_file_path}")
+            print("[DEBUG] Image resized and saved")
+        except Exception as img_error:
+            print(f"[DEBUG] Not an image or resize failed, copying original: {img_error}")
             shutil.copy(file_path, temp_file_path)
         
-        # Start HTTP server in a separate process, not thread
-        import subprocess
         PORT = 8080
         
-        # Kill any existing process on port 8080 - Fix for Windows
-        try:
-            if os.name == 'nt':  # Windows
-                print(f"[DEBUG] Attempting to kill any process on port {PORT} (Windows)")
-                # Use a safer approach for Windows
-                try:
-                    # Find PID using netstat
-                    netstat_output = subprocess.check_output(f'netstat -ano | findstr :{PORT}', shell=True).decode()
-                    print(f"[DEBUG] Netstat output: {netstat_output}")
-                    
-                    # Extract PID from netstat output if it exists
-                    if netstat_output.strip():
-                        lines = netstat_output.strip().split('\n')
-                        for line in lines:
-                            if f":{PORT}" in line:
-                                parts = line.strip().split()
-                                if len(parts) >= 5:
-                                    pid = parts[-1]
-                                    print(f"[DEBUG] Found process with PID {pid} on port {PORT}")
-                                    subprocess.run(f'taskkill /F /PID {pid}', shell=True, 
-                                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                except Exception as kill_error:
-                    print(f"[DEBUG] Error killing process: {str(kill_error)}")
-                    # Continue anyway, as the port might not be in use
-        except Exception as e:
-            print(f"[DEBUG] Exception when trying to kill existing process: {str(e)}")
-            # Continue anyway
-            
         # Start HTTP server
         print(f"[DEBUG] Starting HTTP server on port {PORT}")
-        http_server = subprocess.Popen(['python', '-m', 'http.server', str(PORT)], 
-                                      stdout=subprocess.DEVNULL, 
-                                      stderr=subprocess.DEVNULL)
-        print(f"[DEBUG] HTTP server started with PID: {http_server.pid}")
+        http_server = subprocess.Popen(
+            ['python', '-m', 'http.server', str(PORT)],
+            cwd=temp_media_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
         
-        # Start ngrok with authtoken (you need to set this up)
-        # First, check if ngrok is already running
+        # Verify server is running
+        if not is_local_server_ready(PORT):
+            raise Exception("Local HTTP server failed to start")
+        
+        # Start ngrok (if not already running)
         try:
-            print("[DEBUG] Checking if ngrok is already running")
-            requests.get("http://localhost:4040/api/tunnels")
-            # If the above doesn't throw an exception, ngrok is already running
-            print("[DEBUG] ngrok is already running")
+            requests.get("http://localhost:4040/api/tunnels", timeout=2)
+            print("[DEBUG] Using existing ngrok process")
         except:
-            # Start ngrok
-            print("[DEBUG] Starting ngrok")
-            ngrok_cmd = ["ngrok", "http", str(PORT)]
-                        
-            ngrok = subprocess.Popen(ngrok_cmd, 
-                                    stdout=subprocess.DEVNULL, 
-                                    stderr=subprocess.DEVNULL)
-            print(f"[DEBUG] ngrok started with PID: {ngrok.pid}")
-            
-            # Give ngrok time to start up
-            print("[DEBUG] Waiting for ngrok to start up")
-            time.sleep(5)
+            print("[DEBUG] Starting new ngrok process")
+            ngrok_process = subprocess.Popen(
+                ["ngrok", "http", str(PORT)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
         
-        # Get the public URL from ngrok
-        print("[DEBUG] Attempting to get ngrok URL")
-        max_retries = 3
-        ngrok_url = None
-        for i in range(max_retries):
-            try:
-                print(f"[DEBUG] Getting ngrok URL (attempt {i+1}/{max_retries})")
-                resp = requests.get("http://localhost:4040/api/tunnels")
-                tunnels = resp.json()['tunnels']
-                print(f"[DEBUG] Found {len(tunnels)} tunnels")
-                if tunnels:
-                    ngrok_url = tunnels[0]['public_url']
-                    print(f"[DEBUG] Got ngrok URL: {ngrok_url}")
-                    break
-            except Exception as e:
-                print(f"[DEBUG] Error getting ngrok URL (attempt {i+1}/{max_retries}): {str(e)}")
-                time.sleep(2)
+        # Wait for tunnel
+        tunnel_ready, ngrok_url = wait_for_ngrok_tunnel()
+        if not tunnel_ready:
+            raise Exception("Ngrok tunnel failed to initialize")
         
-        if not ngrok_url:
-            print("[DEBUG] Failed to get ngrok URL after all retries")
-            return False, {'error': 'Failed to get ngrok URL'}
-        
-        # Make sure we use HTTPS URL
+        # Ensure HTTPS
         if ngrok_url.startswith('http:'):
             ngrok_url = ngrok_url.replace('http:', 'https:')
-            print(f"[DEBUG] Converted to HTTPS URL: {ngrok_url}")
-            
-        # Use the basename of the temporary file for the public URL
-        temp_file_basename = os.path.basename(temp_file_path)
-        public_url = f"{ngrok_url}/temp_media/{temp_file_basename}"
-        print(f"[DEBUG] Public URL: {public_url}")
-
-        # Test if the URL is accessible
-        success, result = test_ngrok_url(public_url)
-        if not success:
-            return False, result
         
-        return True, {'public_url': public_url, 'temp_file_path': temp_file_path}
+        # Construct final URL
+        base_url = ngrok_url.rstrip('/')
+        public_url = f"{base_url}/{file_basename}"
+        print(f"[DEBUG] Final public URL: {public_url}")
         
-    except Exception as e:
-        print(f"[DEBUG] Error in ngrok tunnel setup: {str(e)}")
-        return False, {'error': f'Error: {str(e)}'}
-
-
-def test_ngrok_url(public_url):
-    """Test if the Public Url is Accessible"""
-    try:
-        headers = {
-            'ngrok-skip-browser-warning': 'true'
+        # Test URL accessibility
+        print("[DEBUG] Testing URL accessibility...")
+        try:
+            response = requests.get(
+                public_url,
+                headers={
+                    'ngrok-skip-browser-warning': 'true',
+                    'User-Agent': 'Mozilla/5.0'
+                },
+                allow_redirects=True,
+                timeout=10
+            )
+            if response.status_code != 200:
+                raise Exception(f"URL test failed with status {response.status_code}")
+        except Exception as e:
+            print(f"[DEBUG] Full test error: {str(e)}")
+            raise
+        
+        return True, {
+            'public_url': public_url,
+            'temp_file_path': temp_file_path,
+            'http_server': http_server,
+            'ngrok_process': ngrok_process
         }
-        response = requests.head(public_url, headers=headers, timeout=5)
-        if response.status_code != 200:
-            return False, {'error': f'URL test failed with status {response.status_code}'}
-        return True, {}
+        
     except Exception as e:
-        return False, {'error': f'URL test failed: {str(e)}'}
-
-
-def cleanup_temp_file(temp_file_path):
-    """
-    Remove temporary file after posting is done
-    
-    Args:
-        temp_file_path: Path to the temporary file to remove
-    """
-    try:
+        print(f"[ERROR] Setup failed: {str(e)}")
+        # Cleanup
+        if http_server:
+            http_server.terminate()
+        if ngrok_process:
+            ngrok_process.terminate()
         if temp_file_path and os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
-            print(f"[DEBUG] Removed temporary file: {temp_file_path}")
-            return True
+            try:
+                os.remove(temp_file_path)
+            except:
+                pass
+        return False, {'error': str(e)}
+
+def cleanup_resources(result_dict):
+    """Clean up all created resources"""
+    if not result_dict:
+        return
+        
+    try:
+        # Clean up processes
+        if 'http_server' in result_dict and result_dict['http_server']:
+            result_dict['http_server'].terminate()
+        if 'ngrok_process' in result_dict and result_dict['ngrok_process']:
+            result_dict['ngrok_process'].terminate()
+        
+        # Clean up file
+        if 'temp_file_path' in result_dict and result_dict['temp_file_path']:
+            if os.path.exists(result_dict['temp_file_path']):
+                os.remove(result_dict['temp_file_path'])
+                print(f"[DEBUG] Removed {result_dict['temp_file_path']}")
     except Exception as e:
-        print(f"[DEBUG] Error removing temporary file: {str(e)}")
-        return False
+        print(f"[DEBUG] Cleanup error: {e}")
+
+if __name__ == "__main__":
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Test ngrok tunnel setup')
+    parser.add_argument('file_path', help='Path to the file to serve')
+    parser.add_argument('--wait', type=int, default=30, help='Seconds to keep tunnel open')
+    
+    args = parser.parse_args()
+    
+    print("\n=== Starting Ngrok Tunnel Test ===\n")
+    print(f"[DEBUG] Input file: {args.file_path}")
+    
+    success, result = setup_ngrok_tunnel(args.file_path)
+    
+    if success:
+        print("\n=== Tunnel Setup Successful ===")
+        print(f"Public URL: {result['public_url']}")
+        print(f"\nKeeping tunnel open for {args.wait} seconds...")
+        print("Press Ctrl+C to exit early.")
+        
+        try:
+            time.sleep(args.wait)
+        except KeyboardInterrupt:
+            print("\nEarly exit requested...")
+        finally:
+            cleanup_resources(result)
+    else:
+        print("\n❌ Tunnel setup failed!")
+        print(f"Error: {result.get('error', 'Unknown error')}")
+        cleanup_resources(result)
+    
+    print("\n=== Test Complete ===\n")

@@ -6,7 +6,7 @@ from .InstagramManager import InstagramManager
 from .LinkedInManager import LinkedInManager
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
-from .NgrokSetupFunctions import setup_ngrok_tunnel, cleanup_temp_file
+from .NgrokSetupFunctions import setup_ngrok_tunnel, cleanup_resources
 import base64
 from dotenv import load_dotenv
 
@@ -165,7 +165,7 @@ class SchedulerManager:
 
             # Clean up temporary file
             if temp_file_path:
-                cleanup_temp_file(temp_file_path)
+                cleanup_resources(temp_file_path)
 
         except Exception as e:
             logger.error(f"Error publishing post {post_id}: {str(e)}")
@@ -175,7 +175,7 @@ class SchedulerManager:
             
             # Try to clean up anyway on error
             if 'temp_file_path' in locals() and temp_file_path:
-                cleanup_temp_file(temp_file_path)
+                cleanup_resources(temp_file_path)
 
     def get_scheduled_posts(self, status=None):
         """Retrieve scheduled posts with optional status filter"""
