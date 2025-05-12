@@ -12,6 +12,7 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
+     
         // Validation rules
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -19,12 +20,12 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'timezone' => 'required|string',
         ]);
-
+      
         // Return errors if validation fails
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-
+  
         // Create new user with a default plan and timezone
         $user = User::create([
             'name' => $request->name,
@@ -33,7 +34,7 @@ class AuthController extends Controller
             'plan_id' => 1,
             'timezone' => $request->timezone,
         ]);
-
+        
         return response()->json(['success' => true, 'message' => 'User registered successfully.'], 201);
     }
 

@@ -205,24 +205,24 @@ def post_to_facebook():
         print(f'page_token: {data["page_token"]}')
         print(f'page_id: {data["page_id"]}')
         print(f'message: {data["message"]}')
-        success, result = setup_ngrok_tunnel(data['filename'])
+        # success, result = setup_ngrok_tunnel(data['filename'])
         
-        if not success:
-            return jsonify({
-                'status': 'error',
-                'message': result['error']
-            }), 400
+        # if not success:
+        #     return jsonify({
+        #         'status': 'error',
+        #         'message': result['error']
+        #     }), 400
             
-        public_url = result['public_url']
+        # public_url = result['public_url']
         
         # Post to Facebook
         fb_manager = FacebookManager(data['page_token'])
         print(f"[DEBUG] Posting to Facebook with page ID: {data['page_id']}")
-        print(f"[DEBUG] Public URL: {public_url}")
+        print(f"[DEBUG] Public URL: {data['filename']}")
         result = fb_manager.post_content(
             data['page_id'],
             data['page_token'],
-            public_url,
+            data['filename'],
             data['message']
         )
 
