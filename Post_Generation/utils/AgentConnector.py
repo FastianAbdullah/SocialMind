@@ -319,7 +319,7 @@ class AgentConnector:
             # Call the Instagram post endpoint
             post_data = {
                 "ig_user_id": ig_user_id,
-                "image_url": image_url,
+                "filename": image_url,
                 "caption": cleaned_content
             }
             print(f"DEBUG AGENT_CONNECTOR: Posting to Instagram with data: {post_data}")
@@ -421,7 +421,7 @@ class AgentConnector:
             post_data = {
                 "page_id": page_id,
                 "page_token": page_token,
-                "image_url": image_url,
+                "filename": image_url,
                 "message": cleaned_content
             }
             print(f"DEBUG AGENT_CONNECTOR: Posting to Facebook with data: {post_data}")

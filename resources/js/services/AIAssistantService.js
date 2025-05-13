@@ -40,128 +40,9 @@ class AIAssistantService {
             };
         }
     }
-
-    // Update internal context based on agent response
-    updateContext(response) {
-        if (response.state) {
-            this.conversationContext.state = response.state;
-        }
-        
-        if (response.intent) {
-            this.conversationContext.intent = response.intent;
-        }
-        
-        // If we have content, store it for later use
-        if (response.content) {
-            if (!this.conversationContext.currentTask) {
-                this.conversationContext.currentTask = {};
-            }
-            this.conversationContext.currentTask.content = response.content;
-        }
-        
-        // Store platform information if available
-        if (response.platforms) {
-            if (!this.conversationContext.currentTask) {
-                this.conversationContext.currentTask = {};
-            }
-            this.conversationContext.currentTask.platforms = response.platforms;
-        }
-        
-        // Store scheduling information if available
-        if (response.suggestions) {
-            if (!this.conversationContext.currentTask) {
-                this.conversationContext.currentTask = {};
-            }
-            this.conversationContext.currentTask.suggestions = response.suggestions;
-        }
-        
-        console.log('Updated context:', this.conversationContext);
-    }
-
-    async generateContent(topic, platform = null) {
-        try {
-            const response = await axios.post(`${this.baseURL}/generate-content`, {
-                topic,
-                platform,
-                context: this.conversationContext
-            }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            if (response.data) {
-                this.updateContext(response.data);
-            }
-            
-            return response.data;
-        } catch (error) {
-            console.error('Error generating content:', error);
-            return {
-                message: 'Sorry, I encountered an error generating content.',
-                actions: ['Try again'],
-                state: 'error',
-                intent: 'error'
-            };
-        }
-    }
-
-    async suggestPostingTimes(platform) {
-        try {
-            const response = await axios.get(`${this.baseURL}/suggest-times/${platform}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            if (response.data) {
-                this.updateContext(response.data);
-            }
-            
-            return response.data;
-        } catch (error) {
-            console.error('Error getting posting times:', error);
-            return {
-                message: `Sorry, I couldn't retrieve optimal posting times for ${platform}.`,
-                actions: ['Try again'],
-                state: 'error',
-                intent: 'error'
-            };
-        }
-    }
-
-    async analyzePerformance(postId, platform) {
-        try {
-            const response = await axios.post(`${this.baseURL}/analyze-performance`, {
-                post_id: postId,
-                platform,
-                context: this.conversationContext
-            }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            if (response.data) {
-                this.updateContext(response.data);
-            }
-            
-            return response.data;
-        } catch (error) {
-            console.error('Error analyzing performance:', error);
-            return {
-                message: 'Sorry, I encountered an error analyzing performance data.',
-                actions: ['Try again'],
-                state: 'error',
-                intent: 'error'
-            };
-        }
-    }
     
     // Method to post content automatically when ready
-    async postContent(content, platforms, scheduleTime = null) {
+    async postContent(content, platforms, scheduleTime = null, imageFile = null) {
         try {
             // Ensure platforms are properly formatted
             const formattedPlatforms = platforms.map(platform => {
@@ -207,22 +88,30 @@ class AIAssistantService {
             
             console.log('Context for posting with original prompt:', updatedContext);
             
-            const response = await axios.post(`${this.baseURL}/post-content`, {
-                content,
-                platforms: formattedPlatforms,
-                schedule_time: scheduleTime,
-                context: updatedContext
-            }, {
+            // Create FormData for multipart/form-data request
+            const formData = new FormData();
+            formData.append('content', content);
+            formData.append('platforms', JSON.stringify(formattedPlatforms));
+            if (scheduleTime) {
+                formData.append('schedule_time', scheduleTime);
+            }
+            formData.append('context', JSON.stringify(updatedContext));
+            
+            // Append image file if provided
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+            
+            console.log('FormData while posting is:', formData.content);
+            console.log('Formdata of platforms is: ',formData.platforms);
+            console.log("File is Formdata: ",formData.image);
+            const response = await axios.post(`${this.baseURL}/post-content`, formData, {
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'multipart/form-data',
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             });
-            
-            if (response.data) {
-                this.updateContext(response.data);
-            }
-            
+                        
             return response.data;
         } catch (error) {
             console.error('Error posting content:', error);

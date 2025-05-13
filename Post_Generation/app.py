@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify, redirect
 from utils.FacebookManager import FacebookManager
 from utils.InstagramManager import InstagramManager
@@ -8,15 +9,14 @@ from utils.SocialMediaAuth import SocialMediaAuth
 from utils.UserPostHistory import UserPostHistory
 from utils.SentimentAnalyzer import SentimentAnalyzer
 from utils.social_media_strategy import SocialMediaStrategyGenerator
-from Post_Generation.NgrokSetupFunctions import setup_ngrok_tunnel
+# from Post_Generation.NgrokSetupFunctions import setup_ngrok_tunnel
 from dotenv import load_dotenv
-import os
 import ssl
 from flask_cors import CORS
 from utils.SchedulerManager import SchedulerManager
 import logging
 import sys
-import time
+# import time
 from utils.NgrokSetupFunctions import setup_ngrok_tunnel
 
 
@@ -114,17 +114,6 @@ def hello():
         'message': 'Hello! The HTTPS API is working',
         'status': 'success',
         'version': '1.0'
-    })
-
-@app.route('/hello', methods=['POST'])
-def hello_post():
-    """Test POST endpoint with name parameter"""
-    data = request.json
-    name = data.get('name', 'World')
-    return jsonify({
-        'message': f'Hello, {name}!',
-        'status': 'success',
-        'received_data': data
     })
 
 @app.route('/auth/facebook', methods=['GET'])
@@ -1009,6 +998,7 @@ def post_content_through_agent():
         schedule_time = data.get('schedule_time')
         context = data.get('context', {})
         autonomous_mode = data.get('autonomous_mode', False)
+        image_filename = data.get('image_filename')  # Get image filename if provided
         
         # Save the original request prompt/topic if available
         original_prompt = None
@@ -1038,10 +1028,22 @@ def post_content_through_agent():
                 'results': {}
             }), 400
         
+        # Check if image is required for selected platforms
+        requires_image = any(p in ['instagram', 'facebook'] for p in valid_platforms)
+        if requires_image and not image_filename:
+            print("DEBUG APP: Image required but not provided")
+            return jsonify({
+                'status': 'error',
+                'message': 'An image is required for posting to Instagram or Facebook',
+                'intent': 'image_required',
+                'results': {}
+            }), 400
+        
         print(f"DEBUG APP: Posting to platforms: {valid_platforms}")
         print(f"DEBUG APP: Content (first 50 chars): '{content[:50]}...'")
         print(f"DEBUG APP: Schedule time: {schedule_time}")
         print(f"DEBUG APP: Autonomous mode: {autonomous_mode}")
+        print(f"DEBUG APP: Image filename: {image_filename}")
         
         # Check if agent_connector has access tokens
         print(f"DEBUG APP: Agent connector has tokens: {bool(agent_connector.access_tokens)}")
@@ -1054,15 +1056,28 @@ def post_content_through_agent():
                 agent_connector.access_tokens[platform_key] = access_token
                 print(f"DEBUG APP: Set access token for {platform_key}")
         
-        # Always use a reliable image URL for testing
-        test_image_url = "https://cdn.pixabay.com/photo/2014/06/03/19/38/board-361516_1280.jpg"
-        print(f"DEBUG APP: Using image URL: {test_image_url}")
+        # Use the provided image file if available, otherwise use default test image
+        image_url = None
+        if image_filename == None:
+            # Check if file does not exists in the Post_Generation directory
+                print(f"DEBUG APP: Image file not found: {image_filename}")
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Image file not found',
+                    'intent': 'error',
+                    'results': {}
+                }), 400
+        else:
+            # Only use default image for LinkedIn since it's optional
+            if not requires_image:
+                image_url = "https://cdn.pixabay.com/photo/2014/06/03/19/38/board-361516_1280.jpg"
+                print(f"DEBUG APP: Using default image for LinkedIn: {image_url}")
         
         # Try to post
         result = agent_connector.post_content(
             valid_platforms,
             content,
-            image_url=test_image_url,  # Always provide an image URL
+            image_url=image_filename,
             schedule_time=schedule_time
         )
         
@@ -1085,6 +1100,14 @@ def post_content_through_agent():
                     'status': 'error',
                     'message': f'Platform {platform} was not processed'
                 }
+        
+        # Clean up the uploaded image file after posting
+        if image_filename and os.path.exists(image_filename):
+            try:
+                os.remove(image_filename)
+                print(f"DEBUG APP: Cleaned up image file: {image_filename}")
+            except Exception as e:
+                print(f"DEBUG APP: Error cleaning up image file: {e}")
         
         print(f"DEBUG APP: Posting result: {result}")
         return jsonify(result)
@@ -1242,7 +1265,7 @@ if __name__ == '__main__':
             port=8443,
             ssl_context=(CERT_FILE, KEY_FILE),
             debug=True,
-            use_reloader=True  # Explicitly disable reloader
+            use_reloader=False  # Explicitly disable reloader
         )
     except Exception as e:
         logger.critical(f"Failed to start Flask server: {e}")

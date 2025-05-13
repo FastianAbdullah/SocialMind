@@ -346,14 +346,29 @@ class AIAssistantController extends Controller
     {
         $request->validate([
             'content' => 'required|string|min:2',
-            'platforms' => 'required|array|min:1',
+            'platforms' => 'required|string', // Changed to string since FormData sends JSON string
             'schedule_time' => 'nullable|string',
-            'context' => 'nullable|array'
+            'context' => 'nullable|string', // Changed to string since FormData sends JSON string
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:10240'
         ]);
 
         try {
             // Get appropriate access token
             $tokenData = $this->getAccessToken();
+            
+            // Decode JSON strings from FormData
+            $platforms = json_decode($request->input('platforms'), true);
+            $context = json_decode($request->input('context', '[]'), true);
+            
+
+            // Validate decoded platforms data
+            if (!is_array($platforms)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid platforms data format',
+                    'intent' => 'error'
+                ], 400);
+            }
             
             if (!$tokenData['access_token']) {
                 return response()->json([
@@ -376,7 +391,6 @@ class AIAssistantController extends Controller
             ]);
             
             // Filter out platforms that aren't connected
-            $platforms = $request->input('platforms');
             $validPlatforms = [];
             
             foreach ($platforms as $platform) {
@@ -415,29 +429,56 @@ class AIAssistantController extends Controller
                 1 => 'facebook',
                 2 => 'instagram',
                 3 => 'linkedin'
-                // Twitter would be here if implemented
             ];
-            
-            // Reverse mapping for looking up platform IDs from names
-            $platformNameToId = array_flip($platformMapping);
             
             // Convert our platform IDs to platform names for the Flask API
             $platformNames = [];
-            $platformIdMap = []; // Map to track which platform ID corresponds to which name
-            
             foreach ($validPlatforms as $platform) {
                 $platformId = (int)$platform['platform_id'];
                 if (isset($platformMapping[$platformId])) {
-                    $platformName = $platformMapping[$platformId];
-                    $platformNames[] = $platformName;
-                    $platformIdMap[$platformName] = $platformId;
+                    $platformNames[] = $platformMapping[$platformId];
                 }
             }
+
+            // Check if image is required (for Facebook or Instagram)
+            $requiresImage = in_array('facebook', $platformNames) || in_array('instagram', $platformNames);
             
-            Log::info('Sending platforms to Flask API', [
-                'platform_names' => $platformNames,
-                'platform_id_map' => $platformIdMap
-            ]);
+            // Handle image upload if provided or required
+            $imageFilename = null;
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                
+                // Save image to storage first
+                $tempDirectory = 'public/temp';
+                $tempFilename = time() . '_' . $image->getClientOriginalName();
+                $image->storeAs($tempDirectory, $tempFilename);
+                
+                // Get the stored file path to create a duplicate for Flask
+                $storedFilePath = storage_path('app/' . $tempDirectory . '/' . $tempFilename);
+                
+                // Create a duplicate file for Flask API
+                $imageFilename = time() . '_' . $image->getClientOriginalName();
+                $flaskAppPath = base_path('Post_Generation');
+                
+                // Make sure the Flask directory exists
+                if (!file_exists($flaskAppPath)) {
+                    mkdir($flaskAppPath, 0755, true);
+                }
+                
+                // Copy the file to Flask app directory
+                copy($storedFilePath, $flaskAppPath . '/' . $imageFilename);
+                
+                Log::info('Image prepared for Flask API', [
+                    'original_name' => $image->getClientOriginalName(),
+                    'flask_filename' => $imageFilename
+                ]);
+            } elseif ($requiresImage) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'An image is required for posting to Facebook or Instagram',
+                    'intent' => 'image_required'
+                ], 400);
+            }
 
             // Create initial post records for each platform
             $postRecords = [];
@@ -451,7 +492,6 @@ class AIAssistantController extends Controller
                 $post->platform_id = $platformId;
                 
                 // Get the original description from context if available
-                $context = $request->input('context', []);
                 $originalDescription = $this->extractOriginalPromptFromContext($context);
                 
                 // If we couldn't find an original description, use a placeholder
@@ -461,13 +501,14 @@ class AIAssistantController extends Controller
                 
                 // Store the original description and AI-generated content in appropriate columns
                 $post->initial_description = substr($originalDescription, 0, 250) . (strlen($originalDescription) > 250 ? '...' : '');
-                $post->AI_generated_description = $request->input('content'); // Full AI-generated content
+                $post->AI_generated_description = $request->input('content');
                 
                 $post->status = $request->input('schedule_time') ? 'scheduled' : 'pending';
                 $post->metadata = json_encode([
                     'context' => $request->input('context', []),
                     'schedule_time' => $request->input('schedule_time'),
-                    'platform_data' => $platform
+                    'platform_data' => $platform,
+                    'image_filename' => $imageFilename
                 ]);
                 $post->setTable('post');
                 $post->save();
@@ -486,15 +527,9 @@ class AIAssistantController extends Controller
                     $scheduler->status = 'pending';
                     $scheduler->save();
                 }
-                
-                Log::info('Created post record', [
-                    'post_id' => $post->id,
-                    'platform_id' => $platformId,
-                    'platform_name' => $platformName,
-                    'user_id' => Auth::id()
-                ]);
             }
 
+            // Make the request to Flask API
             $response = Http::withoutVerifying()
                 ->withHeaders([
                     'Authorization' => $tokenData['access_token'],
@@ -503,9 +538,10 @@ class AIAssistantController extends Controller
                 ->timeout(60)
                 ->post($this->flaskBaseUrl . '/agent/post-content', [
                     'content' => $request->input('content'),
-                    'platforms' => $platformNames, // Send platform names instead of the original array
+                    'platforms' => $platformNames,
                     'schedule_time' => $request->input('schedule_time'),
-                    'context' => $request->input('context', []),
+                    'context' => $context,
+                    'image_filename' => $imageFilename,
                     'autonomous_mode' => true
                 ]);
 
@@ -519,14 +555,11 @@ class AIAssistantController extends Controller
                 // Update post records with response data
                 if (isset($responseData['results']) && is_array($responseData['results'])) {
                     foreach ($responseData['results'] as $platformName => $details) {
-                        // Check if we have a post record for this platform
                         if (isset($postRecords[$platformName])) {
                             $post = $postRecords[$platformName];
                             
                             if ($details['status'] === 'success') {
                                 $post->response_post_id = $details['post_id'] ?? null;
-                                // Don't overwrite the AI_generated_description as we've already set it
-                                // $post->AI_generated_description = $request->input('content');
                                 $post->status = 'published';
                                 
                                 // Update metadata with response details
@@ -559,21 +592,7 @@ class AIAssistantController extends Controller
                                     'error' => $details['message'] ?? 'Unknown error'
                                 ]);
                             }
-                        } else {
-                            Log::warning('Received response for platform with no post record', [
-                                'platform_name' => $platformName
-                            ]);
                         }
-                    }
-                } else {
-                    Log::warning('No results in response', [
-                        'response_data' => $responseData
-                    ]);
-                    
-                    // Mark all posts as failed if no results were returned
-                    foreach ($postRecords as $post) {
-                        $post->status = 'failed';
-                        $post->save();
                     }
                 }
                 

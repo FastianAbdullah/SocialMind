@@ -46,40 +46,42 @@
                         </p>
                       </div>
 
-                      <!-- Chat Messages -->
+                      <!-- Messages Area -->
                       <div class="chat-messages" ref="chatContainer">
-                        <div v-for="(message, index) in messages" :key="index" 
-                          class="message-wrapper"
-                          v-show="!(index === 0 && message.role === 'assistant' && messages.length === 1)"
-                          :class="[message.role === 'assistant' ? 'message-in' : 'message-out']">
-                          <div :class="['message', message.role === 'assistant' ? 'assistant' : 'user']">
-                            <div class="message-avatar">
-                              <i :class="message.role === 'assistant' ? 'fas fa-robot' : 'fas fa-user'"></i>
-                            </div>
-                            <div class="message-content">
-                              <div class="message-text" v-html="formatMessage(message.content)"></div>
-                              
-                              <!-- Move action buttons inside the message itself -->
-                              <div v-if="message.role === 'assistant' && message.actions && message.actions.length > 0" 
-                                class="message-actions">
-                                <button 
-                                  v-for="(action, actionIndex) in message.actions" 
-                                  :key="actionIndex"
-                                  @click="sendDirectPrompt(action)"
-                                  class="action-button"
-                                >
-                                  {{ action }}
-                                </button>
+                        <div class="messages-container">
+                          <div v-for="(message, index) in messages" :key="index" 
+                            class="message-wrapper"
+                            v-show="!(index === 0 && message.role === 'assistant' && messages.length === 1)"
+                            :class="[message.role === 'assistant' ? 'message-in' : 'message-out']">
+                            <div :class="['message', message.role === 'assistant' ? 'assistant' : 'user']">
+                              <div class="message-avatar">
+                                <i :class="message.role === 'assistant' ? 'fas fa-robot' : 'fas fa-user'"></i>
+                              </div>
+                              <div class="message-content">
+                                <div class="message-text" v-html="formatMessage(message.content)"></div>
+                                
+                                <!-- Action buttons -->
+                                <div v-if="message.role === 'assistant' && message.actions && message.actions.length > 0" 
+                                  class="message-actions">
+                                  <button 
+                                    v-for="(action, actionIndex) in message.actions" 
+                                    :key="actionIndex"
+                                    @click="sendDirectPrompt(action)"
+                                    class="action-button"
+                                  >
+                                    {{ action }}
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                        
-                        <!-- Loading Animation -->
-                        <div v-if="chatLoading" class="typing-indicator">
-                          <span></span>
-                          <span></span>
-                          <span></span>
+                          
+                          <!-- Loading Animation -->
+                          <div v-if="chatLoading" class="typing-indicator">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                          </div>
                         </div>
                       </div>
 
@@ -102,7 +104,36 @@
 
                       <!-- Input Area -->
                       <div class="chat-input">
+                        <div v-if="showImageUpload" class="image-upload-container">
+                          <div class="image-upload-wrapper">
+                            <div class="image-preview-section" :class="{ 'active': selectedImage }">
+                              <div v-if="selectedImage" class="image-thumbnail">
+                                <img :src="imagePreview" alt="Selected image" />
+                                <button class="remove-image-btn" @click="removeImage">
+                                  <i class="fas fa-times"></i>
+                                </button>
+                              </div>
+                              <div v-if="imageError" class="image-error-message">
+                                {{ imageError }}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                         <form @submit.prevent="sendMessage" class="input-form">
+                          <!-- Image Upload Button -->
+                          <div class="upload-media-btn" @click="triggerImageUpload">
+                            <i class="fas fa-image"></i>
+                            <div class="upload-tooltip">Click to upload media</div>
+                            <input 
+                              type="file" 
+                              ref="imageInput"
+                              @change="handleImageSelect"
+                              accept="image/*"
+                              class="d-none"
+                            />
+                          </div>
+                          
+                          <!-- Message Input Field -->
                           <textarea 
                             v-model="userInput" 
                             @keydown.enter.exact.prevent="sendMessage"
@@ -112,6 +143,8 @@
                             ref="inputField"
                             @input="autoResize"
                           ></textarea>
+                          
+                          <!-- Send Button -->
                           <button 
                             type="submit"
                             class="btn btn-primary send-btn"
@@ -121,12 +154,10 @@
                             <i class="fas fa-paper-plane"></i>
                           </button>
                         </form>
+                        <!-- Input Features -->
                         <div class="input-features">
                           <div class="feature-hint" @click="toggleEmojiPicker">
                             <i class="far fa-smile"></i>
-                          </div>
-                          <div class="feature-hint" @click="sendDirectPrompt('Create a social media post with an image')">
-                            <i class="far fa-image"></i>
                           </div>
                           <div class="feature-hint" @click="sendDirectPrompt('Suggest trending hashtags')">
                             <i class="fas fa-hashtag"></i>
@@ -146,7 +177,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, computed } from 'vue';
+import { ref, onMounted, nextTick, watch } from 'vue';
 import axios from 'axios';
 import { marked } from 'marked';
 import createDOMPurify from 'dompurify';
@@ -166,6 +197,11 @@ const userName = ref('User');
 const chatContainer = ref(null);
 const inputField = ref(null);
 const showEmojiPicker = ref(false);
+const selectedImage = ref(null);
+const imagePreview = ref('');
+const imageError = ref('');
+const imageInput = ref(null);
+const showImageUpload = ref(false);
 
 // Quick suggestions data
 const quickSuggestions = [
@@ -224,7 +260,21 @@ const { removeDynamicCss, initializeCss, removeDynamicJs, initializeScripts } = 
 // Methods
 const scrollToBottom = () => {
   if (chatContainer.value) {
-    chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+    // Use nextTick to ensure DOM is updated
+    nextTick(() => {
+      const container = chatContainer.value;
+      
+      // Explicitly calculate the maximum scroll position
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      
+      // Force scroll to the absolute bottom with a slight delay to ensure rendering is complete
+      setTimeout(() => {
+        container.scrollTo({
+          top: maxScroll + 3000, // Add a large value to ensure we're at the bottom
+          behavior: 'smooth'
+        });
+      }, 100);
+    });
   }
 };
 
@@ -245,16 +295,16 @@ const toggleEmojiPicker = () => {
 };
 
 const getUserInfo = async () => {
-  try {
-    const response = await axios.get('/user', {
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    });
-    if (response.data && response.data.name) {
-      userName.value = response.data.name;
-    }
-  } catch (error) {
-    console.log('Could not retrieve user info', error);
-  }
+   try {
+     const response = await axios.get('/user', {
+       headers: { 'X-Requested-With': 'XMLHttpRequest' }
+     });
+     if (response.data && response.data.name) {
+       userName.value = response.data.name;
+     }
+   } catch (error) {
+     console.log('Could not retrieve user info', error);
+   }
 };
 
 const addWelcomeMessage = () => {
@@ -289,10 +339,8 @@ const sendMessage = async (event) => {
     inputField.value.style.height = 'auto';
   }
   
-  // Scroll to show user message first
-  nextTick(() => {
-    scrollToBottom();
-  });
+  // Scroll to show user message
+  scrollToBottom();
   
   chatLoading.value = true;
   
@@ -321,6 +369,9 @@ const sendMessage = async (event) => {
         intent: response.data.intent || null
       });
       
+      // Scroll to new message after it's added
+      scrollToBottom();
+      
       // Automatically handle certain intents without requiring button clicks
       if (response.data.intent) {
         await handleIntent(response.data);
@@ -338,6 +389,9 @@ const sendMessage = async (event) => {
       actions: ['Try again']
     });
     
+    // Scroll to error message
+    scrollToBottom();
+    
     // Show error notification
     if (window.$ && window.$.notify) {
       window.$.notify({
@@ -349,9 +403,6 @@ const sendMessage = async (event) => {
     }
   } finally {
     chatLoading.value = false;
-    nextTick(() => {
-      scrollToBottom();
-    });
   }
 };
 
@@ -366,17 +417,26 @@ const handleIntent = async (response) => {
   switch (intent) {
     case 'content_generation':
       if (response.content) {
-        // Content was already generated, no need to take action
-        console.log('Content already generated by the agent');
+        showImageUpload.value = true;
+        scrollToBottom();
       }
       break;
       
     case 'platform_selection':
+      console.log("Platform selection is required")
       if (response.platforms && response.platforms.length > 0) {
-        // Automatically progress with the first platform unless multiple options
-        // were specifically requested by the user
+        const requiresImage = response.platforms.some(p => 
+          ['facebook', 'instagram'].includes(p.toLowerCase())
+        );
+        // if its facebook and instagram then show image upload should be set to true so that user can upload image.
+        showImageUpload.value = true;
+        scrollToBottom();
+        
         if (response.platforms.length === 1 || !response.message.includes('which platform')) {
           const platform = response.platforms[0];
+          if (requiresImage && !selectedImage.value) {
+            return;
+          }
           sendDirectPrompt(`Let's post to ${platform}`);
         }
       }
@@ -394,23 +454,47 @@ const handleIntent = async (response) => {
       break;
       
     case 'confirmation':
-      // Check if we have content ready to post (to_post data) and state is "posting"
+      // Check if we have content ready to post and state is "posting"
       if (response.to_post && (response.state === 'posting' || response.state === 'confirmation')) {
         console.log('Content ready to post:', response.to_post);
+        
+        // Check if image is required but not provided
+        const requiresImage = response.to_post.platforms.some(p => 
+          ['facebook', 'instagram'].includes(p.toLowerCase())
+        );
+        
+        if (requiresImage && !selectedImage.value) {
+          messages.value.push({
+            role: 'assistant',
+            content: 'Please upload an image before posting to Facebook/Instagram.',
+            actions: ['Upload Image'],
+            state: 'waiting_for_image'
+          });
+          return;
+        }
+        
         // Actually post the content using AIAssistantService
         try {
           chatLoading.value = true;
           
           // Import AIAssistantService if not already imported
           const AIAssistantService = (await import('../services/AIAssistantService')).default;
-          
+          console.log("Response is: ",response)
+          console.log("Content To post is: ",response.to_post.content)
+          console.log("Platforms are: ",response.to_post.platforms)
+          console.log("Selected Image is:",selectedImage.value)
           const postResult = await AIAssistantService.postContent(
             response.to_post.content,
             response.to_post.platforms,
-            null // No schedule time for immediate posting
+            null, // No schedule time for immediate posting
+            selectedImage.value // Pass the selected image file
           );
           
           console.log('Post result:', postResult);
+          
+          // Reset image upload state after successful posting
+          showImageUpload.value = false;
+          removeImage();
           
           // Add a confirmation message about the posting
           messages.value.push({
@@ -420,9 +504,7 @@ const handleIntent = async (response) => {
             state: 'posted'
           });
           
-          nextTick(() => {
-            scrollToBottom();
-          });
+          scrollToBottom();
         } catch (error) {
           console.error('Error posting content:', error);
           messages.value.push({
@@ -453,6 +535,63 @@ const sendDirectPrompt = (prompt) => {
   sendMessage();
 };
 
+// Add these methods for image handling
+const triggerImageUpload = () => {
+  console.log('triggerImageUpload');
+  imageInput.value.click();
+};
+
+const handleImageSelect = (event) => {
+  const file = event.target.files[0];
+  console.log("GOT THE FILE", file);
+  if (file) {
+    // Validate file type and size
+    if (!file.type.match(/^image\/(jpeg|png|gif|jpg)$/)) {
+      imageError.value = 'Please select a valid image file (JPEG, PNG, or GIF)';
+      return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      imageError.value = 'Image size should be less than 10MB';
+      return;
+    }
+    
+    // Clear any previous errors
+    imageError.value = '';
+    
+    // Create preview
+    selectedImage.value = file;
+    console.log("Selected Image", selectedImage.value);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreview.value = e.target.result;
+      console.log("Image Preview", imagePreview.value);
+    };
+    reader.readAsDataURL(file);
+    
+    // Focus back to input field after selecting image
+    nextTick(() => {
+      if (inputField.value) {
+        inputField.value.focus();
+      }
+    });
+  }
+};
+
+const removeImage = () => {
+  selectedImage.value = null;
+  imagePreview.value = '';
+  imageError.value = '';
+  if (imageInput.value) {
+    imageInput.value.value = '';
+  }
+};
+
+// Add a watcher for messages to ensure auto-scroll on any changes
+watch(messages, () => {
+  scrollToBottom();
+}, { deep: true });
+
 // Initialize component
 onMounted(async () => {
   await removeDynamicCss();
@@ -465,14 +604,15 @@ onMounted(async () => {
     scrollToBottom();
   });
 });
+
 </script>
 
 <style scoped>
 .ai-chat-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 280px);
-  max-height: 800px;
+  height: calc(100vh - 180px);
+  max-height: 1000px;
   position: relative;
   background: #f8f9fa;
   border-radius: 16px;
@@ -587,16 +727,25 @@ onMounted(async () => {
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 25px;
-  padding-bottom: 10px;
+  padding: 15px;
+  padding-bottom: 150px;
   scroll-behavior: smooth;
   background: #f9fafc;
+  min-height: 400px;
+  position: relative;
+  z-index: 1;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y proximity;
 }
 
 .message-wrapper {
-  margin-bottom: 20px;
-  opacity: 0;
-  transition: all 0.5s ease;
+  scroll-snap-align: end;
+}
+
+.message-wrapper:last-child {
+  padding-bottom: 250px;
+  margin-bottom: 0;
 }
 
 .message-in {
@@ -633,7 +782,7 @@ onMounted(async () => {
   display: flex;
   max-width: 80%;
   align-items: flex-start;
-  gap: 12px;
+  gap: 8px; /* Reduced from 12px */
 }
 
 .message.user {
@@ -664,7 +813,7 @@ onMounted(async () => {
 
 .message-content {
   background: white;
-  padding: 14px 18px;
+  padding: 10px 14px; /* Reduced from 14px 18px */
   border-radius: 18px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   position: relative;
@@ -690,7 +839,7 @@ onMounted(async () => {
   line-height: 1.6;
   white-space: pre-wrap;
   font-size: 0.95rem;
-  margin-bottom: 8px;
+  margin-bottom: 0px;
 }
 
 .message.user .message-text :deep(a) {
@@ -700,34 +849,23 @@ onMounted(async () => {
 
 /* Action buttons styling */
 .message-actions {
-  margin-top: 12px;
-  display: flex;
+  margin-top: 5px;
+  gap: 5px;
   flex-wrap: wrap;
-  gap: 8px;
 }
 
 .action-button {
-  background: #f0f2f5;
-  border: none;
-  border-radius: 18px;
-  padding: 6px 14px;
-  font-size: 0.85rem;
-  color: #4361ee;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.action-button:hover {
-  background: #e4e6eb;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
 .quick-suggestions {
-  padding: 20px;
+  position: relative;
+  padding: 10px;
   border-top: 1px solid #eee;
   background: white;
-  flex-shrink: 0;
+  z-index: 2;
 }
 
 .suggestion-card {
@@ -786,35 +924,45 @@ onMounted(async () => {
 }
 
 .chat-input {
-  padding: 20px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background: white;
   border-top: 1px solid #eee;
-  flex-shrink: 0;
-  position: sticky;
-  bottom: 0;
+  z-index: 2;
+  padding: 5px;
+  margin: 0;
+  transform: translateZ(0);
+}
+
+/* Container for messages to prevent overlap with input */
+.messages-container {
+  position: relative;
   width: 100%;
-  z-index: 10;
+  height: 100%;
 }
 
 .input-form {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  padding: 5px 10px;
+  background: white;
+  position: relative;
+  z-index: 2;
 }
 
 .modern-input {
   resize: none;
-  border-radius: 24px;
-  padding: 12px 18px;
-  min-height: 50px;
-  max-height: 120px;
+  border-radius: 20px;
+  padding: 8px 15px;
+  min-height: 40px;
+  max-height: 100px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   border: 1px solid #e0e0e0;
   transition: all 0.3s ease;
-}
-
-.modern-input:focus {
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  border-color: #667eea;
+  background: white;
+  width: 100%;
 }
 
 .send-btn {
@@ -861,8 +1009,9 @@ onMounted(async () => {
 .input-features {
   display: flex;
   gap: 15px;
-  margin-top: 10px;
-  padding-left: 10px;
+  margin-top: 5px;
+  padding: 5px 10px;
+  background: white;
 }
 
 .feature-hint {
@@ -884,16 +1033,9 @@ onMounted(async () => {
 }
 
 .typing-indicator {
-  display: flex;
-  gap: 4px;
-  padding: 12px 18px;
-  background: white;
-  border-radius: 18px;
-  width: fit-content;
-  margin-left: 52px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  margin-bottom: 12px;
-  position: relative;
+  margin-bottom: 8px;
+  margin-left: 40px;
+  padding: 8px 14px;
 }
 
 .typing-indicator::before {
@@ -943,43 +1085,207 @@ onMounted(async () => {
   }
 }
 
-/* Custom scrollbar */
+/* Improved scrollbar visibility */
 .chat-messages::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .chat-messages::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.02);
-  border-radius: 3px;
+  background: rgba(0,0,0,0.03);
+  border-radius: 4px;
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.1);
-  border-radius: 3px;
+  background: rgba(102, 126, 234, 0.2);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .chat-messages::-webkit-scrollbar-thumb:hover {
-  background: rgba(0,0,0,0.2);
+  background: rgba(102, 126, 234, 0.3);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
-/* Responsive adjustments */
+/* Prevent content shift when scrollbar appears */
+.chat-messages {
+  scrollbar-gutter: stable;
+  margin-right: 0;
+  padding-right: 15px;
+}
+
+/* Mobile adjustments */
 @media (max-width: 768px) {
   .ai-chat-container {
-    height: calc(100vh - 240px);
+    height: calc(100vh - 140px);
+    border-radius: 0;
   }
-  
-  .message {
-    max-width: 90%;
+
+  .chat-messages {
+    padding-bottom: 120px; /* More space on mobile */
   }
-  
-  .suggestion-card {
-    height: 100px;
-  }
-  
-  .suggestion-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 22px;
+
+  .chat-input {
+    padding: 3px;
   }
 }
+
+.input-form {
+  align-items: flex-end;
+}
+
+/* Upload icon in input area */
+.upload-media-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #f5f7fa;
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+.upload-media-btn:hover {
+  background: #e0e7ff;
+  transform: scale(1.1);
+}
+
+/* Upload tooltip */
+.upload-tooltip {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(51, 51, 51, 0.9);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 11;
+}
+
+.upload-media-btn:hover .upload-tooltip {
+  opacity: 1;
+}
+
+/* Triangle pointer for tooltip */
+.upload-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid rgba(51, 51, 51, 0.9);
+}
+
+/* Image preview section */
+.image-preview-section {
+  padding: 8px 15px;
+  background: #f5f7fa;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.image-preview-section.active {
+  max-height: 120px;
+  padding: 8px 15px;
+}
+
+/* Image preview thumbnail */
+.image-thumbnail {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.image-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Remove image button */
+.remove-image-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+  padding: 0;
+  font-size: 12px;
+}
+
+.remove-image-btn:hover {
+  background: rgba(255, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+
+/* Image uploading progress indicator */
+.image-uploading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error message styling */
+.image-error-message {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 5px;
+  align-self: center;
+}
+
 </style> 

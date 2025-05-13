@@ -205,6 +205,7 @@ class AIAgent:
             self.current_state = "editing"
             response = self._handle_content_edit(intent_analysis, access_token)
         else:
+            print(f"DEBUG AGENT: Unrecognized intent - defaulting to conversation")
             # General conversation or unclear intent
             response = self._generate_conversation_response(user_query)
         
@@ -333,13 +334,31 @@ class AIAgent:
 
         # messages = self.get_formatted_messages()
         
+        print(f"DEBUG: Generating conversation response for query: '{query}'")
+        print(f"Model: {self.model}")
+        print(f"Query: {query}")
+
+        # Create a Array of Objects for the conversation supported by OpenAI.
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful AI assistant for social media management."
+            },
+            {
+                "role": "user",
+                "content": query
+            }
+        ]
+
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=query, # Simple Conversation should include user query only.
+                messages=messages, # Simple Conversation should include user query only.
                 max_tokens=1000,
                 temperature=0.7
             )
+
+            print(f"DEBUG: Conversation response: {response.choices[0]}")
             
             return {
                 "message": response.choices[0].message.content,
@@ -548,6 +567,7 @@ class AIAgent:
                     selected_platforms.insert(0, selected_platforms.pop(selected_platforms.index(platform)))
                     break
         
+        print(f"DEBUG: Selected platforms for posting: {selected_platforms}")
         # Generate message based on available platforms
         if selected_platforms:
             message = f"Based on your connected accounts, I recommend posting to: {', '.join(selected_platforms)}."
