@@ -1,5 +1,33 @@
 <template>
-  <Loader v-show="isLoading"></Loader>
+  <!-- Loading Overlay -->
+  <div v-if="isLoading || isGenerating" class="loading-overlay">
+    <div class="loading-content">
+      <div class="progress-container">
+        <div class="progress">
+          <div class="progress-bar" :style="{ width: generationProgress + '%' }"></div>
+        </div>
+        
+        <div class="steps-container mt-4">
+          <div v-for="(step, index) in generationSteps" 
+               :key="index" 
+               class="step-item"
+               :class="{
+                 'completed': step.completed,
+                 'current': step.current
+               }">
+            <div class="step-icon">
+              <i :class="step.icon"></i>
+              <div class="step-pulse" v-if="step.current"></div>
+            </div>
+            <div class="step-info">
+              <h5>{{ step.title }}</h5>
+              <p>{{ step.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   <div v-show="!isLoading">
     <!-- tap on top starts-->
     <div class="tap-top"><i data-feather="chevrons-up"></i></div>
@@ -212,6 +240,39 @@ const isGenerating = ref(false);
 const userInput = ref('');
 const generatedContent = ref(null);
 
+// Add new refs for generation process
+const generationProgress = ref(0);
+const generationSteps = ref([
+  {
+    title: 'Content Analysis',
+    description: 'Analyzing your content requirements...',
+    icon: 'fas fa-brain',
+    completed: false,
+    current: false
+  },
+  {
+    title: 'Research & Optimization',
+    description: 'Gathering trending topics and engagement data...',
+    icon: 'fas fa-search',
+    completed: false,
+    current: false
+  },
+  {
+    title: 'Description Generation',
+    description: 'Creating your optimized description...',
+    icon: 'fas fa-magic',
+    completed: false,
+    current: false
+  },
+  {
+    title: 'Final Analysis',
+    description: 'Analyzing engagement metrics and adding hashtags...',
+    icon: 'fas fa-chart-line',
+    completed: false,
+    current: false
+  }
+]);
+
 // Example topics
 const exampleTopics = [
   'Product Launch Announcement',
@@ -262,8 +323,46 @@ const generateDescription = async () => {
   
   isGenerating.value = true;
   try {
+    // Reset progress and steps
+    generationProgress.value = 0;
+    generationSteps.value.forEach(step => {
+      step.completed = false;
+      step.current = false;
+    });
+
+    // Step 1: Content Analysis
+    generationSteps.value[0].current = true;
+    generationProgress.value = 15;
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    generationSteps.value[0].completed = true;
+    generationSteps.value[0].current = false;
+
+    // Step 2: Research & Optimization
+    generationSteps.value[1].current = true;
+    generationProgress.value = 40;
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    generationSteps.value[1].completed = true;
+    generationSteps.value[1].current = false;
+
+    // Step 3: Description Generation
+    generationSteps.value[2].current = true;
+    generationProgress.value = 70;
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    generationSteps.value[2].completed = true;
+    generationSteps.value[2].current = false;
+
+    // Step 4: Final Analysis
+    generationSteps.value[3].current = true;
+    generationProgress.value = 90;
+
     const result = await generateOptimizedContent(userInput.value);
     generatedContent.value = result;
+    
+    // Complete final step
+    generationProgress.value = 100;
+    generationSteps.value[3].completed = true;
+    generationSteps.value[3].current = false;
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // Show success notification
     if (window.$) {
@@ -578,5 +677,171 @@ const formatPatternLabel = (key) => {
 
 .text-primary {
   color: #00a3a3 !important;
+}
+
+/* Loading Overlay Styles */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(20, 25, 34, 0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(8px);
+}
+
+.loading-content {
+  width: 90%;
+  max-width: 600px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-container {
+  width: 100%;
+}
+
+.progress {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 30px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #00a3a3, #006666);
+  transition: width 0.5s ease;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+.steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.step-item.completed {
+  background: rgba(0, 163, 163, 0.1);
+}
+
+.step-item.current {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: scale(1.02);
+}
+
+.step-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.step-icon i {
+  color: white;
+  font-size: 1.2rem;
+}
+
+.step-info {
+  flex: 1;
+}
+
+.step-info h5 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  color: white;
+  font-weight: 600;
+}
+
+.step-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.completed .step-icon {
+  background: rgba(0, 163, 163, 0.3);
+}
+
+.completed .step-icon i {
+  color: white;
+}
+
+.current .step-icon {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.current .step-icon i {
+  color: #00a3a3;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .loading-content {
+    padding: 20px;
+    max-width: 90%;
+  }
 }
 </style> 
