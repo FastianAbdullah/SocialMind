@@ -8,7 +8,7 @@ from utils.SocialMediaAuth import SocialMediaAuth
 from utils.UserPostHistory import UserPostHistory
 from utils.SentimentAnalyzer import SentimentAnalyzer
 from utils.social_media_strategy import SocialMediaStrategyGenerator
-from utils.NgrokSetupFunctions import setup_ngrok_tunnel
+from Post_Generation.NgrokSetupFunctions import setup_ngrok_tunnel
 from dotenv import load_dotenv
 import os
 import ssl
@@ -77,7 +77,7 @@ ai_agent = AIAgent(api_key=os.getenv("OPENAI_API_KEY"))
 agent_connector = AgentConnector()
 
 # Disable Flask's reloader to prevent double execution
-app.config['USE_RELOADER'] = False
+# app.config['USE_RELOADER'] = False
 
 # Configure logging with proper encoding handling
 # Create scheduled directory if it doesn't exist
@@ -207,6 +207,8 @@ def post_to_facebook():
         print(f'message: {data["message"]}')
         success, result = setup_ngrok_tunnel(data['filename'])
         
+        print(f"[DEBUG] Success: {success}")
+        print(f"[DEBUG] Result: {result}")
         if not success:
             return jsonify({
                 'status': 'error',
@@ -214,6 +216,8 @@ def post_to_facebook():
             }), 400
             
         public_url = result['public_url']
+
+        print(f"[DEBUG] Public URL: {public_url}")
         
         # Post to Facebook
         fb_manager = FacebookManager(data['page_token'])
@@ -461,6 +465,7 @@ def post_to_instagram():
     
     try:
         # Set up ngrok tunnel
+        print(f"[DEBUG] Setting up ngrok tunnel for file: {data['filename']}")
         success, result = setup_ngrok_tunnel(data['filename'])
         
         if not success:
@@ -1234,7 +1239,7 @@ if __name__ == '__main__':
             port=8443,
             ssl_context=(CERT_FILE, KEY_FILE),
             debug=True,
-            use_reloader=False  # Explicitly disable reloader
+            use_reloader=True  # Explicitly disable reloader
         )
     except Exception as e:
         logger.critical(f"Failed to start Flask server: {e}")

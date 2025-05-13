@@ -6,7 +6,7 @@ from .InstagramManager import InstagramManager
 from .LinkedInManager import LinkedInManager
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
-from .NgrokSetupFunctions import setup_ngrok_tunnel, cleanup_temp_file
+from ..NgrokSetupFunctions import setup_ngrok_tunnel, cleanup_temp_file
 import base64
 from dotenv import load_dotenv
 
