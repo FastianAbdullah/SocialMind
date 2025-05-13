@@ -1074,7 +1074,10 @@ class PostManagerController extends Controller
                     'filename' => $filename,
                     'message' => $content
                 ]);
-            
+           
+        
+        
+        
             // Log the request details
             Log::info('Facebook API request', [
                 'endpoint' => 'https://localhost:8443/facebook/post',
