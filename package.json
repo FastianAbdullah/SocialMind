@@ -16,7 +16,7 @@
         "vue": "^3.3.0"
     },
     "dependencies": {
-        "apexcharts": "^4.5.0",
+        "apexcharts": "^4.7.0",
         "date-fns": "^4.1.0",
         "dompurify": "^3.2.4",
         "jquery": "^3.7.1",

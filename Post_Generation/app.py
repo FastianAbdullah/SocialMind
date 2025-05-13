@@ -64,10 +64,10 @@ mixtral_client = MixtralClient()
 sentiment_analyzer = SentimentAnalyzer()
 
 # Load API key from environment variables
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 # Initialize the strategy generator
-strategy_generator = SocialMediaStrategyGenerator(api_key=DEEPSEEK_API_KEY)
+strategy_generator = SocialMediaStrategyGenerator(api_key=OPENROUTER_API_KEY)
 
 # After the existing imports
 from utils.AIAgent import AIAgent
@@ -838,7 +838,7 @@ def generate_strategy():
         # Get JSON data from request
         data = request.get_json()
         
-        # Check for required fields
+        # Check for required fieldsgenerate-strategygenerate-strategy
         required_fields = ['business_type', 'target_demographics', 'platform', 'business_goals']
         for field in required_fields:
             if field not in data:
@@ -893,6 +893,7 @@ def generate_business_plan():
         
         # Get API key in order of preference
         api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
+        print(f"API key available: {api_key}")
         if not api_key:
             return jsonify({
                 'status': 'error',

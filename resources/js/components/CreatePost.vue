@@ -31,12 +31,43 @@
               <!-- Custom Loader -->
               <div v-if="isGenerating" class="fullpage-loader-overlay">
                 <div class="loader-content">
-                  <div class="loader-animation">
-                    <div class="pulse-ring"></div>
-                    <div class="pulse-dot"></div>
+                  <div class="loader-steps">
+                    <!-- Progress Bar -->
+                    <div class="progress-bar-container">
+                      <div class="progress-bar" :style="{ width: `${generationProgress}%` }"></div>
+                    </div>
+                    
+                    <!-- Steps Display -->
+                    <div class="generation-steps">
+                      <div 
+                        v-for="(step, index) in generationSteps" 
+                        :key="index"
+                        class="generation-step"
+                        :class="{
+                          'completed': step.completed,
+                          'current': step.current,
+                          'pending': !step.completed && !step.current
+                        }"
+                      >
+                        <div class="step-icon">
+                          <i :class="step.icon"></i>
+                          <div class="step-pulse" v-if="step.current"></div>
+                        </div>
+                        <div class="step-content">
+                          <h6 class="step-title">{{ step.title }}</h6>
+                          <p class="step-description">{{ step.description }}</p>
+                        </div>
+                        <div class="step-status">
+                          <i class="fas fa-check" v-if="step.completed"></i>
+                          <div class="loading-dots" v-if="step.current">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <p class="mt-3 loader-text">✨ Crafting the best post drafts for you! 🚀</p>
-                  <p class="loader-subtext">This might take a few seconds...</p>
                 </div>
               </div>
               
@@ -742,6 +773,39 @@ const availableHashtags = ref([
   'positivity', 'recovery', 'mentalhealthsupport', 'life', 'love'
 ]);
 
+// Add new refs for generation process
+const generationProgress = ref(0);
+const generationSteps = ref([
+  {
+    title: 'Content Analysis',
+    description: 'Understanding your content requirements...',
+    icon: 'fas fa-brain',
+    completed: false,
+    current: false
+  },
+  {
+    title: 'Research & Insights',
+    description: 'Gathering trending topics and engagement data...',
+    icon: 'fas fa-search',
+    completed: false,
+    current: false
+  },
+  {
+    title: 'Optimization',
+    description: 'Optimizing content structure and flow...',
+    icon: 'fas fa-magic',
+    completed: false,
+    current: false
+  },
+  {
+    title: 'Draft Generation',
+    description: 'Creating your perfect post drafts...',
+    icon: 'fas fa-pen-fancy',
+    completed: false,
+    current: false
+  }
+]);
+
 // Template Topics.
 const surpriseMe = () => {
   const surpriseTopics = [
@@ -801,28 +865,69 @@ const generatePosts = async () => {
     selectedPostIndex.value = null;
     trendingHashtags.value = [];
     
-    // Save user intial post description
+    // Reset steps
+    generationSteps.value.forEach(step => {
+      step.completed = false;
+      step.current = false;
+    });
+    generationProgress.value = 0;
+
+    // Save initial post description
     initialPostDescription.value = postDescription.value;
-    const result = await createPost(postDescription.value);
+
+    // Start the API call early but don't await it yet
+    const apiPromise = createPost(postDescription.value);
+
+    // Process each step except the last one
+    const totalSteps = generationSteps.value.length;
+    for (let i = 0; i < totalSteps - 1; i++) {
+      generationSteps.value[i].current = true;
+      
+      // Fixed time for each step (5.5 seconds)
+      await new Promise(resolve => setTimeout(resolve, 8500));
+      
+      // Update progress
+      generationProgress.value = ((i + 1) / totalSteps) * 100;
+      
+      // Mark step as completed
+      generationSteps.value[i].completed = true;
+      generationSteps.value[i].current = false;
+    }
+
+    // Start the last step
+    const lastStep = generationSteps.value[totalSteps - 1];
+    lastStep.current = true;
+    lastStep.description = 'Finalizing your post drafts...';
+
+    // Now wait for the API response
+    const result = await apiPromise;
+    
+    // Process the results
     generatedPosts.value = result.posts;
     trendingHashtags.value = result.trendingHashtags || [];
     
-    // Add trending hashtags to available hashtags
     if (trendingHashtags.value.length > 0) {
-      // Merge trending hashtags with available hashtags (avoiding duplicates)
       availableHashtags.value = [...new Set([...trendingHashtags.value])];
     }
+
+    // Complete the last step
+    lastStep.completed = true;
+    lastStep.current = false;
+    generationProgress.value = 100;
+
+    // Add a small delay before showing results
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Scroll to the generated posts section
+    // Scroll to generated posts
     setTimeout(() => {
       const postsSection = document.querySelector('.generated-posts');
       if (postsSection) {
         postsSection.scrollIntoView({ behavior: 'smooth' });
       }
     }, 100);
+
   } catch (error) {
     console.error('Error generating posts:', error);
-    // Show error notification
     $.notify({
       title: 'Error',
       message: 'Failed to generate posts. Please try again.'
@@ -832,6 +937,7 @@ const generatePosts = async () => {
     });
   } finally {
     isGenerating.value = false;
+    generationProgress.value = 0;
   }
 };
 
@@ -1766,72 +1872,184 @@ onBeforeUnmount(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(20, 25, 34, 0.85);
+  background-color: rgba(20, 25, 34, 0.95);
   z-index: 9999;
   display: flex;
   justify-content: center;
   align-items: center;
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(8px);
 }
 
 .loader-content {
-  text-align: center;
-  padding: 30px 40px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-  max-width: 80%;
-  animation: fadeIn 0.5s ease;
-  backdrop-filter: blur(10px);
+  width: 90%;
+  max-width: 600px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.loader-animation {
+.progress-bar-container {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #00a3a3, #006666);
+  border-radius: 10px;
+  transition: width 0.5s ease;
   position: relative;
-  width: 80px;
-  height: 80px;
-  margin: 0 auto;
+  overflow: hidden;
 }
 
-.pulse-ring {
+.progress-bar::after {
+  content: '';
   position: absolute;
-  width: 80px;
-  height: 80px;
-  background: rgba(0, 102, 102, 0.2);
-  border-radius: 50%;
-  animation: pulse 1.5s ease-out infinite;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
 }
 
-.pulse-dot {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 30px;
-  height: 30px;
-  background: linear-gradient(135deg, #006666 0%, #00a3a3 100%);
-  border-radius: 50%;
-  box-shadow: 0 0 20px rgba(0, 102, 102, 0.6);
+.generation-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.loader-text {
-  font-size: 22px;
-  font-weight: 600;
-  color: #006666;
-  margin: 20px 0 5px;
-}
-
-.loader-subtext {
-  font-size: 16px;
-  color: #666;
-  margin-bottom: 0;
-}
-
-.content-loading {
-  opacity: 0.7;
-  pointer-events: none;
-  filter: blur(1px);
+.generation-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 15px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
+}
+
+.step-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: white;
+  position: relative;
+}
+
+.step-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid #00a3a3;
+  animation: pulse 1.5s infinite;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  color: white;
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.step-description {
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  font-size: 14px;
+}
+
+.step-status {
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00a3a3;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.loading-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #00a3a3;
+  animation: dots 1.5s infinite;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.generation-step.completed {
+  background: rgba(0, 163, 163, 0.1);
+}
+
+.generation-step.current {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.02);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.generation-step.pending {
+  opacity: 0.5;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes dots {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* Button styles */
