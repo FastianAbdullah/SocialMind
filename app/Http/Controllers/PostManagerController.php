@@ -1070,7 +1070,7 @@ class PostManagerController extends Controller
                 ->timeout(120)
                 ->post('https://localhost:8443/facebook/post', [
                     'page_id' => $platformPage->page_id,
-                    'page_token' => $userPlatform->access_token,
+                    'page_token' => $platformPage->metadata['access_token'],
                     'filename' => $filename,
                     'message' => $content
                 ]);
