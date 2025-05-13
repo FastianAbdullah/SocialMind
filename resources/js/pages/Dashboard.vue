@@ -205,6 +205,7 @@ const cssFiles = [
 ];
 
 const JsFiles = [
+  'resources/js/legacy/svg.js',
   'resources/js/legacy/jquery.min.js',
   'resources/js/legacy/bootstrap/bootstrap.bundle.min.js',
   'resources/js/legacy/icons/feather-icon/feather.min.js',
@@ -214,12 +215,13 @@ const JsFiles = [
   'resources/js/legacy/config.js',
   'resources/js/legacy/sidebar-menu.js',
   'resources/js/legacy/sidebar-pin.js',
-  'resources/js/legacy/slick/slick.min.js', 
-  'resources/js/legacy/slick/slick.js',
-  'resources/js/legacy/header-slick.js',
   'resources/js/legacy/chart/apex-chart/apex-chart.js',
   'resources/js/legacy/chart/apex-chart/stock-prices.js',
   'resources/js/legacy/chart/apex-chart/moment.min.js',
+  'resources/js/legacy/slick/slick.min.js', 
+  'resources/js/legacy/slick/slick.js',
+  'resources/js/legacy/header-slick.js',
+
   'resources/js/legacy/notify/bootstrap-notify.min.js',
   'resources/js/legacy/script.js'
 ]

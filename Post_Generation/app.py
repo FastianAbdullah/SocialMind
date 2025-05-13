@@ -17,6 +17,7 @@ from utils.SchedulerManager import SchedulerManager
 import logging
 import sys
 import time
+from utils.NgrokSetupFunctions import setup_ngrok_tunnel
 
 
 load_dotenv()
@@ -205,6 +206,7 @@ def post_to_facebook():
         print(f'page_token: {data["page_token"]}')
         print(f'page_id: {data["page_id"]}')
         print(f'message: {data["message"]}')
+
         success, result = setup_ngrok_tunnel(data['filename'])
         
         print(f"[DEBUG] Success: {success}")
@@ -222,6 +224,7 @@ def post_to_facebook():
         # Post to Facebook
         fb_manager = FacebookManager(data['page_token'])
         print(f"[DEBUG] Posting to Facebook with page ID: {data['page_id']}")
+   
         print(f"[DEBUG] Public URL: {public_url}")
         result = fb_manager.post_content(
             data['page_id'],
