@@ -31,10 +31,10 @@ export default defineConfig({
             'resources/js/legacy/header-slick.js',
             'resources/js/legacy/chart/apex-chart/apex-chart.js',
             'resources/js/legacy/chart/apex-chart/stock-prices.js',
-            'resources/js/chart/apex-chart/moment.min.js',
-            'resources/js/notify/bootstrap-notify.min.js',
+            'resources/js/legacy/chart/apex-chart/moment.min.js',
+            'resources/js/legacy/notify/bootstrap-notify.min.js',
             // Theme Js.
-            'resources/js/script.js',
+            'resources/js/legacy/script.js',
 
           ],
           refresh: true,

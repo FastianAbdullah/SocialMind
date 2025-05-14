@@ -188,7 +188,7 @@ class PostSchedulerController extends PostManagerController
                         ->withHeaders([
                             'Content-Type' => 'application/json'
                         ])
-                        ->post('https://localhost:8443/scheduler/schedule', [
+                        ->post($this->flaskApiUrl . '/scheduler/schedule', [
                             'post_id' => $post->id,
                             'platform_id' => $platformId,
                             'scheduled_time' => $scheduledTime,
@@ -255,7 +255,8 @@ class PostSchedulerController extends PostManagerController
     public function getSchedulerStatus($postId)
     {
         try {
-            $response = Http::get("https://localhost:8443/scheduler/status/{$postId}");
+            $response = Http::withoutVerifying()
+                ->get($this->flaskApiUrl . "/scheduler/status/{$postId}");
             
             if ($response->successful()) {
                 return response()->json($response->json());

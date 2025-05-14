@@ -13,12 +13,19 @@ use Illuminate\Support\Facades\Log;
 
 class InstagramController extends Controller
 {
+    protected $flaskApiUrl;
+
+    public function __construct()
+    {
+        $this->flaskApiUrl = env('FLASK_API_URL', 'https://localhost:8443');
+    }
+
     public function generateAuthUrl()
     {
 
         try {
             $response = Http::withoutVerifying()
-                ->get('https://localhost:8443/auth/instagram');
+                ->get($this->flaskApiUrl . '/auth/instagram');
             
             if ($response->failed()) {
                 throw new \Exception('Failed to generate Instagram auth URL');
@@ -68,7 +75,7 @@ class InstagramController extends Controller
                 ->withHeaders([
                     'Authorization' => $request->token
                 ])
-                ->get('https://localhost:8443/instagram/accounts');
+                ->get($this->flaskApiUrl . '/instagram/accounts');
 
             if ($response->failed()) {
                 throw new \Exception('Failed to fetch Instagram accounts');

@@ -12,11 +12,18 @@ use App\Models\UserPlatform;
 
 class LinkedinController extends Controller
 {
+    protected $flaskApiUrl;
+
+    public function __construct()
+    {
+        $this->flaskApiUrl = env('FLASK_API_URL', 'https://localhost:8443');
+    }
+
     public function generateAuthUrl()
     {
         try {
             $response = Http::withoutVerifying()
-                ->get('https://localhost:8443/auth/linkedin');
+                ->get($this->flaskApiUrl . '/auth/linkedin');
             
             if ($response->failed()) {
                 throw new \Exception('Failed to generate LinkedIn auth URL');

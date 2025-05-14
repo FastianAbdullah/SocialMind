@@ -13,11 +13,18 @@ use Illuminate\Support\Facades\Log;
 
 class FacebookController extends Controller
 {
+    protected $flaskApiUrl;
+
+    public function __construct()
+    {
+        $this->flaskApiUrl = env('FLASK_API_URL', 'https://localhost:8443');
+    }
+
     public function generateAuthUrl()
     {
         try {
             $response = Http::withoutVerifying()
-                ->get('https://localhost:8443/auth/facebook');
+                ->get($this->flaskApiUrl . '/auth/facebook');
             
             if ($response->failed()) {
                 throw new \Exception('Failed to generate Facebook auth URL');
@@ -70,7 +77,7 @@ class FacebookController extends Controller
                 ->withHeaders([
                     'Authorization' => $request->token
                 ])
-                ->get('https://localhost:8443/facebook/pages');
+                ->get($this->flaskApiUrl . '/facebook/pages');
     
             if ($response->failed()) {
                 throw new \Exception('Failed to fetch Facebook pages');

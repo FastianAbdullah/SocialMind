@@ -1,4 +1,20 @@
 {
+  "public/assets/images/hand.gif": {
+    "file": "assets/hand-876b1cdb.gif",
+    "src": "public/assets/images/hand.gif"
+  },
+  "public/assets/images/logo/logo-icon.png": {
+    "file": "assets/logo-icon-97286a13.png",
+    "src": "public/assets/images/logo/logo-icon.png"
+  },
+  "public/assets/images/logo/logo.png": {
+    "file": "assets/logo-8bc9824b.png",
+    "src": "public/assets/images/logo/logo.png"
+  },
+  "public/assets/images/logo/logo_dark.png": {
+    "file": "assets/logo_dark-92949c7a.png",
+    "src": "public/assets/images/logo/logo_dark.png"
+  },
   "public/img/avatar-1.png": {
     "file": "assets/avatar-1-553d0834.png",
     "src": "public/img/avatar-1.png"
@@ -256,7 +272,7 @@
     "src": "public/img/testimonial-section-shape-1.png"
   },
   "resources/js/app.css": {
-    "file": "assets/app-2857829f.css",
+    "file": "assets/app-af06c284.css",
     "src": "resources/js/app.css"
   },
   "resources/js/app.js": {
@@ -319,12 +335,19 @@
       "assets/pricing-faq-top-left-c3a8d67c.png",
       "assets/pricing-faq-top-right-22234dd4.png",
       "assets/pricing-faq-bottom-right-c383df6b.png",
-      "assets/cta-4-bg-44d44b6e.png"
+      "assets/cta-4-bg-44d44b6e.png",
+      "assets/logo_dark-92949c7a.png",
+      "assets/logo-8bc9824b.png",
+      "assets/hand-876b1cdb.gif",
+      "assets/logo-icon-97286a13.png"
     ],
     "css": [
-      "assets/app-2857829f.css"
+      "assets/app-af06c284.css"
     ],
-    "file": "assets/app-7df81a6a.js",
+    "dynamicImports": [
+      "resources/js/services/AIAssistantService.js"
+    ],
+    "file": "assets/app-b6c929db.js",
     "isEntry": true,
     "src": "resources/js/app.js"
   },
@@ -334,13 +357,106 @@
     "src": "resources/js/legacy/animatedt-title.js"
   },
   "resources/js/legacy/app.js": {
-    "file": "assets/app-f830d99f.js",
+    "file": "assets/app-5dca7d68.js",
     "isEntry": true,
     "src": "resources/js/legacy/app.js"
+  },
+  "resources/js/legacy/bootstrap/bootstrap.bundle.min.js": {
+    "file": "assets/bootstrap.bundle.min-c42ec76f.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/bootstrap/bootstrap.bundle.min.js"
+  },
+  "resources/js/legacy/chart/apex-chart/apex-chart.js": {
+    "file": "assets/apex-chart-3efd1332.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/chart/apex-chart/apex-chart.js"
+  },
+  "resources/js/legacy/chart/apex-chart/moment.min.js": {
+    "file": "assets/moment.min-f18b934e.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/chart/apex-chart/moment.min.js"
+  },
+  "resources/js/legacy/chart/apex-chart/stock-prices.js": {
+    "file": "assets/stock-prices-4ed993c7.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/chart/apex-chart/stock-prices.js"
+  },
+  "resources/js/legacy/config.js": {
+    "file": "assets/config-2d794524.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/config.js"
+  },
+  "resources/js/legacy/header-slick.js": {
+    "file": "assets/header-slick-424c1846.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/header-slick.js"
+  },
+  "resources/js/legacy/icons/feather-icon/feather-icon.js": {
+    "file": "assets/feather-icon-62065fc9.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/icons/feather-icon/feather-icon.js"
+  },
+  "resources/js/legacy/icons/feather-icon/feather.min.js": {
+    "file": "assets/feather.min-ea640350.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/icons/feather-icon/feather.min.js"
+  },
+  "resources/js/legacy/jquery.min.js": {
+    "file": "assets/jquery.min-0baa6322.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/jquery.min.js"
+  },
+  "resources/js/legacy/notify/bootstrap-notify.min.js": {
+    "file": "assets/bootstrap-notify.min-77af2596.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/notify/bootstrap-notify.min.js"
   },
   "resources/js/legacy/plugins.js": {
     "file": "assets/plugins-d53c6ec7.js",
     "isEntry": true,
     "src": "resources/js/legacy/plugins.js"
+  },
+  "resources/js/legacy/script.js": {
+    "file": "assets/script-9f65e564.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/script.js"
+  },
+  "resources/js/legacy/scrollbar/custom.js": {
+    "file": "assets/custom-81e49acd.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/scrollbar/custom.js"
+  },
+  "resources/js/legacy/scrollbar/simplebar.js": {
+    "file": "assets/simplebar-dcf28494.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/scrollbar/simplebar.js"
+  },
+  "resources/js/legacy/sidebar-menu.js": {
+    "file": "assets/sidebar-menu-fcf8440a.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/sidebar-menu.js"
+  },
+  "resources/js/legacy/sidebar-pin.js": {
+    "file": "assets/sidebar-pin-73d3b951.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/sidebar-pin.js"
+  },
+  "resources/js/legacy/slick/slick.js": {
+    "file": "assets/slick-7e5f2fe2.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/slick/slick.js"
+  },
+  "resources/js/legacy/slick/slick.min.js": {
+    "file": "assets/slick.min-5123236f.js",
+    "isEntry": true,
+    "src": "resources/js/legacy/slick/slick.min.js"
+  },
+  "resources/js/services/AIAssistantService.js": {
+    "file": "assets/AIAssistantService-0af36b0b.js",
+    "imports": [
+      "resources/js/app.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/services/AIAssistantService.js"
   }
 }

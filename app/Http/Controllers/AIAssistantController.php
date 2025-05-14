@@ -12,22 +12,22 @@ use Illuminate\Support\Facades\Auth;
 
 class AIAssistantController extends Controller
 {
-    protected $flaskBaseUrl;
+    protected $flaskApiUrl;
 
     public function __construct()
     {
-        $this->flaskBaseUrl = env('FLASK_API_URL', 'https://localhost:8443');
+        $this->flaskApiUrl = env('FLASK_API_URL', 'https://localhost:8443');
         
         // Add fallback URL configuration and logging
         try {
             // Test if the primary Flask API is available using root endpoint instead of non-existent /health
             $testResponse = Http::withoutVerifying()
                 ->timeout(5)
-                ->get($this->flaskBaseUrl . '/');
+                ->get($this->flaskApiUrl . '/');
                 
             if (!$testResponse->successful()) {
                 Log::warning('Primary Flask API not responding, checking fallback', [
-                    'primary_url' => $this->flaskBaseUrl,
+                    'primary_url' => $this->flaskApiUrl,
                     'response_status' => $testResponse->status()
                 ]);
                 
@@ -42,7 +42,7 @@ class AIAssistantController extends Controller
                         Log::info('Switching to fallback Flask API URL', [
                             'fallback_url' => $fallbackUrl
                         ]);
-                        $this->flaskBaseUrl = $fallbackUrl;
+                        $this->flaskApiUrl = $fallbackUrl;
                     }
                 }
             }
@@ -235,7 +235,7 @@ class AIAssistantController extends Controller
                     'Content-Type' => 'application/json'
                 ])
                 ->timeout(60) // Add longer timeout
-                ->post($this->flaskBaseUrl . '/agent/query', [
+                ->post($this->flaskApiUrl . '/agent/query', [
                     'query' => $request->input('query'),
                     'context' => $request->input('context', []),
                     'autonomous_mode' => true // Enable autonomous mode
@@ -301,7 +301,7 @@ class AIAssistantController extends Controller
                     'Content-Type' => 'application/json'
                 ])
                 ->timeout(60) // Add longer timeout
-                ->post($this->flaskBaseUrl . '/content/generate-optimized', [
+                ->post($this->flaskApiUrl . '/content/generate-optimized', [
                     'text' => $request->input('topic'),
                     'platform' => $request->input('platform'),
                     'context' => $request->input('context', []),
@@ -501,7 +501,7 @@ class AIAssistantController extends Controller
                     'Content-Type' => 'application/json'
                 ])
                 ->timeout(60)
-                ->post($this->flaskBaseUrl . '/agent/post-content', [
+                ->post($this->flaskApiUrl . '/agent/post-content', [
                     'content' => $request->input('content'),
                     'platforms' => $platformNames, // Send platform names instead of the original array
                     'schedule_time' => $request->input('schedule_time'),
@@ -643,7 +643,7 @@ class AIAssistantController extends Controller
                     'Content-Type' => 'application/json'
                 ])
                 ->timeout(60) // Add longer timeout
-                ->get($this->flaskBaseUrl . '/agent/suggest-times/' . $platform, [
+                ->get($this->flaskApiUrl . '/agent/suggest-times/' . $platform, [
                     'autonomous_mode' => true
                 ]);
 
@@ -707,7 +707,7 @@ class AIAssistantController extends Controller
                 ->withHeaders([
                     'Authorization' => $tokenData['access_token']
                 ])
-                ->post($this->flaskBaseUrl . '/post/sentiment-analysis', [
+                ->post($this->flaskApiUrl . '/post/sentiment-analysis', [
                     'post_id' => $request->input('post_id'),
                     'platform' => $request->input('platform')
                 ]);

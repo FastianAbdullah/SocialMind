@@ -11,6 +11,13 @@ use App\Models\PlatformPage;
 
 class HashtagController extends Controller
 {
+    protected $flaskApiUrl;
+
+    public function __construct()
+    {
+        $this->flaskApiUrl = env('FLASK_API_URL', 'https://localhost:8443');
+    }
+
     public function search(Request $request)
     {
         try {
@@ -48,7 +55,7 @@ class HashtagController extends Controller
                 ->withHeaders([
                     'Authorization' => $userPlatform->access_token
                 ])
-                ->post('https://localhost:8443/instagram/hashtags', [
+                ->post($this->flaskApiUrl . '/instagram/hashtags', [
                     'hashtag' => $request->input('hashtag'),
                     'ig_user_id' => $instagramPage->page_id // Use the stored Instagram page ID
                 ]);
@@ -92,7 +99,7 @@ class HashtagController extends Controller
             ]);
 
             $response = Http::withoutVerifying()
-                ->post('https://localhost:8443/content/analyze', [
+                ->post($this->flaskApiUrl . '/content/analyze', [
                     'text' => $request->input('text')
                 ]);
                 
@@ -132,7 +139,7 @@ class HashtagController extends Controller
         try {
             // Get trending hashtags from your Flask API
             $trendingResponse = Http::withoutVerifying()
-                ->get('https://localhost:8443/hashtags/trending', [
+                ->get($this->flaskApiUrl . '/hashtags/trending', [
                     'limit' => $request->input('limit', 10)
                 ]);
                 

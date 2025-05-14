@@ -17,6 +17,13 @@ use App\Models\MediaAttachment;
 
 class PostManagerController extends Controller
 {
+    protected $flaskApiUrl;
+
+    public function __construct()
+    {
+        $this->flaskApiUrl = env('FLASK_API_URL', 'https://localhost:8443');
+    }
+
     /**
      * Create a new post by analyzing content and generating optimized versions
      *
@@ -35,7 +42,7 @@ class PostManagerController extends Controller
             
             // Step 1: Analyze the content to get purpose and hashtags
             $analysisResponse = Http::withoutVerifying()->timeout(80)
-                ->post('https://localhost:8443/content/analyze', [
+                ->post($this->flaskApiUrl . '/content/analyze', [
                     'text' => $content
                 ]);
                 
@@ -115,7 +122,7 @@ class PostManagerController extends Controller
                     ->withHeaders([
                         'Authorization' => $instagramPlatform->access_token
                     ])
-                    ->post('https://localhost:8443/instagram/hashtags', [
+                    ->post($this->flaskApiUrl . '/instagram/hashtags', [
                         'hashtag' => $seedHashtag,
                         'ig_user_id' => $instagramPage->page_id
                     ]);
@@ -138,7 +145,7 @@ class PostManagerController extends Controller
                     ->withHeaders([
                         'Authorization' => $instagramPlatform->access_token
                     ])
-                    ->post('https://localhost:8443/content/generate-optimized', [
+                    ->post($this->flaskApiUrl . '/content/generate-optimized', [
                         'text' => $content,
                         'ig_user_id' => $instagramPage->page_id
                     ]);
@@ -262,7 +269,7 @@ class PostManagerController extends Controller
                 ->withHeaders([
                     'Authorization' => $userPlatform->access_token
                 ])
-                ->post('https://localhost:8443/content/generate-optimized', [
+                ->post($this->flaskApiUrl . '/content/generate-optimized', [
                     'text' => $request->input('text'),
                     'ig_user_id' => $instagramPage->page_id
                 ]);
@@ -334,7 +341,7 @@ class PostManagerController extends Controller
 
             $response = Http::withoutVerifying()
                 ->timeout(90)
-                ->post('https://localhost:8443/content/analyze', [
+                ->post($this->flaskApiUrl . '/content/analyze', [
                     'text' => $request->input('text')
                 ]);
 
@@ -387,7 +394,7 @@ class PostManagerController extends Controller
 
             $response = Http::withoutVerifying()
                 ->timeout(90)
-                ->post('https://localhost:8443/content/optimize', [
+                ->post($this->flaskApiUrl . '/content/optimize', [
                     'purpose' => $request->input('purpose'),
                     'descriptions' => $request->input('descriptions', [])
                 ]);
@@ -493,7 +500,7 @@ class PostManagerController extends Controller
                     'Authorization' => $userPlatform->access_token,
                     'Content-Type' => 'application/json'
                 ])
-                ->post('https://localhost:8443/post/sentiment-analysis', [
+                ->post($this->flaskApiUrl . '/post/sentiment-analysis', [
                     'post_id' => $postId,
                     'platform' => $platform
                 ]);
@@ -615,7 +622,7 @@ class PostManagerController extends Controller
         try {
             $response = Http::withHeaders([
                 'Authorization' => $accessToken
-            ])->post('https://localhost:8443/post/comments', [
+            ])->post($this->flaskApiUrl . '/post/comments', [
                 'post_id' => $postId,
                 'platform' => $platform
             ]);
@@ -917,11 +924,11 @@ class PostManagerController extends Controller
                     'Authorization' => $userPlatform->access_token,
                     'Content-Type' => 'application/json'
                 ])
-                ->post('https://localhost:8443/linkedin/post', $requestData);
+                ->post($this->flaskApiUrl . '/linkedin/post', $requestData);
             
             // Log the request details
             Log::info('LinkedIn API request', [
-                'endpoint' => 'https://localhost:8443/linkedin/post',
+                'endpoint' => $this->flaskApiUrl . '/linkedin/post',
                 'has_media' => $mediaFile ? 'yes' : 'no',
                 'content_length' => strlen($content)
             ]);
@@ -1068,7 +1075,7 @@ class PostManagerController extends Controller
             // Make a JSON request to the Facebook API
             $response = Http::withoutVerifying()
                 ->timeout(120)
-                ->post('https://localhost:8443/facebook/post', [
+                ->post($this->flaskApiUrl . '/facebook/post', [
                     'page_id' => $platformPage->page_id,
                     'page_token' => $platformPage->metadata['access_token'],
                     'filename' => $filename,
@@ -1080,7 +1087,7 @@ class PostManagerController extends Controller
         
             // Log the request details
             Log::info('Facebook API request', [
-                'endpoint' => 'https://localhost:8443/facebook/post',
+                'endpoint' => $this->flaskApiUrl . '/facebook/post',
                 'page_id' => $platformPage->page_id,
                 'filename' => $filename
             ]);
@@ -1227,7 +1234,7 @@ class PostManagerController extends Controller
                     'Authorization' => $userPlatform->access_token,
                     'Content-Type' => 'application/json'
                 ])
-                ->post('https://localhost:8443/instagram/post', [
+                ->post($this->flaskApiUrl . '/instagram/post', [
                     'ig_user_id' => $platformPage->page_id,
                     'filename' => $filename,
                     'caption' => $content
@@ -1235,7 +1242,7 @@ class PostManagerController extends Controller
             
             // Log the request details
             Log::info('Instagram API request', [
-                'endpoint' => 'https://localhost:8443/instagram/post',
+                'endpoint' => $this->flaskApiUrl . '/instagram/post',
                 'payload' => [
                     'ig_user_id' => $platformPage->page_id,
                     'filename' => $filename,

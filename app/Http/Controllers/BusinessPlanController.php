@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\DB;
 
 class BusinessPlanController extends Controller
 {
+    protected $flaskApiUrl;
+
+    public function __construct()
+    {
+        $this->flaskApiUrl = env('FLASK_API_URL', 'https://localhost:8443');
+    }
+
     /**
      * Generate business plan/strategy
      *
@@ -48,7 +55,7 @@ class BusinessPlanController extends Controller
             // Call Flask API endpoint with increased timeout
             $response = Http::timeout(120) // 2 minutes timeout
                 ->withoutVerifying()
-                ->post('https://localhost:8443/generate-strategy', [
+                ->post($this->flaskApiUrl . '/generate-strategy', [
                     'business_type' => $request->business_type,
                     'target_demographics' => $request->target_demographics,
                     'platform' => $request->platform,
