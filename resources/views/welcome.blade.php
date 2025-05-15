@@ -13,6 +13,16 @@
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" crossorigin>
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" as="style" crossorigin>
     
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="{{ asset('css/fonts/ff-1.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/fonts/ff-3.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/fonts/bootstrap-icons.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/vendors/bootstrap.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/plugins.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/color-1.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
+    
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin>
     
