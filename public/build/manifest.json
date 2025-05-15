@@ -294,14 +294,6 @@
     "isEntry": true,
     "src": "resources/css/vendors/bootstrap.css"
   },
-  "resources/fonts/bootstrap-iconsbf04.woff": {
-    "file": "assets/bootstrap-iconsbf04-999550fa.woff",
-    "src": "resources/fonts/bootstrap-iconsbf04.woff"
-  },
-  "resources/fonts/bootstrap-iconsbf04.woff2": {
-    "file": "assets/bootstrap-iconsbf04-cfe45b98.woff2",
-    "src": "resources/fonts/bootstrap-iconsbf04.woff2"
-  },
   "resources/images/other-images/bg-profile.png": {
     "file": "assets/bg-profile-4803ef7d.png",
     "src": "resources/images/other-images/bg-profile.png"
@@ -309,34 +301,6 @@
   "resources/images/other-images/coming-soon-bg.jpg": {
     "file": "assets/coming-soon-bg-f173fb1f.jpg",
     "src": "resources/images/other-images/coming-soon-bg.jpg"
-  },
-  "resources/img/blur-blog-shape.png": {
-    "file": "assets/blur-blog-shape-4a354f32.png",
-    "src": "resources/img/blur-blog-shape.png"
-  },
-  "resources/img/cta-section-2-bg.png": {
-    "file": "assets/cta-section-2-bg-325deb3b.png",
-    "src": "resources/img/cta-section-2-bg.png"
-  },
-  "resources/img/faq-section-4-bg.png": {
-    "file": "assets/faq-section-4-bg-1ecef97d.png",
-    "src": "resources/img/faq-section-4-bg.png"
-  },
-  "resources/img/footer-4-img.png": {
-    "file": "assets/footer-4-img-2f214a9e.png",
-    "src": "resources/img/footer-4-img.png"
-  },
-  "resources/img/hero-4-bg.webp": {
-    "file": "assets/hero-4-bg-80f87d72.webp",
-    "src": "resources/img/hero-4-bg.webp"
-  },
-  "resources/img/post-2-bg.png": {
-    "file": "assets/post-2-bg-dad2333a.png",
-    "src": "resources/img/post-2-bg.png"
-  },
-  "resources/img/post-3-bg.png": {
-    "file": "assets/post-3-bg-1cbb9840.png",
-    "src": "resources/img/post-3-bg.png"
   },
   "resources/js/app.css": {
     "file": "assets/app-af06c284.css",
@@ -414,33 +378,15 @@
     "dynamicImports": [
       "resources/js/services/AIAssistantService.js"
     ],
-    "file": "assets/app-9fd18fea.js",
+    "file": "assets/app-24e5b777.js",
     "imports": [
       "_vendor-e5a96731.js"
     ],
     "isEntry": true,
     "src": "resources/js/app.js"
   },
-  "resources/js/legacy/app.css": {
-    "file": "assets/app-79839011.css",
-    "src": "resources/js/legacy/app.css"
-  },
   "resources/js/legacy/app.js": {
-    "assets": [
-      "assets/bootstrap-iconsbf04-cfe45b98.woff2",
-      "assets/bootstrap-iconsbf04-999550fa.woff",
-      "assets/hero-4-bg-80f87d72.webp",
-      "assets/faq-section-4-bg-1ecef97d.png",
-      "assets/footer-4-img-2f214a9e.png",
-      "assets/cta-section-2-bg-325deb3b.png",
-      "assets/blur-blog-shape-4a354f32.png",
-      "assets/post-2-bg-dad2333a.png",
-      "assets/post-3-bg-1cbb9840.png"
-    ],
-    "css": [
-      "assets/app-79839011.css"
-    ],
-    "file": "assets/app-58e38869.js",
+    "file": "assets/app-b81c75cc.js",
     "imports": [
       "_vendor-e5a96731.js"
     ],
@@ -448,7 +394,7 @@
     "src": "resources/js/legacy/app.js"
   },
   "resources/js/services/AIAssistantService.js": {
-    "file": "assets/AIAssistantService-58b8b8bd.js",
+    "file": "assets/AIAssistantService-5dc5d9ca.js",
     "imports": [
       "resources/js/app.js",
       "_vendor-e5a96731.js"
