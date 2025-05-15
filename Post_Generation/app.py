@@ -202,42 +202,28 @@ def post_to_facebook():
     """Post content to Facebook"""
 
     data = request.json
-    required_fields = ['page_id', 'page_token', 'message']
+    required_fields = ['page_id', 'page_token', 'message', 'public_url']
     
     if not all(field in data for field in required_fields):
         return jsonify({'error': 'Missing required fields'}), 400
     
     try:
-        # Set up ngrok tunnel
-        print(f"[DEBUG] Setting up ngrok tunnel for file: {data['filename']}")
         print(f'page_token: {data["page_token"]}')
         print(f'page_id: {data["page_id"]}')
         print(f'message: {data["message"]}')
-
-        success, result = setup_ngrok_tunnel(data['filename'])
-        
-        if not success:
-            return jsonify({
-                'status': 'error',
-                'message': result['error']
-            }), 400
-            
-        public_url = result['public_url']
+        print(f'public_url: {data["public_url"]}')
 
         fb_manager = FacebookManager(data['page_token'])
         print(f"[DEBUG] Posting to Facebook with page ID: {data['page_id']}")
    
-        print(f"[DEBUG] Public URL: {public_url}")
         result = fb_manager.post_content(
             data['page_id'],
             data['page_token'],
-            public_url,
+            data['public_url'],
             data['message']
         )
 
         print(f"[DEBUG] Facebook API result: {result}")
-        # In both cases after posting or error, remove the data[filename] from the current directory
-        # os.remove(data['filename'])
                 
         if result:
             post_history.add_post('Facebook', result)
