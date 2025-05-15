@@ -1115,7 +1115,7 @@ class PostManagerController extends Controller
                 $mediaAttachment->post_id = $post->id;
                 $mediaAttachment->media_type = $mediaFileType;
                 $mediaAttachment->file_path = $storagePath . '/' . $filename;
-                $mediaAttachment->public_url = $publicUrl;
+                // $mediaAttachment->public_url = $publicUrl;
                 $mediaAttachment->alt_text = $initialPostDescription;
                 $mediaAttachment->metadata = json_encode($metadata);
                 $mediaAttachment->setTable('media_attachment');
@@ -1177,25 +1177,22 @@ class PostManagerController extends Controller
             $mediaFileName = $mediaFile->getClientOriginalName();
             $mediaFileType = $mediaFile->getMimeType();
             
-            // First, save a copy of the media file to storage
-            $tempDirectory = 'public/temp';
-            $tempFilename = time() . '_' . $mediaFileName;
-            $mediaFile->storeAs($tempDirectory, $tempFilename);
+            // Create directory for this post in public storage
+            $postDirectory = 'public/posts/' . time(); // Using timestamp for unique directory
+            $storagePath = storage_path('app/' . $postDirectory);
             
-            // Get the stored file path to create a duplicate for Flask
-            $storedFilePath = storage_path('app/' . $tempDirectory . '/' . $tempFilename);
-            
-            // Create a duplicate file for Flask API (since Flask will delete it after usage)
-            $filename = time() . '_' . $mediaFileName;
-            $flaskAppPath = base_path('Post_Generation');
-            
-            // Make sure the Flask directory exists
-            if (!file_exists($flaskAppPath)) {
-                mkdir($flaskAppPath, 0755, true);
+            if (!file_exists($storagePath)) {
+                mkdir($storagePath, 0755, true);
             }
             
-            // Copy the file to Flask app directory
-            copy($storedFilePath, $flaskAppPath . '/' . $filename);
+            // Generate a unique filename for storage
+            $filename = time() . '_' . $mediaFileName;
+            
+            // Store the file in the public directory
+            $mediaFile->storeAs($postDirectory, $filename);
+            
+            // Generate the public URL for the file
+            $publicUrl = config('app.url') . '/storage/posts/' . time() . '/' . $filename;
             
             // Make the API request
             $response = Http::withoutVerifying()
@@ -1206,7 +1203,7 @@ class PostManagerController extends Controller
                 ])
                 ->post($this->flaskApiUrl . '/instagram/post', [
                     'ig_user_id' => $platformPage->page_id,
-                    'filename' => $filename,
+                    'public_url' => $publicUrl,
                     'caption' => $content
                 ]);
             
@@ -1215,7 +1212,7 @@ class PostManagerController extends Controller
                 'endpoint' => $this->flaskApiUrl . '/instagram/post',
                 'payload' => [
                     'ig_user_id' => $platformPage->page_id,
-                    'filename' => $filename,
+                    'public_url' => $publicUrl,
                     'caption_length' => strlen($content)
                 ]
             ]);
@@ -1234,7 +1231,8 @@ class PostManagerController extends Controller
                     'platform_page_name' => $platformPage->name,
                     'media_type' => $mediaFileType,
                     'media_name' => $mediaFileName,
-                    'media_filename' => $filename
+                    'media_filename' => $filename,
+                    'public_url' => $publicUrl
                 ];
 
                 Log::info('MetaData Stored for Insta is ', [
@@ -1251,37 +1249,12 @@ class PostManagerController extends Controller
                     $metadata
                 );
 
-                // Create directory for this post
-                $postDirectory = 'public/posts/' . $post->id;
-                $storagePath = storage_path('app/' . $postDirectory);
-                
-                if (!file_exists($storagePath)) {
-                    mkdir($storagePath, 0755, true);
-                }
-                
-                // Generate a unique filename for permanent storage
-                $permanentFilename = time() . '_' . $mediaFileName;
-                
-                // Copy from the temp file to the post's permanent directory
-                copy($storedFilePath, $storagePath . '/' . $permanentFilename);
-                
-                // Get the absolute path for database storage
-                $absolutePath = storage_path('app/' . $postDirectory . '/' . $permanentFilename);
-
-                // Log the Saved Media File Data
-                Log::info('Saved Media File Data', [
-                    'post_id' => $post->id,
-                    'media_file' => $mediaFileName,
-                    'media_path' => $absolutePath,
-                    'alt_text' => $initialPostDescription,
-                    'metadata' => $metadata
-                ]);
-
-                // Save media attachment with absolute path in Database
+                // Save media attachment
                 $mediaAttachment = new MediaAttachment();
                 $mediaAttachment->post_id = $post->id;
                 $mediaAttachment->media_type = $mediaFileType;
-                $mediaAttachment->file_path = $absolutePath;
+                $mediaAttachment->file_path = $storagePath . '/' . $filename;
+                // $mediaAttachment->public_url = $publicUrl;
                 $mediaAttachment->alt_text = $initialPostDescription;
                 $mediaAttachment->metadata = json_encode($metadata);
                 $mediaAttachment->setTable('media_attachment');
@@ -1295,8 +1268,6 @@ class PostManagerController extends Controller
                     'post_id' => $responseData['post_id'] ?? null,
                     'database_id' => $post->id
                 ];
-                
-                // File will be cleaned up by the Flask app
             } else {
                 Log::error('Instagram post failed', [
                     'status' => $response->status(),
