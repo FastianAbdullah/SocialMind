@@ -1,17 +1,38 @@
+# Python virtual environment
+venv/
+**/venv/
+Post_Generation/venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Laravel specific
 /node_modules
-/public/storage
 /public/hot
+/public/storage
 /storage/*.key
 /vendor
 .env
+.env.backup
 .phpunit.result.cache
-docker-compose.override.yml
 Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
-/.idea
-/.vscode
-composer.lock
-*.log
-Post_Generation/logs/scheduler.log
+
+# IDE specific
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# OS specific
+.DS_Store
+Thumbs.db
