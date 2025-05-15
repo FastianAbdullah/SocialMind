@@ -72,7 +72,7 @@ class SocialMediaAuth:
             if access_token:
                 return {
                     'access_token': access_token,
-                    'redirect_url': f'http://127.0.0.1:8000/{self.platform}/callback?token={access_token}'
+                    'redirect_url': f'https://discountable.co.uk/{self.platform}/callback?token={access_token}'
                 }
             
 
