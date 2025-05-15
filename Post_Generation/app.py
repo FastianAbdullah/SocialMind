@@ -26,7 +26,14 @@ app = Flask(__name__)
 
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://127.0.0.1:8000", "http://localhost:8000", "https://localhost:8080","http://localhost:3306"],
+        "origins": [
+            "http://127.0.0.1:8000", 
+            "http://localhost:8000", 
+            "https://localhost:8080",
+            "http://localhost:3306",
+            "https://discountable.co.uk",  # Add your production domain
+            "https://discountable.co.uk:8443"  # Add your production domain with port
+        ],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": [
             "Content-Type",
@@ -55,7 +62,7 @@ auth = SocialMediaAuth(
     app_secret=os.getenv("FACEBOOK_APP_SECRET"),
     app_id_linkedin=os.getenv("LK_CLIENT_ID"),
     app_secret_linkedin=os.getenv("LK_CLIENT_SECRET"),
-    redirect_uri='https://localhost:8443/oauth/callback' # Redirect Back to Flask Application Server.
+    redirect_uri='https://discountable.co.uk:8443/oauth/callback'
 )
 post_history = UserPostHistory()
 mixtral_client = MixtralClient()
@@ -1233,11 +1240,11 @@ if __name__ == '__main__':
     try:
         # Run with HTTPS for production
         app.run(
-            host='0.0.0.0',  # Changed from localhost to accept external connections
+            host='0.0.0.0',
             port=8443,
             ssl_context=(CERT_FILE, KEY_FILE),
-            debug=False,  # Disabled debug mode for production
-            use_reloader=False  # Explicitly disable reloader
+            debug=False,  # Keep debug mode disabled in production
+            use_reloader=False
         )
     except Exception as e:
         logger.critical(f"Failed to start Flask server: {e}")
