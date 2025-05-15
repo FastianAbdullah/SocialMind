@@ -9,8 +9,8 @@ export default defineConfig(({ command }) => {
         plugins: [
             laravel({
                 input: [
-                    'resources/js/app.js',      // Main JS entry (includes CSS imports)
-                    'resources/js/legacy/app.js' // Legacy JS (if needed)
+                    'resources/js/app.js',      // Main JS entry
+                    'resources/js/legacy/app.js' // Legacy JS
                 ],
                 refresh: true,
                 publicDirectory: 'public',
@@ -33,28 +33,28 @@ export default defineConfig(({ command }) => {
         },
         build: {
             manifest: true,
+            emptyOutDir: true,
             outDir: 'public/build',
             rollupOptions: {
                 output: {
-                    manualChunks: {
-                        vendor: [
-                            'vue',
-                            'glightbox',
-                            'bootstrap',
-                            'jquery'
-                        ]
+                    // Automatic vendor chunking
+                    manualChunks(id) {
+                        if (id.includes('node_modules')) {
+                            return 'vendor';
+                        }
                     }
                 }
             }
         },
         server: {
             hmr: {
-                host: isProduction ? 'discountable.co.uk' : 'localhost'
+                host: 'localhost' // HMR only needed in development
             },
             port: 5173,
-            https: isProduction
+            https: false // Development server doesn't need HTTPS
         },
         define: {
+            // Use standard HTTPS port in production (no port needed as 443 is default for HTTPS)
             'import.meta.env.VITE_APP_URL': JSON.stringify(
                 isProduction ? 'https://discountable.co.uk' : 'http://localhost:5173'
             )

@@ -1,6 +1,6 @@
 {
-  "_vendor-9aea02ab.js": {
-    "file": "assets/vendor-9aea02ab.js"
+  "_vendor-df8ad712.js": {
+    "file": "assets/vendor-df8ad712.js"
   },
   "public/assets/images/hand.gif": {
     "file": "assets/hand-876b1cdb.gif",
@@ -366,9 +366,9 @@
     "dynamicImports": [
       "resources/js/services/AIAssistantService.js"
     ],
-    "file": "assets/app-5eff91e1.js",
+    "file": "assets/app-29ccbd50.js",
     "imports": [
-      "_vendor-9aea02ab.js"
+      "_vendor-df8ad712.js"
     ],
     "isEntry": true,
     "src": "resources/js/app.js"
@@ -387,18 +387,17 @@
     "css": [
       "assets/app-16b3d0db.css"
     ],
-    "file": "assets/app-fdd54d5c.js",
+    "file": "assets/app-3a5a3b88.js",
     "imports": [
-      "_vendor-9aea02ab.js"
+      "_vendor-df8ad712.js"
     ],
     "isEntry": true,
     "src": "resources/js/legacy/app.js"
   },
   "resources/js/services/AIAssistantService.js": {
-    "file": "assets/AIAssistantService-52276f3d.js",
+    "file": "assets/AIAssistantService-fcabdba0.js",
     "imports": [
-      "resources/js/app.js",
-      "_vendor-9aea02ab.js"
+      "_vendor-df8ad712.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/services/AIAssistantService.js"

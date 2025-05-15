@@ -24,8 +24,10 @@
     
     <!-- Base URL for dynamic resources -->
     <script>
-        window.baseUrl = '{!! config('app.url') !!}';
-        window.isProduction = {!! config('app.env') === 'production' ? 'true' : 'false' !!};
+        window.APP_CONFIG = @json([
+            'isProduction' => config('app.env') === 'production',
+            'baseUrl' => config('app.env') === 'production' ? config('app.url') : env('VITE_DEV_URL', 'http://localhost:5173')
+        ]);
     </script>
 </head>
 <body class="bg-black body-clip light">
