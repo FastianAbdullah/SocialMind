@@ -1231,12 +1231,12 @@ def get_scheduled_posts():
 
 if __name__ == '__main__':
     try:
-        # Run with HTTPS for local development
+        # Run with HTTPS for production
         app.run(
-            host='localhost',
+            host='0.0.0.0',  # Changed from localhost to accept external connections
             port=8443,
             ssl_context=(CERT_FILE, KEY_FILE),
-            debug=True,
+            debug=False,  # Disabled debug mode for production
             use_reloader=False  # Explicitly disable reloader
         )
     except Exception as e:
