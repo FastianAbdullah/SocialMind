@@ -9,6 +9,14 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 
+import '../../css/fonts/ff-1.css';
+import '../../css/fonts/ff-3.css';
+import '../../css/fonts/bootstrap-icons.css';
+import '../../css/vendors/bootstrap.css';
+import '../../css/plugins.min.css';
+import '../../css/style.css';
+import '../../css/color-1.css';
+import '../../css/responsive.css';
 // Initialize GSAP
 gsap.registerPlugin(ScrollTrigger, SplitText);
 

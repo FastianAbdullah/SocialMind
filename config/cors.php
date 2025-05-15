@@ -27,7 +27,7 @@ return [
 
     'max_age' => 0,
 
-    'allowed_origins' => ['http://localhost:5173','https://discountable.co.uk'],
+    'allowed_origins' => ['https://discountable.co.uk'],
 
     'supports_credentials' => false,
 
