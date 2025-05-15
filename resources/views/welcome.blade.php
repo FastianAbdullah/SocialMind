@@ -21,14 +21,6 @@
     
     <!-- Vite Assets -->
     @vite(['resources/js/app.js', 'resources/js/legacy/app.js'])
-    
-    <!-- Base URL for dynamic resources -->
-    <script>
-        window.APP_CONFIG = @json([
-            'isProduction' => config('app.env') === 'production',
-            'baseUrl' => config('app.env') === 'production' ? config('app.url') : env('VITE_DEV_URL', 'http://localhost:5173')
-        ]);
-    </script>
 </head>
 <body class="bg-black body-clip light">
     <div id="app"></div>
