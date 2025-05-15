@@ -60,6 +60,7 @@ def test_content_generation():
 def test_time_suggestions():
     """Test posting time suggestion capabilities"""
     agent = AIAgent()
+    #test the agent's ability to suggest posting times for different platforms
     
     # Test time suggestions for different platforms
     platforms = ["instagram", "facebook", "linkedin", "twitter"]
