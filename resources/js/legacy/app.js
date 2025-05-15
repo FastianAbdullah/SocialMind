@@ -1,17 +1,3 @@
-// Fonts
-import '../../css/fonts/ff-1.css';
-import '../../css/fonts/ff-3.css';
-import '../../css/fonts/bootstrap-icons.css';
-
-// Vendors (Bootstrap, plugins, etc.)
-import '../../css/vendors/bootstrap.css'; // Add this (was missing)
-import '../../css/plugins.min.css';
-
-// Theme styles
-import '../../css/style.css';       // Replace style.min.css if needed
-import '../../css/color-1.css';     // Add this (was missing)
-import '../../css/responsive.css';  // Add this (was missing)
-
 // ========== JS IMPORTS ==========
 import 'jquery';
 import 'bootstrap';
