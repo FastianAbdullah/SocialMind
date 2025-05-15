@@ -6,7 +6,7 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                // 'resources/css/app.css',
+                'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/legacy/app.js'
             ],
@@ -32,6 +32,7 @@ export default defineConfig({
     build: {
         manifest: true,
         outDir: 'public/build',
+        assetsDir: 'assets',
         rollupOptions: {
             output: {
                 manualChunks: {
@@ -44,13 +45,23 @@ export default defineConfig({
                     legacy: [
                         'resources/js/legacy/app.js'
                     ]
-                }
+                },
+                assetFileNames: (assetInfo) => {
+                    let extType = assetInfo.name.split('.').at(1);
+                    if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
+                        extType = 'img';
+                    }
+                    return `assets/${extType}/[name]-[hash][extname]`;
+                },
             }
         }
     },
     server: {
+        https: true,
+        host: true,
         hmr: {
-            host: 'localhost'
+            host: 'discountable.co.uk',
+            protocol: 'https'
         },
         port: 5173
     },
