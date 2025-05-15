@@ -1,0 +1,117 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: socialmind
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, dom, filter, gd, json, pdo, pdo_mysql, zip
+          tools: composer:v2
+          coverage: none
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+      - name: Install Dependencies
+        run: |
+          composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+          npm install
+      - name: Generate key
+        run: php artisan key:generate
+      - name: Build Frontend
+        run: npm run build
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          cat >>~/.ssh/config <<END
+          Host production
+            HostName ${{ secrets.PROD_SERVER_IP }}
+            User ${{ secrets.PROD_SERVER_USER }}
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking no
+          END
+      - name: Deploy to Production
+        env:
+          FLASK_API_URL: ${{ secrets.FLASK_API_URL }}
+          DB_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          APP_KEY: ${{ secrets.APP_KEY }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          # Create deployment script
+          cat > deploy.sh <<'EOL'
+          #!/bin/bash
+          # Set deployment directory
+          DEPLOY_DIR=/var/www/socialmind/SocialMind
+          # Pull latest changes
+          cd $DEPLOY_DIR
+          git pull origin main
+          # Install/update PHP dependencies
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          # Install/update Node.js dependencies and build assets
+          npm install
+          npm run build
+          # Update .env file with production values
+          sed -i "s#APP_KEY=.*#APP_KEY=${APP_KEY}#g" .env
+          sed -i "s#FLASK_API_URL=.*#FLASK_API_URL=${FLASK_API_URL}#g" .env
+          sed -i "s#DB_HOST=.*#DB_HOST=${DB_HOST}#g" .env
+          sed -i "s#DB_DATABASE=.*#DB_DATABASE=${DB_DATABASE}#g" .env
+          sed -i "s#DB_USERNAME=.*#DB_USERNAME=${DB_USERNAME}#g" .env
+          sed -i "s#DB_PASSWORD=.*#DB_PASSWORD=${DB_PASSWORD}#g" .env
+          # Update Python .env with API keys
+          cat > Post_Generation/.env <<EOF
+          OPENAI_API_KEY=${OPENAI_API_KEY}
+          OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+          EOF
+          # Clear Laravel caches
+          php artisan cache:clear
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
+          php artisan optimize:clear
+          # Update Python dependencies
+          cd Post_Generation
+          source venv/bin/activate
+          pip install -r requirements.txt
+          deactivate
+          # Restart services
+          sudo supervisorctl restart flask
+          sudo systemctl restart php8.2-fpm
+          sudo systemctl restart nginx
+          # Set proper permissions
+          sudo chown -R mac:www-data $DEPLOY_DIR
+          sudo find $DEPLOY_DIR -type f -exec chmod 644 {} \;
+          sudo find $DEPLOY_DIR -type d -exec chmod 755 {} \;
+          sudo chown -R mac:www-data $DEPLOY_DIR/storage
+          sudo chown -R mac:www-data $DEPLOY_DIR/bootstrap/cache
+          sudo chmod -R 775 $DEPLOY_DIR/storage
+          sudo chmod -R 775 $DEPLOY_DIR/bootstrap/cache
+          sudo chmod -R 775 $DEPLOY_DIR/Post_Generation
+          # Ensure Python files are executable
+          sudo chmod +x $DEPLOY_DIR/Post_Generation/*.py
+          EOL
+          # Copy and execute deployment script
+          chmod +x deploy.sh
+          scp -i ~/.ssh/deploy_key deploy.sh production:/tmp/
+          ssh production "bash /tmp/deploy.sh"
+
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
