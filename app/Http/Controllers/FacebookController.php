@@ -52,7 +52,7 @@ class FacebookController extends Controller
         try {
             // dd($request->all());
             if (!$request->has('token')) {
-                return redirect()->to('/dashboard?status=error&message=No access token provided');
+                return redirect()->to('https://discountable.co.uk/dashboard?status=error&message=No access token provided');
             }
     
             DB::beginTransaction();
@@ -109,8 +109,8 @@ class FacebookController extends Controller
     
             DB::commit();
     
-            // Redirect to social links page with success message
-            return redirect()->to('/dashboard?status=success&message=Facebook account connected successfully&platform=facebook');
+            // Update redirect URL to production domain
+            return redirect()->to('https://discountable.co.uk/dashboard?status=success&message=Facebook account connected successfully&platform=facebook');
     
         } catch (\Exception $e) {
             DB::rollBack();
@@ -119,7 +119,7 @@ class FacebookController extends Controller
                 'user_id' => Auth::id()
             ]);
     
-            return redirect()->to('/dashboard?status=error&message=' . urlencode($e->getMessage()));
+            return redirect()->to('https://discountable.co.uk/dashboard?status=error&message=' . urlencode($e->getMessage()));
         }
     }
     public function disconnect()
