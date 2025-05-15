@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
+import path from 'path';
 
 export default defineConfig({
     plugins: [
@@ -17,6 +18,15 @@ export default defineConfig({
             },
         }),
     ],
+    resolve: {
+        alias: {
+            '@': '/resources/js',
+            '~': '/resources',
+            '@css': '/resources/css',
+            '@fonts': '/resources/css/fonts',
+            '@vendors': '/resources/css/vendors'
+        },
+    },
     build: {
         manifest: true,
         outDir: 'public/build',
