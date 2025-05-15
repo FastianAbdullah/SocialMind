@@ -81,8 +81,8 @@ from utils.AIAgent import AIAgent
 from utils.AgentConnector import AgentConnector
 
 # Initialize AIAgent
-ai_agent = AIAgent(api_key=os.getenv("OPENAI_API_KEY"))
-agent_connector = AgentConnector()
+ai_agent = AIAgent(api_key=os.getenv("OPENAI_API_KEY"),base_url="https://discountable.co.uk:8443")
+agent_connector = AgentConnector(base_url="https://discountable.co.uk:8443")
 
 # Disable Flask's reloader to prevent double execution
 app.config['USE_RELOADER'] = False
