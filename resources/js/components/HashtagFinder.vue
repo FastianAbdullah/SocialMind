@@ -281,10 +281,10 @@ const formatCount = (count) => {
 
 // Initialize
 const cssFiles = [
-  'resources/css/vendors/bootstrap.css',
-  'resources/css/style.css',
-  'resources/css/color-1.css',
-  'resources/css/responsive.css'
+  'css/vendors/bootstrap.css',
+  'css/style.css',
+  'css/color-1.css',
+  'css/responsive.css'
 ];
 
 const JsFiles = [

@@ -3,40 +3,58 @@ import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 
-export default defineConfig({
-    plugins: [
-        laravel({
-            input: ['resources/js/app.js', 'resources/js/legacy/app.js'],
-            refresh: false
-        }),
-        vue({
-            template: {
-                transformAssetUrls: {
-                    base: null,
-                    includeAbsolute: false,
+export default defineConfig(({ command }) => {
+    const isProduction = command === 'build';
+    
+    return {
+        plugins: [
+            laravel({
+                input: ['resources/js/app.js', 'resources/js/legacy/app.js'],
+                refresh: false
+            }),
+            vue({
+                template: {
+                    transformAssetUrls: {
+                        base: null,
+                        includeAbsolute: false,
+                    },
                 },
+            }),
+        ],
+        resolve: {
+            alias: {
+                '@': '/resources/js',
+                '~': '/resources',
+                '@css': '/resources/css',
+                '@fonts': '/resources/css/fonts',
+                '@vendors': '/resources/css/vendors',
+                'vue': 'vue/dist/vue.esm-bundler.js'
             },
-        }),
-    ],
-    resolve: {
-        alias: {
-            '@': '/resources/js',
-            '~': '/resources',
-            '@css': '/resources/css',
-            '@fonts': '/resources/css/fonts',
-            '@vendors': '/resources/css/vendors'
         },
-    },
-    build: {
-        manifest: true,
-        outDir: 'public/build',
-        emptyOutDir: true,
-        rollupOptions: {
-            output: {
-                manualChunks: {
-                    vendor: ['vue', 'glightbox', 'bootstrap', 'jquery']
+        build: {
+            manifest: true,
+            outDir: 'public/build',
+            emptyOutDir: true,
+            chunkSizeWarningLimit: 1600,
+            rollupOptions: {
+                output: {
+                    manualChunks: {
+                        vendor: ['vue', 'glightbox', 'bootstrap', 'jquery'],
+                        gsap: ['gsap', 'gsap/ScrollTrigger', 'gsap/SplitText'],
+                        utils: ['axios', 'pinia', 'vue-router']
+                    }
                 }
             }
+        },
+        server: isProduction ? {} : {
+            hmr: {
+                host: 'localhost'
+            },
+            host: '0.0.0.0',
+            port: 5173
+        },
+        optimizeDeps: {
+            include: ['vue', 'jquery', 'bootstrap', 'gsap']
         }
     }
 });

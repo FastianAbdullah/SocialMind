@@ -91,11 +91,11 @@ import { useDynamicResources } from "../composables/useDynamicResources";
 
 // Data properties
 const cssFiles = [
-  'resources/css/fonts/ff-1.css',
-  'resources/css/fonts/ff-3.css',
-  'resources/css/fonts/bootstrap-icons.css',
-  'resources/css/plugins.min.css',
-  'resources/css/style.min.css'
+  'css/fonts/ff-1.css',
+  'css/fonts/ff-3.css',
+  'css/fonts/bootstrap-icons.css',
+  'css/plugins.min.css',
+  'css/style.min.css'
 ];
 
 const isLoading = ref(true)
