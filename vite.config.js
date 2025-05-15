@@ -6,7 +6,10 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                // 'resources/css/app.css',
+                'resources/css/vendors/bootstrap.css',
+                'resources/css/style.css',
+                'resources/css/color-1.css',
+                'resources/css/responsive.css',
                 'resources/js/app.js',
                 'resources/js/legacy/app.js'
             ],
@@ -50,7 +53,7 @@ export default defineConfig({
     },
     server: {
         hmr: {
-            host: 'localhost'
+            host: 'discountable.co.uk'
         },
         port: 5173
     },

@@ -1,6 +1,6 @@
 {
-  "_vendor-c1ef6d0f.js": {
-    "file": "assets/vendor-c1ef6d0f.js"
+  "_vendor-e5a96731.js": {
+    "file": "assets/vendor-e5a96731.js"
   },
   "public/assets/images/hand.gif": {
     "file": "assets/hand-876b1cdb.gif",
@@ -274,6 +274,26 @@
     "file": "assets/testimonial-section-shape-1-94d49289.png",
     "src": "public/img/testimonial-section-shape-1.png"
   },
+  "resources/css/color-1.css": {
+    "file": "assets/color-1-e3b0c442.css",
+    "isEntry": true,
+    "src": "resources/css/color-1.css"
+  },
+  "resources/css/responsive.css": {
+    "file": "assets/responsive-453d5e79.css",
+    "isEntry": true,
+    "src": "resources/css/responsive.css"
+  },
+  "resources/css/style.css": {
+    "file": "assets/style-e8695bf9.css",
+    "isEntry": true,
+    "src": "resources/css/style.css"
+  },
+  "resources/css/vendors/bootstrap.css": {
+    "file": "assets/bootstrap-3fdf0de6.css",
+    "isEntry": true,
+    "src": "resources/css/vendors/bootstrap.css"
+  },
   "resources/fonts/bootstrap-iconsbf04.woff": {
     "file": "assets/bootstrap-iconsbf04-999550fa.woff",
     "src": "resources/fonts/bootstrap-iconsbf04.woff"
@@ -281,6 +301,14 @@
   "resources/fonts/bootstrap-iconsbf04.woff2": {
     "file": "assets/bootstrap-iconsbf04-cfe45b98.woff2",
     "src": "resources/fonts/bootstrap-iconsbf04.woff2"
+  },
+  "resources/images/other-images/bg-profile.png": {
+    "file": "assets/bg-profile-4803ef7d.png",
+    "src": "resources/images/other-images/bg-profile.png"
+  },
+  "resources/images/other-images/coming-soon-bg.jpg": {
+    "file": "assets/coming-soon-bg-f173fb1f.jpg",
+    "src": "resources/images/other-images/coming-soon-bg.jpg"
   },
   "resources/img/blur-blog-shape.png": {
     "file": "assets/blur-blog-shape-4a354f32.png",
@@ -386,15 +414,15 @@
     "dynamicImports": [
       "resources/js/services/AIAssistantService.js"
     ],
-    "file": "assets/app-5f624234.js",
+    "file": "assets/app-9fd18fea.js",
     "imports": [
-      "_vendor-c1ef6d0f.js"
+      "_vendor-e5a96731.js"
     ],
     "isEntry": true,
     "src": "resources/js/app.js"
   },
   "resources/js/legacy/app.css": {
-    "file": "assets/app-6b3992a3.css",
+    "file": "assets/app-79839011.css",
     "src": "resources/js/legacy/app.css"
   },
   "resources/js/legacy/app.js": {
@@ -410,20 +438,20 @@
       "assets/post-3-bg-1cbb9840.png"
     ],
     "css": [
-      "assets/app-6b3992a3.css"
+      "assets/app-79839011.css"
     ],
-    "file": "assets/app-8730d179.js",
+    "file": "assets/app-58e38869.js",
     "imports": [
-      "_vendor-c1ef6d0f.js"
+      "_vendor-e5a96731.js"
     ],
     "isEntry": true,
     "src": "resources/js/legacy/app.js"
   },
   "resources/js/services/AIAssistantService.js": {
-    "file": "assets/AIAssistantService-82cc3232.js",
+    "file": "assets/AIAssistantService-58b8b8bd.js",
     "imports": [
       "resources/js/app.js",
-      "_vendor-c1ef6d0f.js"
+      "_vendor-e5a96731.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/services/AIAssistantService.js"
