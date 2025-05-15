@@ -19,12 +19,14 @@
     <!-- GLightbox CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" crossorigin>
     
+    <!-- Vite Assets -->
     @vite(['resources/js/app.js', 'resources/js/legacy/app.js'])
     
-    <!-- Fallback for Vite assets if JavaScript is disabled -->
-    @env('production')
-        <link rel="stylesheet" href="{{ mix('build/assets/app-' . Illuminate\Support\Str::random(8) . '.css') }}" disabled>
-    @endenv
+    <!-- Base URL for dynamic resources -->
+    <script>
+        window.baseUrl = '{!! config('app.url') !!}';
+        window.isProduction = {!! config('app.env') === 'production' ? 'true' : 'false' !!};
+    </script>
 </head>
 <body class="bg-black body-clip light">
     <div id="app"></div>

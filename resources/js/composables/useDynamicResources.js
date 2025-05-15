@@ -1,8 +1,17 @@
 import { ref } from 'vue'
 
-export function useDynamicResources(isLoading,initialCssFiles = [],initialJsFiles = []) {
+export function useDynamicResources(isLoading, initialCssFiles = [], initialJsFiles = []) {
   const cssFiles = ref(initialCssFiles)
   const JsFiles = ref(initialJsFiles)
+
+  // Get base URL based on environment
+  const getBaseUrl = () => {
+    if (import.meta.env.PROD) {
+      return window.location.origin // Use the current domain in production
+    }
+    // In development, use Vite's dev server
+    return import.meta.env.VITE_APP_URL || 'http://localhost:5173'
+  }
 
   const removeDynamicCss = () => {
     return new Promise((resolve, reject) => {
@@ -57,7 +66,7 @@ export function useDynamicResources(isLoading,initialCssFiles = [],initialJsFile
 
   const initializeCss = async () => {
     isLoading.value = true
-    const baseUrl = 'http://[::1]:5173'
+    const baseUrl = getBaseUrl()
     try {
       const loadPromises = cssFiles.value.map(file => loadCss(`${baseUrl}/${file}`))
       await Promise.all(loadPromises)
@@ -69,16 +78,16 @@ export function useDynamicResources(isLoading,initialCssFiles = [],initialJsFile
   }
 
   const removeDynamicJs = () => {
-    return new Promise((resolve,reject) => {
+    return new Promise((resolve, reject) => {
       try {
-        const scriptlinks = document.querySelectorAll('script[data-dynamic="true"]');
+        const scriptlinks = document.querySelectorAll('script[data-dynamic="true"]')
         scriptlinks.forEach((link) => {
           document.body.removeChild(link)
         })
         console.log(`${scriptlinks.length} Scripts Removed.`)
         resolve()
       } catch (error) {
-        console.log('Error Occured While removing Script Files', error)
+        console.log('Error Occurred While removing Script Files', error)
         reject()
       }
     })
@@ -86,42 +95,41 @@ export function useDynamicResources(isLoading,initialCssFiles = [],initialJsFile
 
   const loadScript = (src) => {
     return new Promise((resolve, reject) => {
-      const existingScript = document.querySelector(`script[src="${src}"]`);
+      const existingScript = document.querySelector(`script[src="${src}"]`)
       if (existingScript) {
-        console.log(`${src} already loaded.`);
-        return resolve();
+        console.log(`${src} already loaded.`)
+        return resolve()
       }
-  
-      const script = document.createElement('script');
-      script.src = src;
-      script.dataset.dynamic = 'true';  // Adding data-dynamic attribute
-  
-      script.onload = () => {
-        console.log(`${src} loaded successfully.`);
-        resolve();
-      };
-  
-      script.onerror = () => {
-        console.error(`Failed to load script: ${src}`);
-        reject(new Error(`Failed to load script: ${src}`));
-      };
-  
-      document.body.appendChild(script);
-    });
-  };
 
-   const initializeScripts = async () => {
-    const baseUrl = 'http://[::1]:5173';
+      const script = document.createElement('script')
+      script.src = src
+      script.dataset.dynamic = 'true'
+
+      script.onload = () => {
+        console.log(`${src} loaded successfully.`)
+        resolve()
+      }
+
+      script.onerror = () => {
+        console.error(`Failed to load script: ${src}`)
+        reject(new Error(`Failed to load script: ${src}`))
+      }
+
+      document.body.appendChild(script)
+    })
+  }
+
+  const initializeScripts = async () => {
+    const baseUrl = getBaseUrl()
     try {
       for (const script of JsFiles.value) {
-        await loadScript(`${baseUrl}/${script}`);
+        await loadScript(`${baseUrl}/${script}`)
       }
-      console.log('All scripts loaded successfully');
+      console.log('All scripts loaded successfully')
     } catch (error) {
-      console.error('Error loading scripts:', error);
+      console.error('Error loading scripts:', error)
     }
-  };
-
+  }
 
   return {
     removeDynamicCss,

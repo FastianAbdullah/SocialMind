@@ -366,7 +366,7 @@
     "dynamicImports": [
       "resources/js/services/AIAssistantService.js"
     ],
-    "file": "assets/app-21b066ed.js",
+    "file": "assets/app-5eff91e1.js",
     "imports": [
       "_vendor-9aea02ab.js"
     ],
@@ -395,7 +395,7 @@
     "src": "resources/js/legacy/app.js"
   },
   "resources/js/services/AIAssistantService.js": {
-    "file": "assets/AIAssistantService-2b5ca6d7.js",
+    "file": "assets/AIAssistantService-52276f3d.js",
     "imports": [
       "resources/js/app.js",
       "_vendor-9aea02ab.js"
