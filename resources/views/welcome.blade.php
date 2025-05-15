@@ -9,25 +9,40 @@
     <title>Social Mind - Modern AI Landing HTML Template</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <!-- Font Awesome (loaded from CDN as it's more efficient) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Preload CDN assets -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" as="style" crossorigin>
     
-    <!-- GLightbox -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">
-    <script src="https://cdn.jsdelivr.net/gh/mcstudios/glightbox/dist/js/glightbox.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin>
     
-    @vite([ 'resources/js/app.js', 'resources/js/legacy/app.js'])
+    <!-- GLightbox CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" crossorigin>
+    
+    @vite(['resources/js/app.js', 'resources/js/legacy/app.js'])
+    
+    <!-- Fallback for Vite assets if JavaScript is disabled -->
+    @env('production')
+        <link rel="stylesheet" href="{{ mix('build/assets/app-' . Illuminate\Support\Str::random(8) . '.css') }}" disabled>
+    @endenv
 </head>
 <body class="bg-black body-clip light">
     <div id="app"></div>
     
+    <!-- GLightbox JS (loaded after Vite bundles) -->
+    <script src="https://cdn.jsdelivr.net/gh/mcstudios/glightbox/dist/js/glightbox.min.js" crossorigin defer></script>
+    
     <script>
-        // Initialize GLightbox after it's loaded
-        document.addEventListener('DOMContentLoaded', function() {
+        // Initialize GLightbox after everything loads
+        window.addEventListener('load', function() {
             if (typeof GLightbox !== 'undefined') {
-                const lightbox = GLightbox();
+                const lightbox = GLightbox({
+                    selector: '[data-glightbox]',
+                    touchNavigation: true,
+                    loop: true
+                });
             }
         });
     </script>
 </body>
-</html> 
+</html>

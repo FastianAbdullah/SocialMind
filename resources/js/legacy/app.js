@@ -1,11 +1,18 @@
-// Import required CSS files
+// Fonts
 import '../../css/fonts/ff-1.css';
 import '../../css/fonts/ff-3.css';
 import '../../css/fonts/bootstrap-icons.css';
-import '../../css/plugins.min.css';
-import '../../css/style.min.css';
 
-// Import third-party dependencies
+// Vendors (Bootstrap, plugins, etc.)
+import '../../css/vendors/bootstrap.css'; // Add this (was missing)
+import '../../css/plugins.min.css';
+
+// Theme styles
+import '../../css/style.css';       // Replace style.min.css if needed
+import '../../css/color-1.css';     // Add this (was missing)
+import '../../css/responsive.css';  // Add this (was missing)
+
+// ========== JS IMPORTS ==========
 import 'jquery';
 import 'bootstrap';
 import GLightbox from 'glightbox';
@@ -16,12 +23,11 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 
-// Register GSAP plugins
+// Initialize GSAP
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
-// Make GLightbox available globally
+// Make GLightbox globally available
 window.GLightbox = GLightbox;
-"use strict";
 
 document.addEventListener("DOMContentLoaded", function () {
 	const body = document.querySelector("body");

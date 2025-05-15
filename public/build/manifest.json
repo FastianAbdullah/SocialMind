@@ -1,6 +1,6 @@
 {
-  "_vendor-c1ef6d0f.js": {
-    "file": "assets/vendor-c1ef6d0f.js"
+  "_vendor-9aea02ab.js": {
+    "file": "assets/vendor-9aea02ab.js"
   },
   "public/assets/images/hand.gif": {
     "file": "assets/hand-876b1cdb.gif",
@@ -282,33 +282,13 @@
     "file": "assets/bootstrap-iconsbf04-cfe45b98.woff2",
     "src": "resources/fonts/bootstrap-iconsbf04.woff2"
   },
-  "resources/img/blur-blog-shape.png": {
-    "file": "assets/blur-blog-shape-4a354f32.png",
-    "src": "resources/img/blur-blog-shape.png"
+  "resources/images/other-images/bg-profile.png": {
+    "file": "assets/bg-profile-4803ef7d.png",
+    "src": "resources/images/other-images/bg-profile.png"
   },
-  "resources/img/cta-section-2-bg.png": {
-    "file": "assets/cta-section-2-bg-325deb3b.png",
-    "src": "resources/img/cta-section-2-bg.png"
-  },
-  "resources/img/faq-section-4-bg.png": {
-    "file": "assets/faq-section-4-bg-1ecef97d.png",
-    "src": "resources/img/faq-section-4-bg.png"
-  },
-  "resources/img/footer-4-img.png": {
-    "file": "assets/footer-4-img-2f214a9e.png",
-    "src": "resources/img/footer-4-img.png"
-  },
-  "resources/img/hero-4-bg.webp": {
-    "file": "assets/hero-4-bg-80f87d72.webp",
-    "src": "resources/img/hero-4-bg.webp"
-  },
-  "resources/img/post-2-bg.png": {
-    "file": "assets/post-2-bg-dad2333a.png",
-    "src": "resources/img/post-2-bg.png"
-  },
-  "resources/img/post-3-bg.png": {
-    "file": "assets/post-3-bg-1cbb9840.png",
-    "src": "resources/img/post-3-bg.png"
+  "resources/images/other-images/coming-soon-bg.jpg": {
+    "file": "assets/coming-soon-bg-f173fb1f.jpg",
+    "src": "resources/images/other-images/coming-soon-bg.jpg"
   },
   "resources/js/app.css": {
     "file": "assets/app-af06c284.css",
@@ -386,44 +366,39 @@
     "dynamicImports": [
       "resources/js/services/AIAssistantService.js"
     ],
-    "file": "assets/app-5f624234.js",
+    "file": "assets/app-21b066ed.js",
     "imports": [
-      "_vendor-c1ef6d0f.js"
+      "_vendor-9aea02ab.js"
     ],
     "isEntry": true,
     "src": "resources/js/app.js"
   },
   "resources/js/legacy/app.css": {
-    "file": "assets/app-6b3992a3.css",
+    "file": "assets/app-16b3d0db.css",
     "src": "resources/js/legacy/app.css"
   },
   "resources/js/legacy/app.js": {
     "assets": [
       "assets/bootstrap-iconsbf04-cfe45b98.woff2",
       "assets/bootstrap-iconsbf04-999550fa.woff",
-      "assets/hero-4-bg-80f87d72.webp",
-      "assets/faq-section-4-bg-1ecef97d.png",
-      "assets/footer-4-img-2f214a9e.png",
-      "assets/cta-section-2-bg-325deb3b.png",
-      "assets/blur-blog-shape-4a354f32.png",
-      "assets/post-2-bg-dad2333a.png",
-      "assets/post-3-bg-1cbb9840.png"
+      "assets/coming-soon-bg-f173fb1f.jpg",
+      "assets/bg-profile-4803ef7d.png"
     ],
     "css": [
-      "assets/app-6b3992a3.css"
+      "assets/app-16b3d0db.css"
     ],
-    "file": "assets/app-8730d179.js",
+    "file": "assets/app-fdd54d5c.js",
     "imports": [
-      "_vendor-c1ef6d0f.js"
+      "_vendor-9aea02ab.js"
     ],
     "isEntry": true,
     "src": "resources/js/legacy/app.js"
   },
   "resources/js/services/AIAssistantService.js": {
-    "file": "assets/AIAssistantService-82cc3232.js",
+    "file": "assets/AIAssistantService-2b5ca6d7.js",
     "imports": [
       "resources/js/app.js",
-      "_vendor-c1ef6d0f.js"
+      "_vendor-9aea02ab.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/services/AIAssistantService.js"

@@ -6,9 +6,8 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                // 'resources/css/app.css',
-                'resources/js/app.js',
-                'resources/js/legacy/app.js'
+                'resources/js/app.js',      // Main JS entry (includes CSS imports)
+                'resources/js/legacy/app.js' // Legacy JS (if needed)
             ],
             refresh: true,
             publicDirectory: 'public',
@@ -41,20 +40,19 @@ export default defineConfig({
                         'bootstrap',
                         'jquery'
                     ],
-                    legacy: [
-                        'resources/js/legacy/app.js'
-                    ]
+                    // Optional: Consider adding GSAP/Swiper to vendor chunk
+                    // vendor: ['gsap', 'swiper', ...] 
                 }
             }
         }
     },
     server: {
         hmr: {
-            host: 'localhost'
+            host: 'discountable.co.uk' // Ensure this matches your dev domain
         },
         port: 5173
     },
     optimizeDeps: {
         include: ['vue', 'glightbox']
     }
-}); 
+});
