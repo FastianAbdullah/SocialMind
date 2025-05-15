@@ -9,7 +9,39 @@ export default defineConfig(({ command }) => {
     return {
         plugins: [
             laravel({
-                input: ['resources/js/app.js', 'resources/js/legacy/app.js'],
+                input: [
+                    'resources/js/app.js',
+                    'resources/js/legacy/plugins.js',
+                    'resources/js/legacy/app.js',
+                    'resources/js/legacy/animatedt-title.js',
+                    //Dashboard JS files.
+                    // latest jquery
+                    'resources/js/legacy/jquery.min.js',
+                    // Bootstrap js
+                    'resources/js/legacy/bootstrap/bootstrap.bundle.min.js',
+                    // Feather Icon
+                    'resources/js/legacy/icons/feather-icon/feather.min.js',
+                    'resources/js/legacy/icons/feather-icon/feather-icon.js',
+                    // ScrollBar Js
+                    'resources/js/legacy/scrollbar/simplebar.js',
+                    'resources/js/legacy/scrollbar/custom.js',
+                    // Sidebar Jquery
+                    'resources/js/legacy/config.js',
+                    // Plugins JS start
+                    'resources/js/legacy/sidebar-menu.js',
+                    'resources/js/legacy/sidebar-pin.js',
+                    'resources/js/legacy/slick/slick.min.js',
+                    'resources/js/legacy/slick/slick.js',
+                    'resources/js/legacy/header-slick.js',
+                    'resources/js/legacy/chart/apex-chart/apex-chart.js',
+                    'resources/js/legacy/chart/apex-chart/stock-prices.js',
+                    'resources/js/legacy/chart/apex-chart/moment.min.js',
+                    'resources/js/legacy/notify/bootstrap-notify.min.js',
+                    // Theme Js.
+                    'resources/js/legacy/script.js',
+        
+                  ],
+        
                 refresh: false
             }),
             vue({
