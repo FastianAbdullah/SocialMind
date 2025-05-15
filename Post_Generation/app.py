@@ -447,7 +447,7 @@ def post_to_instagram():
         return jsonify({'error': 'No access token provided'}), 401
     
     data = request.json
-    required_fields = ['ig_user_id', 'filename', 'caption']
+    required_fields = ['ig_user_id', 'public_url', 'caption']
     if not all(field in data for field in required_fields):
         return jsonify({
             'status': 'error',
@@ -455,36 +455,22 @@ def post_to_instagram():
         }), 400
     
     try:
-        # Set up ngrok tunnel
-        success, result = setup_ngrok_tunnel(data['filename'])
-        
-        if not success:
-            return jsonify({
-                'status': 'error',
-                'message': result['error']
-            }), 400
-            
-        public_url = result['public_url']
-        
-        # Post to Instagram
         print(f"[DEBUG] Posting to Instagram with user ID: {data['ig_user_id']}")
+        print(f"[DEBUG] Public URL: {data['public_url']}")
+        print(f"[DEBUG] Caption length: {len(data['caption'])}")
+        
         ig_manager = InstagramManager(access_token)
         result = ig_manager.post_content(
             data['ig_user_id'],
-            public_url,
+            data['public_url'],
             data['caption']
         )
         
         print(f"[DEBUG] Instagram API result: {result}")
-        # In both cases after posting or error, remove the data[filename] from the current directory
-        os.remove(data['filename'])
 
         if result:
             post_history.add_post('Instagram', result)
             print("[DEBUG] Successfully posted to Instagram")
-            
-            # We'll leave the HTTP server and ngrok running for Instagram to fetch the image
-            # They'll be cleaned up when the Flask app restarts
             
             return jsonify({
                 'status': 'success',
@@ -493,7 +479,6 @@ def post_to_instagram():
             })
         
         print("[DEBUG] Failed to post content to Instagram")
-
         return jsonify({
             'status': 'error',
             'message': 'Failed to post content'
