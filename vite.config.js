@@ -18,6 +18,8 @@ export default defineConfig(({ command }) => {
                     // latest jquery
                     'resources/js/legacy/jquery.min.js',
                     // Bootstrap js
+                    'resources/js/bootstrap.js',
+                    'resources/js/legacy/notify/bootstrap-notify.min.js',
                     'resources/js/legacy/bootstrap/bootstrap.bundle.min.js',
                     // Feather Icon
                     'resources/js/legacy/icons/feather-icon/feather.min.js',
