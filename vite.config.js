@@ -1,20 +1,13 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
+import path from 'path';
 
 export default defineConfig({
     plugins: [
         laravel({
-            input: [
-                'resources/css/vendors/bootstrap.css',
-                'resources/css/style.css',
-                'resources/css/color-1.css',
-                'resources/css/responsive.css',
-                'resources/js/app.js',
-                'resources/js/legacy/app.js'
-            ],
-            refresh: true,
-            publicDirectory: 'public',
+            input: ['resources/js/app.js', 'resources/js/legacy/app.js'],
+            refresh: false
         }),
         vue({
             template: {
@@ -27,37 +20,23 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
-            vue: 'vue/dist/vue.esm-bundler.js',
             '@': '/resources/js',
             '~': '/resources',
+            '@css': '/resources/css',
+            '@fonts': '/resources/css/fonts',
+            '@vendors': '/resources/css/vendors'
         },
     },
     build: {
         manifest: true,
         outDir: 'public/build',
+        emptyOutDir: true,
         rollupOptions: {
             output: {
                 manualChunks: {
-                    vendor: [
-                        'vue',
-                        'glightbox',
-                        'bootstrap',
-                        'jquery'
-                    ],
-                    legacy: [
-                        'resources/js/legacy/app.js'
-                    ]
+                    vendor: ['vue', 'glightbox', 'bootstrap', 'jquery']
                 }
             }
         }
-    },
-    server: {
-        hmr: {
-            host: 'discountable.co.uk'
-        },
-        port: 5173
-    },
-    optimizeDeps: {
-        include: ['vue', 'glightbox']
     }
-}); 
+});

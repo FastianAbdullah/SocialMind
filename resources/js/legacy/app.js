@@ -1,3 +1,13 @@
+// CSS Imports
+import '@fonts/ff-1.css';
+import '@fonts/ff-3.css';
+import '@fonts/bootstrap-icons.css';
+import '@vendors/bootstrap.css';
+import '@css/plugins.min.css';
+import '@css/style.css';
+import '@css/color-1.css';
+import '@css/responsive.css';
+
 // ========== JS IMPORTS ==========
 import 'jquery';
 import 'bootstrap';
