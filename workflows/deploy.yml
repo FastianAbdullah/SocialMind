@@ -59,13 +59,15 @@ jobs:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           # Create deployment script
           cat > deploy.sh <<'EOL'
           #!/bin/bash
           
           # Set deployment directory
-          DEPLOY_DIR=/var/www/socialmind
+          DEPLOY_DIR=/var/www/socialmind/SocialMind
           
           # Pull latest changes
           cd $DEPLOY_DIR
@@ -86,6 +88,12 @@ jobs:
           sed -i "s#DB_USERNAME=.*#DB_USERNAME=${DB_USERNAME}#g" .env
           sed -i "s#DB_PASSWORD=.*#DB_PASSWORD=${DB_PASSWORD}#g" .env
           
+          # Update Python .env with API keys
+          cat > Post_Generation/.env <<EOF
+          OPENAI_API_KEY=${OPENAI_API_KEY}
+          OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+          EOF
+          
           # Clear Laravel caches
           php artisan cache:clear
           php artisan config:clear
@@ -97,6 +105,7 @@ jobs:
           cd Post_Generation
           source venv/bin/activate
           pip install -r requirements.txt
+          deactivate
           
           # Restart services
           sudo supervisorctl restart flask
@@ -104,13 +113,17 @@ jobs:
           sudo systemctl restart nginx
           
           # Set proper permissions
-          sudo chown -R www-data:www-data $DEPLOY_DIR
+          sudo chown -R mac:www-data $DEPLOY_DIR
           sudo find $DEPLOY_DIR -type f -exec chmod 644 {} \;
           sudo find $DEPLOY_DIR -type d -exec chmod 755 {} \;
-          sudo chown -R www-data:www-data $DEPLOY_DIR/storage
-          sudo chown -R www-data:www-data $DEPLOY_DIR/bootstrap/cache
+          sudo chown -R mac:www-data $DEPLOY_DIR/storage
+          sudo chown -R mac:www-data $DEPLOY_DIR/bootstrap/cache
           sudo chmod -R 775 $DEPLOY_DIR/storage
           sudo chmod -R 775 $DEPLOY_DIR/bootstrap/cache
+          sudo chmod -R 775 $DEPLOY_DIR/Post_Generation
+          
+          # Ensure Python files are executable
+          sudo chmod +x $DEPLOY_DIR/Post_Generation/*.py
           EOL
           
           # Copy and execute deployment script
