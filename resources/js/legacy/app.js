@@ -1,3 +1,26 @@
+// Import required CSS files
+import '../../css/fonts/ff-1.css';
+import '../../css/fonts/ff-3.css';
+import '../../css/fonts/bootstrap-icons.css';
+import '../../css/plugins.min.css';
+import '../../css/style.min.css';
+
+// Import third-party dependencies
+import 'jquery';
+import 'bootstrap';
+import GLightbox from 'glightbox';
+import 'feather-icons';
+import SimpleBar from 'simplebar';
+import Swiper from 'swiper';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { SplitText } from 'gsap/SplitText';
+
+// Register GSAP plugins
+gsap.registerPlugin(ScrollTrigger, SplitText);
+
+// Make GLightbox available globally
+window.GLightbox = GLightbox;
 "use strict";
 
 document.addEventListener("DOMContentLoaded", function () {

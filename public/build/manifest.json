@@ -1,4 +1,7 @@
 {
+  "_vendor-c1ef6d0f.js": {
+    "file": "assets/vendor-c1ef6d0f.js"
+  },
   "public/assets/images/hand.gif": {
     "file": "assets/hand-876b1cdb.gif",
     "src": "public/assets/images/hand.gif"
@@ -271,6 +274,42 @@
     "file": "assets/testimonial-section-shape-1-94d49289.png",
     "src": "public/img/testimonial-section-shape-1.png"
   },
+  "resources/fonts/bootstrap-iconsbf04.woff": {
+    "file": "assets/bootstrap-iconsbf04-999550fa.woff",
+    "src": "resources/fonts/bootstrap-iconsbf04.woff"
+  },
+  "resources/fonts/bootstrap-iconsbf04.woff2": {
+    "file": "assets/bootstrap-iconsbf04-cfe45b98.woff2",
+    "src": "resources/fonts/bootstrap-iconsbf04.woff2"
+  },
+  "resources/img/blur-blog-shape.png": {
+    "file": "assets/blur-blog-shape-4a354f32.png",
+    "src": "resources/img/blur-blog-shape.png"
+  },
+  "resources/img/cta-section-2-bg.png": {
+    "file": "assets/cta-section-2-bg-325deb3b.png",
+    "src": "resources/img/cta-section-2-bg.png"
+  },
+  "resources/img/faq-section-4-bg.png": {
+    "file": "assets/faq-section-4-bg-1ecef97d.png",
+    "src": "resources/img/faq-section-4-bg.png"
+  },
+  "resources/img/footer-4-img.png": {
+    "file": "assets/footer-4-img-2f214a9e.png",
+    "src": "resources/img/footer-4-img.png"
+  },
+  "resources/img/hero-4-bg.webp": {
+    "file": "assets/hero-4-bg-80f87d72.webp",
+    "src": "resources/img/hero-4-bg.webp"
+  },
+  "resources/img/post-2-bg.png": {
+    "file": "assets/post-2-bg-dad2333a.png",
+    "src": "resources/img/post-2-bg.png"
+  },
+  "resources/img/post-3-bg.png": {
+    "file": "assets/post-3-bg-1cbb9840.png",
+    "src": "resources/img/post-3-bg.png"
+  },
   "resources/js/app.css": {
     "file": "assets/app-af06c284.css",
     "src": "resources/js/app.css"
@@ -347,114 +386,44 @@
     "dynamicImports": [
       "resources/js/services/AIAssistantService.js"
     ],
-    "file": "assets/app-b6c929db.js",
+    "file": "assets/app-5f624234.js",
+    "imports": [
+      "_vendor-c1ef6d0f.js"
+    ],
     "isEntry": true,
     "src": "resources/js/app.js"
   },
-  "resources/js/legacy/animatedt-title.js": {
-    "file": "assets/animatedt-title-1f255911.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/animatedt-title.js"
+  "resources/js/legacy/app.css": {
+    "file": "assets/app-6b3992a3.css",
+    "src": "resources/js/legacy/app.css"
   },
   "resources/js/legacy/app.js": {
-    "file": "assets/app-5dca7d68.js",
+    "assets": [
+      "assets/bootstrap-iconsbf04-cfe45b98.woff2",
+      "assets/bootstrap-iconsbf04-999550fa.woff",
+      "assets/hero-4-bg-80f87d72.webp",
+      "assets/faq-section-4-bg-1ecef97d.png",
+      "assets/footer-4-img-2f214a9e.png",
+      "assets/cta-section-2-bg-325deb3b.png",
+      "assets/blur-blog-shape-4a354f32.png",
+      "assets/post-2-bg-dad2333a.png",
+      "assets/post-3-bg-1cbb9840.png"
+    ],
+    "css": [
+      "assets/app-6b3992a3.css"
+    ],
+    "file": "assets/app-8730d179.js",
+    "imports": [
+      "_vendor-c1ef6d0f.js"
+    ],
     "isEntry": true,
     "src": "resources/js/legacy/app.js"
   },
-  "resources/js/legacy/bootstrap/bootstrap.bundle.min.js": {
-    "file": "assets/bootstrap.bundle.min-c42ec76f.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/bootstrap/bootstrap.bundle.min.js"
-  },
-  "resources/js/legacy/chart/apex-chart/apex-chart.js": {
-    "file": "assets/apex-chart-3efd1332.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/chart/apex-chart/apex-chart.js"
-  },
-  "resources/js/legacy/chart/apex-chart/moment.min.js": {
-    "file": "assets/moment.min-f18b934e.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/chart/apex-chart/moment.min.js"
-  },
-  "resources/js/legacy/chart/apex-chart/stock-prices.js": {
-    "file": "assets/stock-prices-4ed993c7.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/chart/apex-chart/stock-prices.js"
-  },
-  "resources/js/legacy/config.js": {
-    "file": "assets/config-2d794524.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/config.js"
-  },
-  "resources/js/legacy/header-slick.js": {
-    "file": "assets/header-slick-424c1846.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/header-slick.js"
-  },
-  "resources/js/legacy/icons/feather-icon/feather-icon.js": {
-    "file": "assets/feather-icon-62065fc9.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/icons/feather-icon/feather-icon.js"
-  },
-  "resources/js/legacy/icons/feather-icon/feather.min.js": {
-    "file": "assets/feather.min-ea640350.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/icons/feather-icon/feather.min.js"
-  },
-  "resources/js/legacy/jquery.min.js": {
-    "file": "assets/jquery.min-0baa6322.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/jquery.min.js"
-  },
-  "resources/js/legacy/notify/bootstrap-notify.min.js": {
-    "file": "assets/bootstrap-notify.min-77af2596.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/notify/bootstrap-notify.min.js"
-  },
-  "resources/js/legacy/plugins.js": {
-    "file": "assets/plugins-d53c6ec7.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/plugins.js"
-  },
-  "resources/js/legacy/script.js": {
-    "file": "assets/script-9f65e564.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/script.js"
-  },
-  "resources/js/legacy/scrollbar/custom.js": {
-    "file": "assets/custom-81e49acd.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/scrollbar/custom.js"
-  },
-  "resources/js/legacy/scrollbar/simplebar.js": {
-    "file": "assets/simplebar-dcf28494.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/scrollbar/simplebar.js"
-  },
-  "resources/js/legacy/sidebar-menu.js": {
-    "file": "assets/sidebar-menu-fcf8440a.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/sidebar-menu.js"
-  },
-  "resources/js/legacy/sidebar-pin.js": {
-    "file": "assets/sidebar-pin-73d3b951.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/sidebar-pin.js"
-  },
-  "resources/js/legacy/slick/slick.js": {
-    "file": "assets/slick-7e5f2fe2.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/slick/slick.js"
-  },
-  "resources/js/legacy/slick/slick.min.js": {
-    "file": "assets/slick.min-5123236f.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/slick/slick.min.js"
-  },
   "resources/js/services/AIAssistantService.js": {
-    "file": "assets/AIAssistantService-0af36b0b.js",
+    "file": "assets/AIAssistantService-82cc3232.js",
     "imports": [
-      "resources/js/app.js"
+      "resources/js/app.js",
+      "_vendor-c1ef6d0f.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/services/AIAssistantService.js"
