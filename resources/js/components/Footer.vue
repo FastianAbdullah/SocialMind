@@ -52,7 +52,7 @@
                                             class="link d-inline-block clr-neutral-80 :clr-primary-key"> About </a>
                                     </li>
                                     <li>
-                                        <a href="/public/documents/project-report.pdf" target="_blank"
+                                        <a href="/documents/project-report.pdf" target="_blank"
                                             class="link d-inline-block clr-neutral-80 :clr-primary-key"> Project Report <i class="bi bi-file-earmark-pdf"></i></a>
                                     </li>
                                 </ul>
