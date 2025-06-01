@@ -3,7 +3,7 @@ import router from '../router';
 
 // Use the same Flask API instance from facebookService
 const flaskApi = axios.create({
-    baseURL: 'https://discountable.co.uk:8443',
+    baseURL: 'https://socialmidsai.com:8443',
     withCredentials: true,
     headers: {
         'Accept': 'application/json',

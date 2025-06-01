@@ -27,7 +27,7 @@ return [
 
     'max_age' => 0,
 
-    'allowed_origins' => ['https://discountable.co.uk'],
+    'allowed_origins' => ['https://socialmidsai.com'],
 
     'supports_credentials' => false,
 
