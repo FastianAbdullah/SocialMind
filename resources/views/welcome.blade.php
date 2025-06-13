@@ -55,6 +55,19 @@
                 });
             }
         });
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                const addressDiv = document.getElementById('addressDiv');
+                const originalText = addressDiv.innerHTML;
+                addressDiv.innerHTML = 'Copied!';
+                addressDiv.style.background = 'rgba(34, 197, 94, 0.8)';
+                
+                setTimeout(function() {
+                addressDiv.innerHTML = originalText;
+                addressDiv.style.background = 'rgba(255, 255, 255, 0.1)';
+                }, 1500);
+            });
+}
     </script>
 </body>
 </html>
