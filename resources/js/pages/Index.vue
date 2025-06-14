@@ -17,11 +17,11 @@
                   class="d-inline-block py-1 px-2 rounded bg-white on-secondary-fixed-variant ff-1 fs-12 fw-bold flex-shrink-0">
                   New Featured </span>
                 <div class="text-center">
-                  <span class="d-block text-center text-md-start ff-1 fs-12 fw-semibold clr-white"> Chat with The Cloud
-                   Coin launched on Pump.Fun 
+                  <span class="d-block text-center text-md-start ff-1 fs-12 fw-semibold clr-white"> We're beyond excited to announce the launch of our AI Coin on Ethereum (Base Chain)! 🎉
+
                   </span>
                   <div 
-                    onclick="copyToClipboard('9wJNTw91yY6TcQwPHDR1oEtEz3KJToBguV3mpLf9pump')" 
+                    onclick="copyToClipboard('CA :')" 
                     style="
                       background: rgba(255, 255, 255, 0.1);
                       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -43,7 +43,7 @@
                     onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'"
                     title="Click to copy address"
                     id="addressDiv">
-                    9wJNTw91yY6TcQwPHDR1oEtEz3KJToBguV3mpLf9pump
+                    CA :
                   </div>
                 </div>
               </div>
