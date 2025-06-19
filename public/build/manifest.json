@@ -359,7 +359,7 @@
     "dynamicImports": [
       "resources/js/services/AIAssistantService.js"
     ],
-    "file": "assets/app-1c857c90.js",
+    "file": "assets/app-337451b4.js",
     "imports": [
       "resources/js/bootstrap.js",
       "_utils-a4d315c4.js",
@@ -440,11 +440,6 @@
     "file": "assets/bootstrap-notify.min-77af2596.js",
     "isEntry": true,
     "src": "resources/js/legacy/notify/bootstrap-notify.min.js"
-  },
-  "resources/js/legacy/plugins.js": {
-    "file": "assets/plugins-d53c6ec7.js",
-    "isEntry": true,
-    "src": "resources/js/legacy/plugins.js"
   },
   "resources/js/legacy/script.js": {
     "file": "assets/script-9f65e564.js",
