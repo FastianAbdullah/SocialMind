@@ -7,7 +7,7 @@
             <nav class="menu d-lg-flex justify-content-lg-between align-items-lg-center py-3 py-lg-0">
               <div class="d-flex align-items-center justify-content-between">
                 <a href="index.html" class="logo link d-inline-flex align-items-center flex-shrink-0">
-                  <img src="../../../public/img/logo-light.png" alt="logo" class="img-fluid object-fit-contain" width="150" height="50">
+                  <img src="img/logo-light.png" alt="logo" class="img-fluid object-fit-contain" width="150" height="50">
                 </a>
                 <button class="menu-toggle w-15 h-15 p-0 border-0 lh-1 bg-primary-50 clr-neutral-100 transition rounded flex-shrink-0 d-lg-none order-sm-3 fs-24">
                   <i class="bi bi-list"></i>

@@ -97,11 +97,11 @@
                     </div>
                     <div class="col-md-6 col-xl-7">
                       <div class="text-center">
-                        <img src="../../../public/img/hero-4-img.webp" alt="image" class="img-fluid">
+                        <img src="/img/hero-4-img.webp" alt="image" class="img-fluid">
                       </div>
                     </div>
                   </div>
-                  <img src="../../../public/img/hero-4-content-shape.webp" alt="image"
+                  <img src="/img/hero-4-content-shape.webp" alt="image"
                     class="w-100 h-100 position-absolute inset-0 z-n1 pointer-none">
                 </div>
               </div>
@@ -134,97 +134,97 @@
               <ul class="list list-row gap-10 scroller-x__list">
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/spotify.png" alt="image" class="img-fluid">
+                    <img src="/img/spotify.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-1.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-1.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-2.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-2.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-3.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-3.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-4.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-4.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-5.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-5.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-6.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-6.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-7.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-7.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-8.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-8.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-9.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-9.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-10.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-10.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-11.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-11.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-12.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-12.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-7.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-7.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-8.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-8.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-9.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-9.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-10.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-10.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-11.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-11.png" alt="image" class="img-fluid">
                   </div>
                 </li>
                 <li>
                   <div class="brand-btn d-inline-block">
-                    <img src="../../../public/img/brand-icon-12.png" alt="image" class="img-fluid">
+                    <img src="/img/brand-icon-12.png" alt="image" class="img-fluid">
                   </div>
                 </li>
               </ul>
@@ -242,10 +242,10 @@
             <div class="row">
               <div class="col-12">
                 <div class="d-inline-block position-relative z-1">
-                  <img src="../../../public/img/logo-circular-text.png" alt="image" class="img-fluid fadeIn_bottom">
-                  <img src="../../../public/img/circular-text-shape-start.png" alt="image"
+                  <img src="/img/logo-circular-text.png" alt="image" class="img-fluid fadeIn_bottom">
+                  <img src="/img/circular-text-shape-start.png" alt="image"
                     class="ai-featured-section__top-shape-1">
-                  <img src="../../../public/img/circular-text-shape-end.png" alt="image"
+                  <img src="/img/circular-text-shape-end.png" alt="image"
                     class="ai-featured-section__top-shape-2">
                 </div>
               </div>
@@ -272,12 +272,12 @@
                 <div
                   class="d-flex flex-column justify-content-center px-4 py-12 rounded-3 bg-neutral-10 text-center h-100">
                   <div class="mb-6 d-inline-block mx-auto">
-                    <img src="../../../public/img/icon-feature-1.png" alt="image" class="img-fluid">
+                    <img src="/img/icon-feature-1.png" alt="image" class="img-fluid">
                   </div>
                   <h6 class="clr-neutral-90 fw-extrabold"> Post Scheduler </h6>
                   <p class="mb-0 clr-neutral-80"> Schedule your posts effortlessly for maximum engagement. </p>
                 </div>
-                <img src="../../../public/img/gradient-bottom-half-border.png" alt="image"
+                <img src="/img/gradient-bottom-half-border.png" alt="image"
                   class="img-fluid w-100 position-absolute start-0 end-0 bottom-0 z-n1">
               </div>
             </div>
@@ -287,12 +287,12 @@
                 <div
                   class="d-flex flex-column justify-content-center px-4 py-12 rounded-3 bg-neutral-10 text-center h-100">
                   <div class="mb-6 d-inline-block mx-auto">
-                    <img src="../../../public/img/icon-feature-2.png" alt="image" class="img-fluid">
+                    <img src="/img/icon-feature-2.png" alt="image" class="img-fluid">
                   </div>
                   <h6 class="clr-neutral-90 fw-extrabold"> Auto-Poster </h6>
                   <p class="mb-0 clr-neutral-80"> Automatically share your content across multiple platforms. </p>
                 </div>
-                <img src="../../../public/img/gradient-top-half-border.png" alt="image"
+                <img src="/img/gradient-top-half-border.png" alt="image"
                   class="img-fluid w-100 position-absolute start-0 end-0 top-0 z-n1">
               </div>
             </div>
@@ -302,13 +302,13 @@
                 <div
                   class="d-flex flex-column justify-content-center px-4 py-12 rounded-3 bg-neutral-10 text-center h-100">
                   <div class="mb-6 d-inline-block mx-auto">
-                    <img src="../../../public/img/icon-feature-3.png" alt="image" class="img-fluid">
+                    <img src="/img/icon-feature-3.png" alt="image" class="img-fluid">
                   </div>
                   <h6 class="clr-neutral-90 fw-extrabold"> Description & Tags Optimizer </h6>
                   <p class="mb-0 clr-neutral-80"> Enhance your content with optimized descriptions and tags for better
                     visibility. </p>
                 </div>
-                <img src="../../../public/img/gradient-bottom-half-border.png" alt="image"
+                <img src="/img/gradient-bottom-half-border.png" alt="image"
                   class="img-fluid w-100 position-absolute start-0 end-0 bottom-0 z-n1">
               </div>
             </div>
@@ -318,13 +318,13 @@
                 <div
                   class="d-flex flex-column justify-content-center px-4 py-12 rounded-3 bg-neutral-10 text-center h-100">
                   <div class="mb-6 d-inline-block mx-auto">
-                    <img src="../../../public/img/icon-feature-4.png" alt="image" class="img-fluid">
+                    <img src="/img/icon-feature-4.png" alt="image" class="img-fluid">
                   </div>
                   <h6 class="clr-neutral-90 fw-extrabold"> Sentiment Analysis Dashboard </h6>
                   <p class="mb-0 clr-neutral-80"> Gain insights into audience engagement with real-time sentiment
                     analysis. </p>
                 </div>
-                <img src="../../../public/img/gradient-top-half-border.png" alt="image"
+                <img src="/img/gradient-top-half-border.png" alt="image"
                   class="img-fluid w-100 position-absolute start-0 end-0 top-0 z-n1">
               </div>
             </div>
@@ -408,13 +408,13 @@
               </div>
               <ul class="list gap-6">
                 <li>
-                  <img src="../../../public/img/fb-img-1.png" alt="image" class="img-fluid w-100">
+                  <img src="/img/fb-img-1.png" alt="image" class="img-fluid w-100">
                 </li>
                 <li>
-                  <img src="../../../public/img/fb-img-2.png" alt="image" class="img-fluid w-100">
+                  <img src="/img/fb-img-2.png" alt="image" class="img-fluid w-100">
                 </li>
                 <li>
-                  <img src="../../../public/img/fb-img-3.png" alt="image" class="img-fluid w-100">
+                  <img src="/img/fb-img-3.png" alt="image" class="img-fluid w-100">
                 </li>
               </ul>
             </div>
@@ -426,14 +426,14 @@
                 <span class="d-inline-block flex-shrink-0 py-1 px-2 bg-primary-50 bg-opacity-2 clr-primary-50 lh-1 fs-14">
                   Step 03 </span>
               </div>
-              <img src="../../../public/img/fb-img-4.png" alt="image" class="img-fluid">
+              <img src="/img/fb-img-4.png" alt="image" class="img-fluid">
             </div>
           </div>
           <div class="col-md-6 fadein_bottom_25">
             <div class="p-4 p-md-6 px-xl-9 py-xl-12 rounded-4 h-100 blurred-post">
               <div class="mb-6 text-center position-relative z-1 fadeIn_bottom">
-                <img src="../../../public/img/fb-img-5.png" alt="image" class="img-fluid">
-                <img src="../../../public/img/fb-card-blurr-shape.png" alt="image"
+                <img src="/img/fb-img-5.png" alt="image" class="img-fluid">
+                <img src="/img/fb-card-blurr-shape.png" alt="image"
                   class="w-100 h-100 object-fit-contain position-absolute inset-0 z-n1 pointer-none">
               </div>
               <h6 class="clr-neutral-90 fs-18 reveal-text"> Stability AI Image Easy to customize hard to get wrong </h6>
@@ -444,7 +444,7 @@
           <div class="col-md-6 fadein_bottom_25">
             <div class="p-4 p-md-6 px-xl-9 py-xl-12 bg-neutral-6 rounded-4 post-2-bg h-100">
               <div class="mb-6 text-center fadeIn_bottom">
-                <img src="../../../public/img/fb-img-6.png" alt="image" class="img-fluid">
+                <img src="/img/fb-img-6.png" alt="image" class="img-fluid">
               </div>
               <h6 class="clr-neutral-90 fs-18 reveal-text"> Stability AI Image Easy to customize hard to get wrong </h6>
               <p class="mb-0 clr-neutral-80 animate-text-from-right"> Social Mind AI is a versatile product demo software
@@ -454,7 +454,7 @@
           <div class="col-md-6 col-lg-4 fadein_bottom_26">
             <div class="p-4 p-xl-8 rounded-4 bg-neutral-6 post-3-bg h-100">
               <div class="mb-6 fadeIn_bottom">
-                <img src="../../../public/img/fb-img-7.png" alt="image" class="img-fluid">
+                <img src="/img/fb-img-7.png" alt="image" class="img-fluid">
               </div>
               <h6 class="fs-18 clr-neutral-90 reveal-text"> Actual Current Content </h6>
               <p class="mb-0 clr-neutral-80 animate-text-from-right"> AI can generate written content, including articles
@@ -464,7 +464,7 @@
           <div class="col-md-6 col-lg-4 fadein_bottom_26">
             <div class="p-4 p-xl-8 rounded-4 bg-neutral-6 post-3-bg h-100">
               <div class="mb-6 fadeIn_bottom">
-                <img src="../../../public/img/fb-img-8.png" alt="image" class="img-fluid">
+                <img src="/img/fb-img-8.png" alt="image" class="img-fluid">
               </div>
               <h6 class="fs-18 clr-neutral-90 reveal-text"> Adding Knowledge Dashboard </h6>
               <p class="mb-0 clr-neutral-80 animate-text-from-right"> AI can generate written content, including articles
@@ -474,7 +474,7 @@
           <div class="col-md-6 col-lg-4 fadein_bottom_26">
             <div class="p-4 p-xl-8 rounded-4 bg-neutral-6 post-3-bg h-100">
               <div class="mb-6 fadeIn_bottom">
-                <img src="../../../public/img/fb-img-9.png" alt="image" class="img-fluid">
+                <img src="/img/fb-img-9.png" alt="image" class="img-fluid">
               </div>
               <h6 class="fs-18 clr-neutral-90 reveal-text"> Easy to Share Content any platform </h6>
               <p class="mb-0 clr-neutral-80 animate-text-from-right"> AI can generate written content, including articles
@@ -487,7 +487,7 @@
 
     <!-- Testimonial Section 1 -->
     <div class="testimonial-section-1 section-space-sm-y position-relative z-1">
-      <img src="../../../public/img/testimonial-section-shape-1.png" alt="image"
+      <img src="/img/testimonial-section-shape-1.png" alt="image"
         class="w-100 h-100 position-absolute inset-0 z-n1 pointer-none">
       <div class="section-space-sm-bottom">
         <div class="container">
@@ -510,7 +510,7 @@
                     <div class="p-4 px-md-8 py-md-12 bg-black rounded-4 max-text-50">
                       <div class="d-flex gap-4 align-items-center mb-8">
                         <div class="w-12 h-12 flex-shrink-0 rounded-circle overflow-hidden">
-                          <img src="../../../public/img/avatar-1.png" alt="image" class="w-100 h-100 object-fit-cover">
+                          <img src="/img/avatar-1.png" alt="image" class="w-100 h-100 object-fit-cover">
                         </div>
                         <div class="flex-grow-1">
                           <h6 class="mb-0 fs-18 clr-neutral-90"> Mark Villomas </h6>
@@ -526,7 +526,7 @@
                     <div class="p-4 px-md-8 py-md-12 bg-black rounded-4 max-text-50">
                       <div class="d-flex gap-4 align-items-center mb-8">
                         <div class="w-12 h-12 flex-shrink-0 rounded-circle overflow-hidden">
-                          <img src="../../../public/img/avatar-2.png" alt="image" class="w-100 h-100 object-fit-cover">
+                          <img src="/img/avatar-2.png" alt="image" class="w-100 h-100 object-fit-cover">
                         </div>
                         <div class="flex-grow-1">
                           <h6 class="mb-0 fs-18 clr-neutral-90"> Mark Villomas </h6>
@@ -542,7 +542,7 @@
                     <div class="p-4 px-md-8 py-md-12 bg-black rounded-4 max-text-50">
                       <div class="d-flex gap-4 align-items-center mb-8">
                         <div class="w-12 h-12 flex-shrink-0 rounded-circle overflow-hidden">
-                          <img src="../../../public/img/avatar-3.png" alt="image" class="w-100 h-100 object-fit-cover">
+                          <img src="/img/avatar-3.png" alt="image" class="w-100 h-100 object-fit-cover">
                         </div>
                         <div class="flex-grow-1">
                           <h6 class="mb-0 fs-18 clr-neutral-90"> Mark Villomas </h6>
@@ -558,7 +558,7 @@
                     <div class="p-4 px-md-8 py-md-12 bg-black rounded-4 max-text-50">
                       <div class="d-flex gap-4 align-items-center mb-8">
                         <div class="w-12 h-12 flex-shrink-0 rounded-circle overflow-hidden">
-                          <img src="../../../public/img/avatar-4.png" alt="image" class="w-100 h-100 object-fit-cover">
+                          <img src="/img/avatar-4.png" alt="image" class="w-100 h-100 object-fit-cover">
                         </div>
                         <div class="flex-grow-1">
                           <h6 class="mb-0 fs-18 clr-neutral-90"> Mark Villomas </h6>
@@ -574,7 +574,7 @@
                     <div class="p-4 px-md-8 py-md-12 bg-black rounded-4 max-text-50">
                       <div class="d-flex gap-4 align-items-center mb-8">
                         <div class="w-12 h-12 flex-shrink-0 rounded-circle overflow-hidden">
-                          <img src="../../../public/img/avatar-5.png" alt="image" class="w-100 h-100 object-fit-cover">
+                          <img src="/img/avatar-5.png" alt="image" class="w-100 h-100 object-fit-cover">
                         </div>
                         <div class="flex-grow-1">
                           <h6 class="mb-0 fs-18 clr-neutral-90"> Mark Villomas </h6>
@@ -590,7 +590,7 @@
                     <div class="p-4 px-md-8 py-md-12 bg-black rounded-4 max-text-50">
                       <div class="d-flex gap-4 align-items-center mb-8">
                         <div class="w-12 h-12 flex-shrink-0 rounded-circle overflow-hidden">
-                          <img src="../../../public/img/avatar-6.png" alt="image" class="w-100 h-100 object-fit-cover">
+                          <img src="/img/avatar-6.png" alt="image" class="w-100 h-100 object-fit-cover">
                         </div>
                         <div class="flex-grow-1">
                           <h6 class="mb-0 fs-18 clr-neutral-90"> Mark Villomas </h6>
@@ -610,7 +610,7 @@
                     <div class="p-4 px-md-8 py-md-12 bg-black rounded-4 max-text-50">
                       <div class="d-flex gap-4 align-items-center mb-8">
                         <div class="w-12 h-12 flex-shrink-0 rounded-circle overflow-hidden">
-                          <img src="../../../public/img/avatar-1.png" alt="image" class="w-100 h-100 object-fit-cover">
+                          <img src="/img/avatar-1.png" alt="image" class="w-100 h-100 object-fit-cover">
                         </div>
                         <div class="flex-grow-1">
                           <h6 class="mb-0 fs-18 clr-neutral-90"> Mark Villomas </h6>
@@ -626,7 +626,7 @@
                     <div class="p-4 px-md-8 py-md-12 bg-black rounded-4 max-text-50">
                       <div class="d-flex gap-4 align-items-center mb-8">
                         <div class="w-12 h-12 flex-shrink-0 rounded-circle overflow-hidden">
-                          <img src="../../../public/img/avatar-2.png" alt="image" class="w-100 h-100 object-fit-cover">
+                          <img src="/img/avatar-2.png" alt="image" class="w-100 h-100 object-fit-cover">
                         </div>
                         <div class="flex-grow-1">
                           <h6 class="mb-0 fs-18 clr-neutral-90"> Mark Villomas </h6>
@@ -642,7 +642,7 @@
                     <div class="p-4 px-md-8 py-md-12 bg-black rounded-4 max-text-50">
                       <div class="d-flex gap-4 align-items-center mb-8">
                         <div class="w-12 h-12 flex-shrink-0 rounded-circle overflow-hidden">
-                          <img src="../../../public/img/avatar-3.png" alt="image" class="w-100 h-100 object-fit-cover">
+                          <img src="/img/avatar-3.png" alt="image" class="w-100 h-100 object-fit-cover">
                         </div>
                         <div class="flex-grow-1">
                           <h6 class="mb-0 fs-18 clr-neutral-90"> Mark Villomas </h6>
@@ -658,7 +658,7 @@
                     <div class="p-4 px-md-8 py-md-12 bg-black rounded-4 max-text-50">
                       <div class="d-flex gap-4 align-items-center mb-8">
                         <div class="w-12 h-12 flex-shrink-0 rounded-circle overflow-hidden">
-                          <img src="../../../public/img/avatar-4.png" alt="image" class="w-100 h-100 object-fit-cover">
+                          <img src="/img/avatar-4.png" alt="image" class="w-100 h-100 object-fit-cover">
                         </div>
                         <div class="flex-grow-1">
                           <h6 class="mb-0 fs-18 clr-neutral-90"> Mark Villomas </h6>
@@ -674,7 +674,7 @@
                     <div class="p-4 px-md-8 py-md-12 bg-black rounded-4 max-text-50">
                       <div class="d-flex gap-4 align-items-center mb-8">
                         <div class="w-12 h-12 flex-shrink-0 rounded-circle overflow-hidden">
-                          <img src="../../../public/img/avatar-5.png" alt="image" class="w-100 h-100 object-fit-cover">
+                          <img src="/img/avatar-5.png" alt="image" class="w-100 h-100 object-fit-cover">
                         </div>
                         <div class="flex-grow-1">
                           <h6 class="mb-0 fs-18 clr-neutral-90"> Mark Villomas </h6>
@@ -690,7 +690,7 @@
                     <div class="p-4 px-md-8 py-md-12 bg-black rounded-4 max-text-50">
                       <div class="d-flex gap-4 align-items-center mb-8">
                         <div class="w-12 h-12 flex-shrink-0 rounded-circle overflow-hidden">
-                          <img src="../../../public/img/avatar-6.png" alt="image" class="w-100 h-100 object-fit-cover">
+                          <img src="/img/avatar-6.png" alt="image" class="w-100 h-100 object-fit-cover">
                         </div>
                         <div class="flex-grow-1">
                           <h6 class="mb-0 fs-18 clr-neutral-90"> Mark Villomas </h6>
@@ -840,7 +840,7 @@
           <div class="col-xl-8">
             <div class="text-center">
               <div class="mb-8 fadeIn_bottom">
-                <img src="../../../public/img/cta-2-log.png" alt="image" class="img-fluid">
+                <img src="/img/cta-2-log.png" alt="image" class="img-fluid">
               </div>
               <h3 class="mb-6 clr-neutral-90 fw-extrabold animate-line-3d"> Think better with <span
                   class="d-inline-block gradient-flow gradient-flow--start">WirteBot AI</span>
