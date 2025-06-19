@@ -7,6 +7,8 @@ export default defineConfig(({ command }) => {
     const isProduction = command === 'build';
     
     return {
+        base: './', 
+
         plugins: [
             laravel({
                 input: [
