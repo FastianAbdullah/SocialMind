@@ -62,7 +62,8 @@ export default defineConfig(({ command }) => {
                 '@css': '/resources/css',
                 '@fonts': '/resources/css/fonts',
                 '@vendors': '/resources/css/vendors',
-                'vue': 'vue/dist/vue.esm-bundler.js'
+                'vue': 'vue/dist/vue.esm-bundler.js',
+                'bootstrap': 'bootstrap/dist/js/bootstrap.bundle.js'
             },
         },
         build: {
@@ -88,7 +89,7 @@ export default defineConfig(({ command }) => {
             port: 5173
         },
         optimizeDeps: {
-            include: ['vue', 'jquery', 'bootstrap', 'gsap']
+            include: ['vue', 'jquery', 'bootstrap', 'gsap', 'bootstrap/dist/js/bootstrap.bundle.js']
         }
     }
 });
