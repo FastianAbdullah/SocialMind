@@ -13,7 +13,7 @@ class AIAgent:
     suggest posting strategies, and manage conversation context.
     """
     
-    def __init__(self, api_key: Optional[str] = None, base_url: str = "https://socialmidsai.com:8443"):
+    def __init__(self, api_key: Optional[str] = None, base_url: str = "http://localhost:8000"):
         """
         Initialize the AI agent with necessary API clients.
         

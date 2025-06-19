@@ -6,7 +6,7 @@ export function useDynamicResources(isLoading, initialCssFiles = [], initialJsFi
 
   // Get base URL based on environment
   const getBaseUrl = () => {
-    return import.meta.env.VITE_DEV_URL || 'https://socialmidsai.com'
+    return import.meta.env.VITE_DEV_URL || 'http://localhost:8000'
   }
 
   const removeDynamicCss = () => {
