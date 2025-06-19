@@ -8,14 +8,15 @@
 
     <!-- Hero Section  -->
     <div class="hero-4 bg-grad-6">
+
       <div class="py-3">
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-12">
               <div class="d-flex align-items-center justify-content-center flex-wrap gap-3">
-                <span
+                <!-- <span
                   class="d-inline-block py-1 px-2 rounded bg-white on-secondary-fixed-variant ff-1 fs-12 fw-bold flex-shrink-0">
-                  New Featured </span>
+                  New Featured </span> -->
                 <div class="text-center">
                   <span class="d-block text-center text-md-start ff-1 fs-12 fw-semibold clr-white"> We're beyond excited to announce the launch of our AI Coin on Ethereum (Base Chain)! 🎉
 
@@ -51,9 +52,14 @@
           </div>
         </div>
       </div>
+
       <div class="hero-4__content bg-black rounded-top-5 section-space-top">
+
+        
         <div class="section-space-top section-space-sm-bottom">
           <div class="section-space-sm-bottom">
+
+            
             <div class="container">
               <div class="row justify-content-center">
                 <div class="col-xl-10">
@@ -104,6 +110,8 @@
         </div>
       </div>
     </div>
+
+   
 
     <!-- Brand Section  -->
     <div class="section-space-xsm-bottom">

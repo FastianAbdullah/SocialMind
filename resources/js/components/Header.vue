@@ -1,6 +1,6 @@
 <!-- Header.vue -->
 <template>
-    <header class="header header--4 header--fixed">
+    <header class="header header--4 header--fixed1">
       <div class="container">
         <div class="row">
           <div class="col-12">
