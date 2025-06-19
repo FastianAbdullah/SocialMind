@@ -1,6 +1,6 @@
 // ========== JS IMPORTS ==========
 import 'jquery';
-import 'bootstrap/dist/js/bootstrap.bundle.js';
+import 'bootstrap';
 import GLightbox from 'glightbox';
 import 'feather-icons';
 import SimpleBar from 'simplebar';
