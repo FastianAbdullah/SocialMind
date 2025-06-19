@@ -6,7 +6,8 @@ export function useDynamicResources(isLoading, initialCssFiles = [], initialJsFi
 
   // Get base URL based on environment
   const getBaseUrl = () => {
-    return import.meta.env.VITE_DEV_URL || 'http://localhost:8000'
+    // Use VITE_APP_DOMAIN for production, fallback to local for development
+    return import.meta.env.VITE_APP_DOMAIN || 'http://localhost:8000'
   }
 
   const removeDynamicCss = () => {

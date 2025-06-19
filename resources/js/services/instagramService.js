@@ -3,7 +3,7 @@ import router from '../router';
 
 // Use the same Flask API instance from facebookService
 const flaskApi = axios.create({
-    baseURL: 'http://localhost:8000',
+    baseURL: import.meta.env.VITE_APP_DOMAIN || 'http://localhost:8000',
     withCredentials: true,
     headers: {
         'Accept': 'application/json',

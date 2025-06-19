@@ -24,13 +24,19 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# Get domain from environment variable or default to localhost
+APP_DOMAIN = os.getenv("APP_DOMAIN", "http://localhost:8000")
+
 CORS(app, resources={
     r"/*": {
         "origins": [
-            "http://127.0.0.1:8000", 
-            "http://localhost:8000", 
+            APP_DOMAIN,
+            "http://127.0.0.1:8000",
+            "http://localhost:8000",
             "https://localhost:8080",
-            "http://localhost:3306"
+            "http://localhost:3306",
+            "https://socialmidsai.com",
+            "https://socialmidsai.com:8443"
         ],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": [
@@ -60,7 +66,7 @@ auth = SocialMediaAuth(
     app_secret=os.getenv("FACEBOOK_APP_SECRET"),
     app_id_linkedin=os.getenv("LK_CLIENT_ID"),
     app_secret_linkedin=os.getenv("LK_CLIENT_SECRET"),
-    redirect_uri='http://localhost:8000/oauth/callback'
+    redirect_uri=f'{APP_DOMAIN}/oauth/callback'
 )
 post_history = UserPostHistory()
 mixtral_client = MixtralClient()
@@ -79,8 +85,8 @@ from utils.AIAgent import AIAgent
 from utils.AgentConnector import AgentConnector
 
 # Initialize AIAgent
-ai_agent = AIAgent(api_key=os.getenv("OPENAI_API_KEY"),base_url="http://localhost:8000")
-agent_connector = AgentConnector(base_url="http://localhost:8000")
+ai_agent = AIAgent(api_key=os.getenv("OPENAI_API_KEY"), base_url=APP_DOMAIN)
+agent_connector = AgentConnector(base_url=APP_DOMAIN)
 
 # Disable Flask's reloader to prevent double execution
 app.config['USE_RELOADER'] = False
