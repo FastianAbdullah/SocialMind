@@ -11,7 +11,6 @@ export default defineConfig(({ command }) => {
             laravel({
                 input: [
                     'resources/js/app.js',
-                    'resources/js/legacy/plugins.js',
                     'resources/js/legacy/app.js',
                     'resources/js/legacy/animatedt-title.js',
                     //Dashboard JS files.
